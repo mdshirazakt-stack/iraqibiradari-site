@@ -20,6 +20,7 @@ import { createSupabaseClient } from './supabase-config.js';
   }
 
   list.innerHTML = items.map((item) => {
+    if (page === 'announcements') return renderAnnouncement(item);
     const meta = [item.category, item.type, item.date].filter(Boolean).join(' · ');
     const url = item.registrationUrl || item.url;
     const action = url
@@ -35,16 +36,34 @@ import { createSupabaseClient } from './supabase-config.js';
     `;
   }).join('');
 
+  function renderAnnouncement(item) {
+    const text = item.body || item.description || '';
+    const preview = text.length > 220 ? `${text.slice(0, 220).trim()}...` : text;
+    return `
+      <article class="border border-archive-line bg-white p-6">
+        <p class="text-xs font-black uppercase tracking-[0.14em] text-archive-gold">${escapeHtml(item.date || item.category || 'Announcement')}</p>
+        <h2 class="mt-3 font-display text-3xl font-bold leading-tight text-archive-green">${escapeHtml(item.title || 'Untitled')}</h2>
+        <p class="mt-4 leading-7 text-archive-muted">${escapeHtml(preview)}</p>
+        <details class="mt-5 border-t border-archive-line pt-4">
+          <summary class="cursor-pointer text-sm font-black uppercase tracking-[0.12em] text-archive-maroon">Read full announcement</summary>
+          <p class="mt-4 whitespace-pre-line leading-8 text-archive-muted">${escapeHtml(text)}</p>
+        </details>
+      </article>
+    `;
+  }
+
   async function loadItems(type) {
     try {
       const supabase = await createSupabaseClient();
       const orderColumn = type === 'events' ? 'event_date' : type === 'videos' ? 'video_date' : 'created_at';
-      const { data, error } = await supabase
+      let query = supabase
         .from(type)
         .select('*')
         .eq('published', true)
-        .order(orderColumn, { ascending: false, nullsFirst: false })
+        .order(orderColumn, { ascending: type === 'events', nullsFirst: false })
         .order('sort_order', { ascending: false });
+      if (type === 'events') query = query.gte('event_date', new Date().toISOString().slice(0, 10));
+      const { data, error } = await query;
       if (error) throw error;
       return (data || []).map((row) => normalizeRow(type, row));
     } catch (error) {
@@ -56,7 +75,10 @@ import { createSupabaseClient } from './supabase-config.js';
     try {
       const response = await fetch('/assets/data/content.json', { cache: 'no-store' });
       const data = await response.json();
-      return (data[type] || []).filter((item) => item.published !== false);
+      const today = new Date().toISOString().slice(0, 10);
+      return (data[type] || [])
+        .filter((item) => item.published !== false)
+        .filter((item) => type !== 'events' || !item.date || item.date >= today);
     } catch (error) {
       return [];
     }

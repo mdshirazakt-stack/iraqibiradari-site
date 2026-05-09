@@ -74,6 +74,29 @@
     mix-blend-mode: multiply;
     filter: drop-shadow(0 2px 5px rgba(32, 28, 23, 0.12));
   }
+  .event-alert {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .event-alert::before {
+    content: "";
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    background: #ead7a2;
+    box-shadow: 0 0 0 0 rgba(234, 215, 162, 0.72);
+    animation: eventPulse 1.5s ease-out infinite;
+  }
+  @keyframes eventPulse {
+    0% { box-shadow: 0 0 0 0 rgba(234, 215, 162, 0.72); }
+    70% { box-shadow: 0 0 0 10px rgba(234, 215, 162, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(234, 215, 162, 0); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .event-alert::before { animation: none; }
+  }
 </style>
 </head>
 <body class="font-body text-archive-ink antialiased">
@@ -97,6 +120,7 @@
         <a class="hover:text-archive-green" href="/about/">About</a>
         <a class="hover:text-archive-green" href="#preserve">Heritage</a>
         <a class="hover:text-archive-green" href="https://apnonkitalash.com/">Shajra</a>
+        <a class="hover:text-archive-green" href="/announcements/">Announcements</a>
         <a class="hover:text-archive-green" href="/events/">Events</a>
         <a class="hover:text-archive-green" href="/documents/">Documents</a>
         <a class="hover:text-archive-green" href="/videos/">Videos</a>
@@ -301,6 +325,7 @@
       </div>
       <div class="flex flex-wrap gap-4 text-xs font-black uppercase tracking-[0.12em] text-[#d8cfbf]">
         <a class="hover:text-archive-goldSoft" href="https://apnonkitalash.com/">Shajra</a>
+        <a class="hover:text-archive-goldSoft" href="/announcements/">Announcements</a>
         <a class="hover:text-archive-goldSoft" href="/documents/">Documents</a>
         <a class="hover:text-archive-goldSoft" href="/events/">Events</a>
         <a class="hover:text-archive-goldSoft" href="/contact/">Contact</a>
