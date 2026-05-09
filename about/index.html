@@ -3,8 +3,12 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>About — Apnon Ki Talash</title>
-<meta name="description" content="About Iraqi Biradari and the Apnon Ki Talash heritage platform."/>
+<title>About — Iraqi Biradari</title>
+<meta name="description" content="About Iraqi Biradari, its history, origin, settlement, and heritage archive."/>
+<link rel="icon" href="/iraqi_biradari_favicon.ico" sizes="any"/>
+<link rel="icon" type="image/png" sizes="32x32" href="/iraqi_biradari_favicon_32x32.png"/>
+<link rel="icon" type="image/png" sizes="16x16" href="/iraqi_biradari_favicon_16x16.png"/>
+<link rel="apple-touch-icon" href="/Iraquibiradari-final-logo-2.png"/>
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
   tailwind.config={theme:{extend:{colors:{archive:{cream:'#fbf7ed',paper:'#f3ead8',green:'#173f31',moss:'#496b4a',gold:'#b99045',goldSoft:'#ead7a2',ink:'#201c17',muted:'#746b5f',line:'#ded2bc',maroon:'#743a32'}},fontFamily:{body:['Lato','Arial','sans-serif'],display:['Amiri','serif']},boxShadow:{soft:'0 18px 45px rgba(32,28,23,.12)'}}}};
@@ -12,46 +16,136 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet"/>
+<style>
+  .manuscript-border {
+    background-image:
+      linear-gradient(90deg, rgba(185, 144, 69, 0.42) 1px, transparent 1px),
+      linear-gradient(rgba(185, 144, 69, 0.22) 1px, transparent 1px);
+    background-size: 34px 34px;
+  }
+  .brand-mark {
+    mix-blend-mode: multiply;
+    filter: drop-shadow(0 2px 5px rgba(32, 28, 23, 0.12));
+  }
+</style>
 </head>
 <body class="bg-archive-cream font-body text-archive-ink antialiased">
   <header class="border-b border-archive-line bg-archive-cream/95 shadow-soft">
     <div class="mx-auto flex w-[min(1120px,calc(100%-36px))] flex-col gap-4 py-5 lg:flex-row lg:items-center lg:justify-between">
-      <a href="/" class="flex flex-col"><span class="font-display text-4xl font-bold leading-none text-archive-green">Apnon Ki Talash</span><span class="mt-1 text-xs font-black uppercase tracking-[0.18em] text-archive-muted">Iraqi Biradari Heritage Platform</span></a>
-      <nav class="flex flex-wrap gap-x-5 gap-y-2 text-xs font-black uppercase tracking-[0.12em] text-archive-muted">
-        <a class="text-archive-green" href="/about/">About</a><a class="hover:text-archive-green" href="/events/">Events</a><a class="hover:text-archive-green" href="/documents/">Documents</a><a class="hover:text-archive-green" href="/videos/">Videos</a><a class="hover:text-archive-green" href="https://apnonkitalash.com/">Shijra</a><a class="hover:text-archive-green" href="/contact/">Contact</a>
+      <a href="/" class="flex items-center gap-3" aria-label="Iraqi Biradari home">
+        <img class="brand-mark h-14 w-14 rounded object-cover" src="/Iraquibiradari-final-logo-2.png" alt="Iraqi Biradari logo"/>
+        <span class="flex flex-col">
+          <span class="font-display text-4xl font-bold leading-none text-archive-green">Iraqi Biradari</span>
+          <span class="mt-1 text-xs font-black uppercase tracking-[0.18em] text-archive-muted">Iraqi Biradari Heritage Platform</span>
+        </span>
+      </a>
+      <nav class="flex flex-wrap gap-x-5 gap-y-2 text-xs font-black uppercase tracking-[0.12em] text-archive-muted" aria-label="Main navigation">
+        <a class="text-archive-green" href="/about/">About</a>
+        <a class="hover:text-archive-green" href="/events/">Events</a>
+        <a class="hover:text-archive-green" href="/documents/">Documents</a>
+        <a class="hover:text-archive-green" href="/videos/">Videos</a>
+        <a class="hover:text-archive-green" href="https://apnonkitalash.com/">Shajra</a>
+        <a class="hover:text-archive-green" href="/contact/">Contact</a>
       </nav>
     </div>
   </header>
+
   <main>
-    <section class="border-b border-archive-line bg-archive-green py-20 text-archive-cream">
-      <div class="mx-auto w-[min(1120px,calc(100%-36px))]">
-        <p class="text-xs font-black uppercase tracking-[0.18em] text-archive-goldSoft">About the Community</p>
-        <h1 class="mt-4 max-w-4xl font-display text-6xl font-bold leading-none text-white">Iraqi Biradari history, memory, and kinship.</h1>
-        <p class="mt-6 max-w-3xl text-lg leading-8 text-archive-paper">This page collects the community introduction and gives it a calmer archival home, separate from the genealogy explorer.</p>
+    <section class="relative overflow-hidden border-b border-archive-line bg-archive-green py-20 text-archive-cream">
+      <div class="absolute inset-0 manuscript-border opacity-15" aria-hidden="true"></div>
+      <div class="relative mx-auto grid w-[min(1120px,calc(100%-36px))] gap-8 lg:grid-cols-[1fr_0.7fr] lg:items-end">
+        <div>
+          <p class="text-xs font-black uppercase tracking-[0.18em] text-archive-goldSoft">About the Community</p>
+          <h1 class="mt-4 max-w-4xl font-display text-6xl font-bold leading-none text-white">Iraqi Biradari history, origin, and settlement.</h1>
+          <p class="mt-6 max-w-3xl text-lg leading-8 text-archive-paper">A source-backed introduction to the community, adapted for this heritage archive and credited to Wikipedia contributors.</p>
+        </div>
+        <aside class="border border-archive-gold/45 bg-[#102d24] p-5">
+          <p class="text-xs font-black uppercase tracking-[0.16em] text-archive-goldSoft">Also Known As</p>
+          <p class="mt-3 font-display text-3xl font-bold text-white">Iraqi Biradri</p>
+          <p class="mt-2 text-archive-paper">Iraqi Shaikh</p>
+          <p class="mt-2 text-archive-goldSoft" lang="ur" dir="rtl">العراقي برادری</p>
+        </aside>
       </div>
     </section>
+
     <section class="py-20">
-      <div class="mx-auto grid w-[min(1120px,calc(100%-36px))] gap-10 lg:grid-cols-[0.9fr_1.1fr]">
-        <aside class="border border-archive-line bg-white p-6">
-          <p class="text-xs font-black uppercase tracking-[0.16em] text-archive-gold">Platform Principle</p>
-          <p class="mt-4 text-archive-muted">The <a class="font-bold text-archive-green underline decoration-archive-gold underline-offset-4" href="https://apnonkitalash.com/">Shijra</a> remains isolated from the public content system so lineage research can evolve safely.</p>
+      <div class="mx-auto grid w-[min(1120px,calc(100%-36px))] gap-10 lg:grid-cols-[0.82fr_1.18fr]">
+        <aside class="space-y-5">
+          <div class="border border-archive-line bg-white p-6">
+            <p class="text-xs font-black uppercase tracking-[0.16em] text-archive-gold">At a Glance</p>
+            <dl class="mt-5 space-y-4">
+              <div>
+                <dt class="text-xs font-black uppercase tracking-[0.14em] text-archive-muted">Community</dt>
+                <dd class="mt-1 font-bold text-archive-green">Sunni Muslim community in India</dd>
+              </div>
+              <div>
+                <dt class="text-xs font-black uppercase tracking-[0.14em] text-archive-muted">Languages</dt>
+                <dd class="mt-1 font-bold text-archive-green">Urdu, Hindi, Bhojpuri, English</dd>
+              </div>
+              <div>
+                <dt class="text-xs font-black uppercase tracking-[0.14em] text-archive-muted">Primary Region</dt>
+                <dd class="mt-1 font-bold text-archive-green">Eastern Uttar Pradesh</dd>
+              </div>
+            </dl>
+          </div>
+          <div class="border border-archive-line bg-archive-paper p-6">
+            <p class="text-xs font-black uppercase tracking-[0.16em] text-archive-gold">Platform Principle</p>
+            <p class="mt-4 leading-7 text-archive-muted">The <a class="font-bold text-archive-green underline decoration-archive-gold underline-offset-4" href="https://apnonkitalash.com/">Shajra</a> remains isolated from the public content system so lineage research can evolve safely.</p>
+          </div>
         </aside>
-        <div class="space-y-5 text-[1.03rem] leading-8 text-archive-muted">
-          <p>Iraqi Biradari, <span lang="ur" dir="rtl">العراقي برادری</span>, or Iraqi Tamimi is a Sunni Muslim community in India. Community history connects the Biradari with Bani Tamim, migration through Sindh, and later settlement in Eastern Uttar Pradesh.</p>
-          <p>According to community references, Bani Tamim families from Southern Iraq and Syria settled in Sindh after migration. Later, members of the community moved toward Eastern Uttar Pradesh for trade and social reasons.</p>
-          <p>The Biradari preserves identity through family records, community gatherings, documents, books, oral histories, and the family <a class="font-bold text-archive-green underline decoration-archive-gold underline-offset-4" href="https://apnonkitalash.com/">Shijra</a>.</p>
-          <p>This platform is designed as a heritage institution: a stable place to preserve archival material and make it easier for families to find, read, and share community memory.</p>
+
+        <div class="space-y-10">
+          <article class="space-y-5 text-[1.03rem] leading-8 text-archive-muted">
+            <h2 class="font-display text-4xl font-bold leading-tight text-archive-green">Identity and settlement</h2>
+            <p>Iraqi Biradari is described as a Sunni Muslim community found chiefly in the Ghazipur, Azamgarh, Ballia, Deoria, and Gorakhpur districts of eastern Uttar Pradesh, India. The community is also referred to as Iraqi Shaikh.</p>
+            <p>The article records Urdu, Hindi, Bhojpuri, and English among the languages associated with the community, with Islam and Sunni practice listed as its religious identity.</p>
+          </article>
+
+          <article class="space-y-5 text-[1.03rem] leading-8 text-archive-muted">
+            <h2 class="font-display text-4xl font-bold leading-tight text-archive-green">History and origin</h2>
+            <p>Wikipedia summarizes Iraqi Biradari as a descendant population of immigrants from Iraq, with later settlement in Ghazipur during the Delhi Sultanate period. The article connects this history with Sayyid Masud Al Hussaini and his family, and notes a broad community origin roughly seven centuries ago.</p>
+            <p>It also notes that older family lines are preserved in distinct family trees across several towns and villages. This is why the public heritage site and the separate <a class="font-bold text-archive-green underline decoration-archive-gold underline-offset-4" href="https://apnonkitalash.com/">Shajra</a> explorer belong together as companion efforts, while remaining technically separate.</p>
+          </article>
+
+          <article class="space-y-5 text-[1.03rem] leading-8 text-archive-muted">
+            <h2 class="font-display text-4xl font-bold leading-tight text-archive-green">Migration and wider presence</h2>
+            <p>The article mentions historic Iraqi populations in eastern Uttar Pradesh, including Lar, and notes that Iraqi families also migrated to Karachi, Pakistan after Indian independence in 1947.</p>
+            <p>This archive will continue to preserve public community material, documents, meeting records, books, and oral memory so that historical identity and family knowledge remain easier to find.</p>
+          </article>
         </div>
       </div>
     </section>
+
     <section class="border-y border-archive-line bg-white py-16">
       <div class="mx-auto grid w-[min(1120px,calc(100%-36px))] gap-5 md:grid-cols-3">
-        <div class="border-l-4 border-archive-gold pl-5"><h2 class="font-black uppercase tracking-[0.12em] text-archive-green">Lineage</h2><p class="mt-3 text-archive-muted">Preserve family connections and make them searchable through the existing explorer.</p></div>
-        <div class="border-l-4 border-archive-gold pl-5"><h2 class="font-black uppercase tracking-[0.12em] text-archive-green">Archive</h2><p class="mt-3 text-archive-muted">Collect books, PDFs, videos, reports, and announcements in a permanent structure.</p></div>
-        <div class="border-l-4 border-archive-gold pl-5"><h2 class="font-black uppercase tracking-[0.12em] text-archive-green">Community</h2><p class="mt-3 text-archive-muted">Support events, membership references, and future public updates.</p></div>
+        <div class="border-l-4 border-archive-gold pl-5">
+          <h2 class="font-black uppercase tracking-[0.12em] text-archive-green">Lineage</h2>
+          <p class="mt-3 text-archive-muted">Preserve family connections through the existing <a class="font-bold text-archive-green underline decoration-archive-gold underline-offset-4" href="https://apnonkitalash.com/">Shajra</a> explorer.</p>
+        </div>
+        <div class="border-l-4 border-archive-gold pl-5">
+          <h2 class="font-black uppercase tracking-[0.12em] text-archive-green">Archive</h2>
+          <p class="mt-3 text-archive-muted">Collect books, PDFs, videos, reports, and announcements in a permanent structure.</p>
+        </div>
+        <div class="border-l-4 border-archive-gold pl-5">
+          <h2 class="font-black uppercase tracking-[0.12em] text-archive-green">Community</h2>
+          <p class="mt-3 text-archive-muted">Support events, membership references, and future public updates.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="py-14">
+      <div class="mx-auto w-[min(1120px,calc(100%-36px))] border border-archive-line bg-archive-paper p-6">
+        <p class="text-xs font-black uppercase tracking-[0.16em] text-archive-gold">Source Credit</p>
+        <p class="mt-3 leading-7 text-archive-muted">This page summarizes and adapts information from <a class="font-bold text-archive-green underline decoration-archive-gold underline-offset-4" href="https://en.wikipedia.org/wiki/Iraqi_Biradari" target="_blank" rel="noopener">“Iraqi Biradari,” Wikipedia</a>, accessed May 10, 2026. Wikipedia text is available under the <a class="font-bold text-archive-green underline decoration-archive-gold underline-offset-4" href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener">Creative Commons Attribution-ShareAlike License</a>; the wording here has been condensed and rewritten for the Iraqi Biradari heritage archive.</p>
       </div>
     </section>
   </main>
-  <footer class="bg-[#17130f] py-9 text-archive-paper"><div class="mx-auto flex w-[min(1120px,calc(100%-36px))] flex-wrap items-center justify-between gap-5"><p class="font-display text-3xl font-bold text-archive-goldSoft">Apnon Ki Talash</p><a class="text-xs font-black uppercase tracking-[0.12em] hover:text-archive-goldSoft" href="https://apnonkitalash.com/">Open Shijra</a></div></footer>
+
+  <footer class="bg-[#17130f] py-9 text-archive-paper">
+    <div class="mx-auto flex w-[min(1120px,calc(100%-36px))] flex-wrap items-center justify-between gap-5">
+      <p class="font-display text-3xl font-bold text-archive-goldSoft">Iraqi Biradari</p>
+      <a class="text-xs font-black uppercase tracking-[0.12em] hover:text-archive-goldSoft" href="https://apnonkitalash.com/">Open Shajra</a>
+    </div>
+  </footer>
 </body>
 </html>
