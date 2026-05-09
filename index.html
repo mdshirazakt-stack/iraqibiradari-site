@@ -3,8 +3,12 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Apnon Ki Talash — Iraqi Biradari Heritage Platform</title>
+<title>Iraqi Biradari</title>
 <meta name="description" content="A digital heritage platform preserving Iraqi Biradari lineage, history, documents, videos, events, and archival material."/>
+<link rel="icon" href="/iraqi_biradari_favicon.ico" sizes="any"/>
+<link rel="icon" type="image/png" sizes="32x32" href="/iraqi_biradari_favicon_32x32.png"/>
+<link rel="icon" type="image/png" sizes="16x16" href="/iraqi_biradari_favicon_16x16.png"/>
+<link rel="apple-touch-icon" href="/Iraquibiradari-final-logo-2.png"/>
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
   tailwind.config = {
@@ -61,21 +65,33 @@
     background: #b99045;
     vertical-align: middle;
   }
+  .logo-panel {
+    background:
+      radial-gradient(circle at top, rgba(234, 215, 162, 0.36), transparent 38%),
+      #fbf7ed;
+  }
+  .brand-mark {
+    mix-blend-mode: multiply;
+    filter: drop-shadow(0 2px 5px rgba(32, 28, 23, 0.12));
+  }
 </style>
 </head>
 <body class="font-body text-archive-ink antialiased">
   <div class="bg-archive-maroon text-archive-cream">
     <div class="mx-auto flex min-h-11 w-[min(1120px,calc(100%-36px))] flex-col justify-center gap-1 py-2 text-sm md:flex-row md:items-center md:justify-between md:gap-6">
-      <a class="font-bold underline decoration-archive-goldSoft underline-offset-4" href="https://forms.gle/EBSTYKkYU588i6tA8" target="_blank" rel="noopener">International Webinar: Iraqi - Apno Ki Talash | Click to Register</a>
+      <a class="font-bold underline decoration-archive-goldSoft underline-offset-4" href="https://forms.gle/EBSTYKkYU588i6tA8" target="_blank" rel="noopener">International Webinar: Iraqi Biradari | Click to Register</a>
       <a class="font-bold" href="tel:+918789034923">+91 87890 34923</a>
     </div>
   </div>
 
   <header class="sticky top-0 z-30 border-b border-archive-line bg-archive-cream/95 shadow-soft backdrop-blur">
     <div class="mx-auto flex w-[min(1120px,calc(100%-36px))] flex-col gap-4 py-5 lg:flex-row lg:items-center lg:justify-between">
-      <a href="/" class="flex flex-col" aria-label="Apnon Ki Talash home">
-        <span class="font-display text-4xl font-bold leading-none text-archive-green">Apnon Ki Talash</span>
-        <span class="mt-1 text-xs font-black uppercase tracking-[0.18em] text-archive-muted">Iraqi Biradari Heritage Platform</span>
+      <a href="/" class="flex items-center gap-3" aria-label="Iraqi Biradari home">
+        <img class="brand-mark h-14 w-14 rounded object-cover" src="/Iraquibiradari-final-logo-2.png" alt="Iraqi Biradari logo"/>
+        <span class="flex flex-col">
+          <span class="font-display text-4xl font-bold leading-none text-archive-green">Iraqi Biradari</span>
+          <span class="mt-1 text-xs font-black uppercase tracking-[0.18em] text-archive-muted">Iraqi Biradari Heritage Platform</span>
+        </span>
       </a>
       <nav class="flex flex-wrap gap-x-5 gap-y-2 text-xs font-black uppercase tracking-[0.12em] text-archive-muted" aria-label="Main navigation">
         <a class="hover:text-archive-green" href="/about/">About</a>
@@ -90,34 +106,33 @@
   </header>
 
   <main>
-    <section class="relative border-b border-archive-line bg-archive-green text-archive-cream">
+    <section class="relative overflow-hidden border-b border-archive-line bg-archive-green text-archive-cream">
       <div class="absolute inset-0 manuscript-border opacity-15" aria-hidden="true"></div>
-      <div class="relative mx-auto grid min-h-[620px] w-[min(1120px,calc(100%-36px))] items-center gap-10 py-20 lg:grid-cols-[1.05fr_0.95fr]">
+      <div class="relative mx-auto grid min-h-[680px] w-[min(1120px,calc(100%-36px))] items-center gap-10 py-16 lg:grid-cols-[0.95fr_1.05fr]">
         <div>
           <p class="arch-rule text-xs font-black uppercase tracking-[0.18em] text-archive-goldSoft">Since 1955</p>
           <h1 class="mt-5 font-display text-6xl font-bold leading-none text-white md:text-7xl">Iraqi Biradari <span class="block text-archive-goldSoft" lang="ur" dir="rtl">العراقي برادری</span></h1>
-          <p class="mt-7 max-w-2xl text-lg leading-8 text-[#f3ead8]">A digital home for lineage, community memory, documents, events, videos, and archival material of the Iraqi Biradari.</p>
+          <p class="mt-7 max-w-2xl text-lg leading-8 text-[#f3ead8]">A calm digital home for community memory, documents, events, videos, and archival material of the Iraqi Biradari community in India.</p>
           <div class="mt-9 flex flex-wrap gap-3">
             <a class="inline-flex min-h-12 items-center justify-center border border-archive-gold bg-archive-gold px-6 text-sm font-black uppercase tracking-[0.12em] text-archive-ink hover:bg-archive-goldSoft" href="https://apnonkitalash.com/">Explore Shijra</a>
-            <a class="inline-flex min-h-12 items-center justify-center border border-archive-goldSoft px-6 text-sm font-black uppercase tracking-[0.12em] text-archive-cream hover:bg-archive-cream hover:text-archive-green" href="#preserve">View Archive Plan</a>
+            <a class="inline-flex min-h-12 items-center justify-center border border-archive-goldSoft px-6 text-sm font-black uppercase tracking-[0.12em] text-archive-cream hover:bg-archive-cream hover:text-archive-green" href="#preserve">View Heritage Archive</a>
           </div>
         </div>
-        <div class="border border-archive-gold/50 bg-[#102d24] p-5 shadow-soft">
-          <div class="border border-archive-gold/40 bg-archive-cream p-6 text-archive-ink">
-            <p class="font-display text-3xl font-bold text-archive-green">"Assalaamu Alaikum"</p>
-            <p class="mt-4 text-archive-muted">Welcome to Anjuman Iraqi Biradari. This platform begins with the strongest existing asset: the genealogy explorer, preserved separately at <a class="font-bold text-archive-green underline decoration-archive-gold underline-offset-4" href="https://apnonkitalash.com/">apnonkitalash.com</a>.</p>
+        <div class="border border-archive-gold/50 bg-[#102d24] p-4 shadow-soft">
+          <div class="logo-panel min-h-[430px] border border-archive-gold/40 bg-archive-cream p-6 text-archive-ink">
+            <img class="mx-auto max-h-[340px] w-full object-contain drop-shadow-xl" src="/Iraquibiradari-final-logo.png" alt="Iraqi Biradari community logo"/>
             <dl class="mt-7 grid gap-4 border-t border-archive-line pt-5">
               <div>
-                <dt class="text-xs font-black uppercase tracking-[0.14em] text-archive-gold">Primary Asset</dt>
-                <dd class="mt-1 font-bold">Genealogy visualization system</dd>
+                <dt class="text-xs font-black uppercase tracking-[0.14em] text-archive-gold">Community</dt>
+                <dd class="mt-1 font-bold">Anjuman Iraqi Biradari</dd>
               </div>
               <div>
                 <dt class="text-xs font-black uppercase tracking-[0.14em] text-archive-gold">Platform Scope</dt>
                 <dd class="mt-1 font-bold">Heritage, documents, videos, events, announcements</dd>
               </div>
               <div>
-                <dt class="text-xs font-black uppercase tracking-[0.14em] text-archive-gold">Architecture</dt>
-                <dd class="mt-1 font-bold">Public site, <a class="text-archive-green underline decoration-archive-gold underline-offset-4" href="https://apnonkitalash.com/">Shijra</a>, and admin kept separate</dd>
+                <dt class="text-xs font-black uppercase tracking-[0.14em] text-archive-gold">Lineage Tool</dt>
+                <dd class="mt-1 font-bold">Shijra remains available separately at <a class="text-archive-green underline decoration-archive-gold underline-offset-4" href="https://apnonkitalash.com/">apnonkitalash.com</a></dd>
               </div>
             </dl>
           </div>
@@ -185,7 +200,7 @@
         <div class="mt-10 grid gap-5 md:grid-cols-3">
           <article class="border border-archive-line bg-white p-6">
             <p class="text-xs font-black uppercase tracking-[0.14em] text-archive-gold">Webinar</p>
-            <h3 class="mt-3 text-xl font-black text-archive-green">Iraqi - Apno Ki Talash</h3>
+            <h3 class="mt-3 text-xl font-black text-archive-green">Iraqi Biradari Webinar</h3>
             <p class="mt-4 text-archive-muted">International webinar and community registration reference from the existing site.</p>
             <a class="mt-5 inline-flex font-black text-archive-maroon underline underline-offset-4" href="https://forms.gle/EBSTYKkYU588i6tA8" target="_blank" rel="noopener">Register</a>
           </article>
@@ -281,7 +296,7 @@
   <footer class="bg-[#17130f] py-9 text-archive-paper">
     <div class="mx-auto flex w-[min(1120px,calc(100%-36px))] flex-col gap-5 md:flex-row md:items-center md:justify-between">
       <div>
-        <p class="font-display text-3xl font-bold text-archive-goldSoft">Apnon Ki Talash</p>
+        <p class="font-display text-3xl font-bold text-archive-goldSoft">Iraqi Biradari</p>
         <p class="mt-1 text-sm text-[#bdb2a3]">Copyright © 2026 iraqibiradari. All Rights Reserved.</p>
       </div>
       <div class="flex flex-wrap gap-4 text-xs font-black uppercase tracking-[0.12em] text-[#d8cfbf]">
