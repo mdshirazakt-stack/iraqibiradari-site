@@ -60,8 +60,8 @@ import { createSupabaseClient } from './supabase-config.js';
         .from(type)
         .select('*')
         .eq('published', true)
-        .order(orderColumn, { ascending: type === 'events', nullsFirst: false })
-        .order('sort_order', { ascending: false });
+        .order('sort_order', { ascending: false })
+        .order(orderColumn, { ascending: type === 'events', nullsFirst: false });
       if (type === 'events') query = query.gte('event_date', new Date().toISOString().slice(0, 10));
       const { data, error } = await query;
       if (error) throw error;
@@ -78,7 +78,14 @@ import { createSupabaseClient } from './supabase-config.js';
       const today = new Date().toISOString().slice(0, 10);
       return (data[type] || [])
         .filter((item) => item.published !== false)
-        .filter((item) => type !== 'events' || !item.date || item.date >= today);
+        .filter((item) => type !== 'events' || !item.date || item.date >= today)
+        .sort((a, b) => {
+          const orderDifference = Number(b.sortOrder || b.sort_order || 0) - Number(a.sortOrder || a.sort_order || 0);
+          if (orderDifference) return orderDifference;
+          const aDate = a.date || '';
+          const bDate = b.date || '';
+          return type === 'events' ? aDate.localeCompare(bDate) : bDate.localeCompare(aDate);
+        });
     } catch (error) {
       return [];
     }
@@ -95,7 +102,8 @@ import { createSupabaseClient } from './supabase-config.js';
       url: row.url,
       registrationUrl: row.registration_url,
       date: row.event_date || row.video_date || row.date,
-      published: row.published
+      published: row.published,
+      sortOrder: row.sort_order
     };
   }
 

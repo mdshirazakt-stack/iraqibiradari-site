@@ -10,11 +10,19 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
   const form = document.querySelector('[data-admin-form]');
   const list = document.querySelector('[data-admin-list]');
   const typeSelect = document.querySelector('[name="type"]');
-  const registrationRow = document.querySelector('[data-registration-row]');
   const seedButton = document.querySelector('[data-seed-json]');
+  const fieldRows = {
+    category: document.querySelector('[data-field="category"]'),
+    itemType: document.querySelector('[data-field="itemType"]'),
+    url: document.querySelector('[data-field="url"]'),
+    registrationUrl: document.querySelector('[data-field="registrationUrl"]'),
+    date: document.querySelector('[data-field="date"]'),
+    sortOrder: document.querySelector('[data-field="sortOrder"]')
+  };
   if (!authPanel || !adminPanel || !form || !list) return;
 
   let currentType = typeSelect.value;
+  updateFieldVisibility();
 
   const { data: sessionData } = await supabase.auth.getSession();
   await reflectSession(sessionData.session);
@@ -41,7 +49,7 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
 
   typeSelect.addEventListener('change', () => {
     currentType = typeSelect.value;
-    registrationRow.hidden = currentType !== 'events';
+    updateFieldVisibility();
     renderList();
   });
 
@@ -59,6 +67,8 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
 
     form.reset();
     form.elements.published.checked = true;
+    form.elements.sortOrder.value = '0';
+    updateFieldVisibility();
     setStatus('Saved.');
     await renderList();
   });
@@ -79,6 +89,13 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
       const published = button.dataset.published !== 'true';
       const { error } = await supabase.from(table).update({ published }).eq('id', id);
       setStatus(error ? error.message : 'Updated.');
+    }
+
+    if (action === 'move') {
+      const sortOrder = Number(button.dataset.sortOrder || 0);
+      const delta = Number(button.dataset.delta || 0);
+      const { error } = await supabase.from(table).update({ sort_order: sortOrder + delta }).eq('id', id);
+      setStatus(error ? error.message : 'Display order updated.');
     }
 
     await renderList();
@@ -119,6 +136,7 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
     const { data, error } = await supabase
       .from(currentType)
       .select('*')
+      .order('sort_order', { ascending: false })
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -128,12 +146,16 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
 
     list.innerHTML = (data || []).map((row) => {
       const date = row.date || row.event_date || row.video_date || '';
+      const sortOrder = Number(row.sort_order || 0);
       return `
         <article class="border border-archive-line bg-white p-5">
           <p class="text-xs font-black uppercase tracking-[0.14em] text-archive-gold">${escapeHtml(row.category || row.content_type || date || 'Archive')}</p>
           <h2 class="mt-2 text-xl font-black text-archive-green">${escapeHtml(row.title)}</h2>
+          <p class="mt-2 text-xs font-black uppercase tracking-[0.12em] text-archive-muted">Display order: ${sortOrder}</p>
           <p class="mt-3 text-sm leading-6 text-archive-muted">${escapeHtml(row.description || row.body || '')}</p>
           <div class="mt-4 flex flex-wrap gap-2">
+            <button data-action="move" data-table="${currentType}" data-id="${escapeHtml(row.id)}" data-sort-order="${sortOrder}" data-delta="1" class="border border-archive-line px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-archive-green" type="button">Move up</button>
+            <button data-action="move" data-table="${currentType}" data-id="${escapeHtml(row.id)}" data-sort-order="${sortOrder}" data-delta="-1" class="border border-archive-line px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-archive-muted" type="button">Move down</button>
             <button data-action="toggle" data-table="${currentType}" data-id="${escapeHtml(row.id)}" data-published="${row.published}" class="border border-archive-gold px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-archive-green" type="button">${row.published ? 'Unpublish' : 'Publish'}</button>
             <button data-action="delete" data-table="${currentType}" data-id="${escapeHtml(row.id)}" class="border border-archive-line px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-archive-muted" type="button">Delete</button>
           </div>
@@ -149,7 +171,8 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
       category: String(data.get('category') || '').trim() || null,
       description: String(data.get('description') || '').trim() || null,
       url: String(data.get('url') || '').trim() || null,
-      published: data.get('published') === 'on'
+      published: data.get('published') === 'on',
+      sort_order: Number(data.get('sortOrder') || 0)
     };
 
     if (table === 'announcements') {
@@ -157,8 +180,9 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
         id: base.id,
         title: base.title,
         body: base.description,
-        date: String(data.get('date') || '') || null,
-        published: base.published
+        date: null,
+        published: base.published,
+        sort_order: base.sort_order
       };
     }
 
@@ -192,6 +216,7 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
       ['registrationUrl', item.registrationUrl],
       ['date', item.date],
       ['itemType', item.type],
+      ['sortOrder', item.sortOrder || item.sort_order || 0],
       ['published', item.published === false ? '' : 'on']
     ]);
     const payload = formPayload({ get: (key) => data.get(key) }, table);
@@ -201,6 +226,25 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
 
   function setStatus(message) {
     status.textContent = message || '';
+  }
+
+  function updateFieldVisibility() {
+    currentType = typeSelect.value;
+    const visibleByType = {
+      documents: ['category', 'itemType', 'url', 'sortOrder'],
+      videos: ['category', 'url', 'sortOrder'],
+      events: ['category', 'registrationUrl', 'date', 'sortOrder'],
+      announcements: ['sortOrder']
+    };
+    const visible = new Set(visibleByType[currentType] || []);
+    for (const [name, row] of Object.entries(fieldRows)) {
+      if (!row) continue;
+      const isVisible = visible.has(name);
+      row.hidden = !isVisible;
+      row.querySelectorAll('input, textarea, select').forEach((control) => {
+        control.disabled = !isVisible;
+      });
+    }
   }
 
   function slugify(value) {

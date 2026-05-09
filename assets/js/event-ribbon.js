@@ -25,6 +25,7 @@ import { createSupabaseClient } from './supabase-config.js';
         .eq('published', true)
         .not('registration_url', 'is', null)
         .gte('event_date', new Date().toISOString().slice(0, 10))
+        .order('sort_order', { ascending: false })
         .order('event_date', { ascending: true, nullsFirst: false })
         .limit(1);
       if (error) throw error;
