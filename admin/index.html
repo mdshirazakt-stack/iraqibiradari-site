@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Admin — Iraqi Biradari</title>
+<link rel="icon" href="/iraqi_biradari_favicon.ico" sizes="any"/>
+<link rel="icon" type="image/png" sizes="32x32" href="/iraqi_biradari_favicon_32x32.png"/>
+<link rel="icon" type="image/png" sizes="16x16" href="/iraqi_biradari_favicon_16x16.png"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={theme:{extend:{colors:{archive:{cream:'#fbf7ed',paper:'#f3ead8',green:'#173f31',gold:'#b99045',goldSoft:'#ead7a2',ink:'#201c17',muted:'#746b5f',line:'#ded2bc',maroon:'#743a32'}},fontFamily:{body:['Lato','Arial','sans-serif'],display:['Amiri','serif']},boxShadow:{soft:'0 18px 45px rgba(32,28,23,.12)'}}}};</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"/><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/><link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet"/>
+</head>
+<body class="bg-archive-cream font-body text-archive-ink">
+  <header class="border-b border-archive-line bg-archive-cream/95 shadow-soft">
+    <div class="mx-auto flex w-[min(1120px,calc(100%-36px))] flex-col gap-4 py-5 lg:flex-row lg:items-center lg:justify-between">
+      <a href="/" class="font-display text-4xl font-bold leading-none text-archive-green">Iraqi Biradari</a>
+      <nav class="flex flex-wrap gap-x-5 gap-y-2 text-xs font-black uppercase tracking-[0.12em] text-archive-muted">
+        <a class="hover:text-archive-green" href="/">Home</a>
+        <a class="hover:text-archive-green" href="/documents/">Documents</a>
+        <a class="hover:text-archive-green" href="/videos/">Videos</a>
+        <a class="hover:text-archive-green" href="/events/">Events</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="bg-archive-green py-16 text-archive-cream">
+      <div class="mx-auto w-[min(1120px,calc(100%-36px))]">
+        <p class="text-xs font-black uppercase tracking-[0.18em] text-archive-goldSoft">Admin Console</p>
+        <h1 class="mt-4 max-w-4xl font-display text-6xl font-bold leading-none text-white">Curate archive content.</h1>
+        <p class="mt-6 max-w-3xl text-lg leading-8 text-archive-paper">Add videos, meeting notes, documents, events, and announcements. Access is restricted through Supabase Auth.</p>
+      </div>
+    </section>
+
+    <section class="py-12">
+      <div class="mx-auto w-[min(1120px,calc(100%-36px))]">
+        <p data-status class="mb-6 border-l-4 border-archive-gold bg-white p-4 text-sm font-bold text-archive-muted"></p>
+
+        <section data-auth-panel class="border border-archive-line bg-white p-6">
+          <h2 class="font-display text-3xl font-bold text-archive-green">Admin sign in</h2>
+          <p class="mt-3 max-w-2xl text-archive-muted">Use the Supabase Auth account for <strong>mdshiraz.ib@outlook.com</strong>. A magic sign-in link will be sent by email.</p>
+          <form data-login-form class="mt-5 flex flex-col gap-3 md:flex-row">
+            <input name="email" type="email" required value="mdshiraz.ib@outlook.com" class="min-h-12 flex-1 border border-archive-line bg-archive-cream px-4 text-archive-ink"/>
+            <button class="min-h-12 bg-archive-gold px-5 text-sm font-black uppercase tracking-[0.12em] text-archive-ink" type="submit">Send sign-in link</button>
+          </form>
+        </section>
+
+        <section data-admin-panel hidden class="grid gap-8 lg:grid-cols-[0.82fr_1.18fr]">
+        <form data-admin-form class="grid gap-4 border border-archive-line bg-white p-6">
+          <h2 class="font-display text-3xl font-bold text-archive-green">New entry</h2>
+          <label class="grid gap-2 text-sm font-bold text-archive-muted">Content type
+            <select name="type" class="border border-archive-line bg-archive-cream p-3 text-archive-ink">
+              <option value="documents">Document</option>
+              <option value="videos">Video</option>
+              <option value="events">Event</option>
+              <option value="announcements">Announcement</option>
+            </select>
+          </label>
+          <label class="grid gap-2 text-sm font-bold text-archive-muted">Title
+            <input name="title" required class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
+          </label>
+          <label class="grid gap-2 text-sm font-bold text-archive-muted">Category
+            <input name="category" placeholder="Books, Meeting Notes, Meeting Videos..." class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
+          </label>
+          <label class="grid gap-2 text-sm font-bold text-archive-muted">Document type
+            <input name="itemType" placeholder="PDF, Drive video, Notice..." class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
+          </label>
+          <label class="grid gap-2 text-sm font-bold text-archive-muted">Drive or public URL
+            <input name="url" type="url" class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
+          </label>
+          <label data-registration-row hidden class="grid gap-2 text-sm font-bold text-archive-muted">Registration URL
+            <input name="registrationUrl" type="url" class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
+          </label>
+          <label class="grid gap-2 text-sm font-bold text-archive-muted">Date
+            <input name="date" type="date" class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
+          </label>
+          <label class="grid gap-2 text-sm font-bold text-archive-muted">Description
+            <textarea name="description" rows="4" class="border border-archive-line bg-archive-cream p-3 text-archive-ink"></textarea>
+          </label>
+          <label class="flex items-center gap-3 text-sm font-bold text-archive-muted">
+            <input name="published" type="checkbox" checked class="h-5 w-5"/> Published
+          </label>
+          <button class="min-h-12 bg-archive-gold px-5 text-sm font-black uppercase tracking-[0.12em] text-archive-ink" type="submit">Save to Supabase</button>
+          <button data-logout class="min-h-12 border border-archive-line px-5 text-sm font-black uppercase tracking-[0.12em] text-archive-muted" type="button">Sign out</button>
+        </form>
+
+        <div class="grid gap-6">
+          <div data-admin-list class="grid gap-4 md:grid-cols-2"></div>
+          <div class="border border-archive-line bg-white p-6">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <h2 class="font-display text-3xl font-bold text-archive-green">Seed curated archive</h2>
+              <div class="flex flex-wrap gap-2">
+                <button data-seed-json class="border border-archive-gold px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-archive-green" type="button">Seed JSON to Supabase</button>
+              </div>
+            </div>
+            <p class="mt-3 text-sm leading-6 text-archive-muted">After running <code>supabase/schema.sql</code> in Supabase, use this once to copy the curated Drive starter data into the live tables. Public pages will read Supabase first and fall back to local JSON if tables are unavailable.</p>
+          </div>
+        </div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="/assets/js/admin.js"></script>
+</body>
+</html>

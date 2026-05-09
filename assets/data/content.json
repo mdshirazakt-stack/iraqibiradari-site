@@ -1,0 +1,139 @@
+{
+  "updatedAt": "2026-05-10",
+  "source": {
+    "title": "Biradare Old Books & Meeting Videos",
+    "url": "https://drive.google.com/drive/folders/1Dl5q9nluGUWuc8BVjZY1BvljlYN2j2lZ",
+    "note": "Curated from the public Google Drive folder. Irrelevant folders, loose photographs, receipts, duplicate files, and staging folders are intentionally excluded."
+  },
+  "announcements": [
+    {
+      "id": "archive-organization-started",
+      "title": "Archive organization has started",
+      "body": "Books, meeting notes, videos, and community records are being categorized from the existing public Drive collection.",
+      "date": "2026-05-10",
+      "published": true
+    }
+  ],
+  "events": [],
+  "documents": [
+    {
+      "id": "lar-nama-noorul-qamar-lari",
+      "title": "Lar Nama by Er. Noorul Qamar Lari",
+      "category": "Books",
+      "type": "PDF",
+      "url": "https://drive.google.com/file/d/1zGD0FaRtLnND7Sd2p98aspq1ZROomwBW/view?usp=drivesdk",
+      "description": "Community publication preserved from the old books archive.",
+      "published": true
+    },
+    {
+      "id": "maulana-mohibullah-lari-nadwi",
+      "title": "Maulana Mohibullah Lari Nadwi Hayat wa Khidmat",
+      "category": "Books",
+      "type": "PDF",
+      "url": "https://drive.google.com/file/d/1nXUUpT-Z0TQbw-STrxQX3E3qJHXsy2kX/view?usp=drivesdk",
+      "description": "Biographical/community publication from the Drive archive.",
+      "published": true
+    },
+    {
+      "id": "rodad-1903",
+      "title": "Rodad 1903",
+      "category": "Historical Documents",
+      "type": "PDF",
+      "url": "https://drive.google.com/file/d/1IRgmuy-DCLsxD9PhTbb8A31ViX_eViuL/view?usp=drivesdk",
+      "description": "Historical Rodad document from the Drive archive.",
+      "published": true
+    },
+    {
+      "id": "tujar-iraq-1",
+      "title": "Tujar Iraq - 1",
+      "category": "Books",
+      "type": "PDF",
+      "url": "https://drive.google.com/file/d/13xdCO551AV6WTURl4UAVFKZENepiQozj/view?usp=drivesdk",
+      "description": "Community reference book from the Drive archive.",
+      "published": true
+    },
+    {
+      "id": "trust-paper",
+      "title": "Trust Paper",
+      "category": "Trust Documents",
+      "type": "PDF",
+      "url": "https://drive.google.com/file/d/1qoi1JfbtwtOvndSWgpwEfE1h4uhjTUHh/view?usp=drivesdk",
+      "description": "Trust-related document from the Drive archive.",
+      "published": true
+    },
+    {
+      "id": "minutes-meeting-1",
+      "title": "Minutes of Meeting - 1",
+      "category": "Meeting Notes",
+      "type": "PDF",
+      "url": "https://drive.google.com/file/d/19XBOiBLhZhkKk-4tIkuk2VNrk8HGAhEp/view?usp=drivesdk",
+      "description": "Meeting minutes preserved as a PDF.",
+      "published": true
+    },
+    {
+      "id": "anjm-today-1955",
+      "title": "Anjm Today 1955",
+      "category": "Historical Documents",
+      "type": "PDF",
+      "url": "https://drive.google.com/file/d/1ncbO2-zt40Cuy7cU63_vbqswXJBxZZnk/view?usp=drivesdk",
+      "description": "Historical document from the Drive archive.",
+      "published": true
+    },
+    {
+      "id": "zakat-message",
+      "title": "Zakat Message",
+      "category": "Community Notices",
+      "type": "PDF",
+      "url": "https://drive.google.com/file/d/1xfH58BslG_ohNNzHq1w3tKyQEXimyBiO/view?usp=drivesdk",
+      "description": "Community notice preserved from the Drive archive.",
+      "published": true
+    }
+  ],
+  "videos": [
+    {
+      "id": "meeting-2025-02-27",
+      "title": "Meeting 27.02.2025",
+      "category": "Meeting Videos",
+      "url": "https://drive.google.com/file/d/1MxnttCds3XKX1yowsC403eqNcJjSeB42/view?usp=drivesdk",
+      "date": "2025-02-27",
+      "description": "Meeting video from the Drive archive.",
+      "published": true
+    },
+    {
+      "id": "tazkirul-quran-episode-1",
+      "title": "Tazkirul Quran Episode - 1",
+      "category": "Recorded Programs",
+      "url": "https://drive.google.com/file/d/1NClp6GrgH8xd_Z2nrXCAIafCIKfWVaKH/view?usp=drivesdk",
+      "date": "2025-03-06",
+      "description": "Recorded Tazkirul Quran program from the Drive archive.",
+      "published": true
+    },
+    {
+      "id": "monthly-meeting-2021-06-13",
+      "title": "Apno Ki Talash Monthly Meeting",
+      "category": "Meeting Videos",
+      "url": "https://drive.google.com/file/d/1jc6gD_hYwatXsozeIVCwi81qm1flXAXr/view?usp=drivesdk",
+      "date": "2021-06-13",
+      "description": "Monthly meeting video from the Drive archive.",
+      "published": true
+    },
+    {
+      "id": "meeting-2021-01-31",
+      "title": "Meeting 2021-01-31",
+      "category": "Meeting Videos",
+      "url": "https://drive.google.com/file/d/10OUpXDteFelkt2td3F_obcH8zrCx03ZF/view?usp=drivesdk",
+      "date": "2021-01-31",
+      "description": "Meeting recording from the Drive archive.",
+      "published": true
+    },
+    {
+      "id": "dr-tabrez-session-2020-11-15",
+      "title": "Dr Tabrez Session",
+      "category": "Recorded Programs",
+      "url": "https://drive.google.com/file/d/1w_qqKXgK95lo9JZuxkdttI-wr_TNwlcH/view?usp=drivesdk",
+      "date": "2020-11-15",
+      "description": "Recorded session from the Drive archive.",
+      "published": true
+    }
+  ]
+}
