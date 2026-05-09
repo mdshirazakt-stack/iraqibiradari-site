@@ -1,4 +1,4 @@
-import { ADMIN_EMAIL, createSupabaseClient } from './supabase-config.js';
+import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabase-config.js';
 
 (async function () {
   const supabase = await createSupabaseClient();
@@ -29,7 +29,7 @@ import { ADMIN_EMAIL, createSupabaseClient } from './supabase-config.js';
     setStatus('Sending sign-in link...');
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: `${window.location.origin}/admin/` }
+      options: { emailRedirectTo: ADMIN_REDIRECT_URL }
     });
     setStatus(error ? error.message : 'Check your email for the Supabase sign-in link.');
   });
