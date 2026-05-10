@@ -11,6 +11,10 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
   const list = document.querySelector('[data-admin-list]');
   const typeSelect = document.querySelector('[name="type"]');
   const seedButton = document.querySelector('[data-seed-json]');
+  const formTitle = document.querySelector('[data-form-title]');
+  const editingNote = document.querySelector('[data-editing-note]');
+  const saveButton = document.querySelector('[data-save-button]');
+  const cancelEditButton = document.querySelector('[data-cancel-edit]');
   const fieldRows = {
     category: document.querySelector('[data-field="category"]'),
     itemType: document.querySelector('[data-field="itemType"]'),
@@ -22,6 +26,8 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
   if (!authPanel || !adminPanel || !form || !list) return;
 
   let currentType = typeSelect.value;
+  let editingEntry = null;
+  let draggedEntryId = null;
   updateFieldVisibility();
 
   const { data: sessionData } = await supabase.auth.getSession();
@@ -48,15 +54,16 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
   });
 
   typeSelect.addEventListener('change', () => {
-    currentType = typeSelect.value;
-    updateFieldVisibility();
+    resetFormState(typeSelect.value);
     renderList();
   });
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
     const payload = formPayload(new FormData(form), currentType);
+    if (editingEntry && editingEntry.table === currentType) payload.id = editingEntry.id;
     if (!payload.title) return;
+    const savedType = currentType;
     setStatus('Saving...');
 
     const { error } = await supabase.from(currentType).upsert(payload, { onConflict: 'id' });
@@ -65,12 +72,14 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
       return;
     }
 
-    form.reset();
-    form.elements.published.checked = true;
-    form.elements.sortOrder.value = '0';
-    updateFieldVisibility();
+    resetFormState(savedType);
     setStatus('Saved.');
     await renderList();
+  });
+
+  cancelEditButton.addEventListener('click', () => {
+    resetFormState(currentType);
+    setStatus('Edit cancelled.');
   });
 
   list.addEventListener('click', async (event) => {
@@ -91,14 +100,55 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
       setStatus(error ? error.message : 'Updated.');
     }
 
-    if (action === 'move') {
-      const sortOrder = Number(button.dataset.sortOrder || 0);
-      const delta = Number(button.dataset.delta || 0);
-      const { error } = await supabase.from(table).update({ sort_order: sortOrder + delta }).eq('id', id);
-      setStatus(error ? error.message : 'Display order updated.');
+    if (action === 'edit') {
+      const { data, error } = await supabase.from(table).select('*').eq('id', id).single();
+      if (error) {
+        setStatus(error.message);
+        return;
+      }
+      loadEntryForEdit(table, data);
+      return;
     }
 
     await renderList();
+  });
+
+  list.addEventListener('dragstart', (event) => {
+    const handle = event.target.closest('[data-drag-handle]');
+    if (!handle) return;
+    draggedEntryId = handle.dataset.id;
+    const card = handle.closest('[data-entry-card]');
+    if (card) card.classList.add('is-dragging');
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', draggedEntryId);
+  });
+
+  list.addEventListener('dragover', (event) => {
+    if (!draggedEntryId) return;
+    const targetCard = event.target.closest('[data-entry-card]');
+    const draggedCard = list.querySelector(`[data-entry-id="${cssEscape(draggedEntryId)}"]`);
+    if (!targetCard || !draggedCard || targetCard === draggedCard) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+    clearDropTargets();
+    targetCard.classList.add('is-drop-target');
+    const targetRect = targetCard.getBoundingClientRect();
+    const shouldPlaceAfter = event.clientY > targetRect.top + targetRect.height / 2;
+    list.insertBefore(draggedCard, shouldPlaceAfter ? targetCard.nextSibling : targetCard);
+  });
+
+  list.addEventListener('drop', async (event) => {
+    if (!draggedEntryId) return;
+    event.preventDefault();
+    clearDropTargets();
+    await persistDraggedOrder();
+  });
+
+  list.addEventListener('dragend', () => {
+    const draggedCard = list.querySelector('.is-dragging');
+    if (draggedCard) draggedCard.classList.remove('is-dragging');
+    clearDropTargets();
+    draggedEntryId = null;
   });
 
   seedButton.addEventListener('click', async () => {
@@ -148,14 +198,19 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
       const date = row.date || row.event_date || row.video_date || '';
       const sortOrder = Number(row.sort_order || 0);
       return `
-        <article class="border border-archive-line bg-white p-5">
+        <article data-entry-card data-entry-id="${escapeHtml(row.id)}" class="border border-archive-line bg-white p-5">
+          <div class="mb-4 flex items-start justify-between gap-4">
+            <button data-drag-handle data-id="${escapeHtml(row.id)}" draggable="true" class="inline-flex cursor-grab items-center gap-3 border border-archive-line bg-archive-cream px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-archive-muted active:cursor-grabbing" type="button" aria-label="Drag ${escapeHtml(row.title)} to reorder">
+              <span class="text-lg leading-none text-archive-gold" aria-hidden="true">⋮⋮</span>
+              Drag
+            </button>
+            <p class="text-right text-xs font-black uppercase tracking-[0.12em] text-archive-muted">Display order: ${sortOrder}</p>
+          </div>
           <p class="text-xs font-black uppercase tracking-[0.14em] text-archive-gold">${escapeHtml(row.category || row.content_type || date || 'Archive')}</p>
           <h2 class="mt-2 text-xl font-black text-archive-green">${escapeHtml(row.title)}</h2>
-          <p class="mt-2 text-xs font-black uppercase tracking-[0.12em] text-archive-muted">Display order: ${sortOrder}</p>
           <p class="mt-3 text-sm leading-6 text-archive-muted">${escapeHtml(row.description || row.body || '')}</p>
           <div class="mt-4 flex flex-wrap gap-2">
-            <button data-action="move" data-table="${currentType}" data-id="${escapeHtml(row.id)}" data-sort-order="${sortOrder}" data-delta="1" class="border border-archive-line px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-archive-green" type="button">Move up</button>
-            <button data-action="move" data-table="${currentType}" data-id="${escapeHtml(row.id)}" data-sort-order="${sortOrder}" data-delta="-1" class="border border-archive-line px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-archive-muted" type="button">Move down</button>
+            <button data-action="edit" data-table="${currentType}" data-id="${escapeHtml(row.id)}" class="border border-archive-gold bg-archive-gold px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-archive-ink" type="button">Edit</button>
             <button data-action="toggle" data-table="${currentType}" data-id="${escapeHtml(row.id)}" data-published="${row.published}" class="border border-archive-gold px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-archive-green" type="button">${row.published ? 'Unpublish' : 'Publish'}</button>
             <button data-action="delete" data-table="${currentType}" data-id="${escapeHtml(row.id)}" class="border border-archive-line px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-archive-muted" type="button">Delete</button>
           </div>
@@ -245,6 +300,81 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
         control.disabled = !isVisible;
       });
     }
+  }
+
+  function loadEntryForEdit(table, row) {
+    editingEntry = { table, id: row.id };
+    currentType = table;
+    typeSelect.value = table;
+    typeSelect.disabled = true;
+    form.elements.title.value = row.title || '';
+    form.elements.category.value = row.category || '';
+    form.elements.itemType.value = row.content_type || '';
+    form.elements.url.value = row.url || '';
+    form.elements.registrationUrl.value = row.registration_url || '';
+    form.elements.date.value = row.event_date || row.video_date || row.date || '';
+    form.elements.sortOrder.value = Number(row.sort_order || 0);
+    form.elements.description.value = row.description || row.body || '';
+    form.elements.published.checked = row.published !== false;
+    updateFieldVisibility();
+    formTitle.textContent = `Edit ${contentTypeLabel(table)}`;
+    editingNote.hidden = false;
+    saveButton.textContent = 'Update Supabase';
+    cancelEditButton.hidden = false;
+    form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setStatus(`Editing "${row.title || 'entry'}".`);
+  }
+
+  function resetFormState(type = typeSelect.value) {
+    editingEntry = null;
+    form.reset();
+    typeSelect.value = type;
+    typeSelect.disabled = false;
+    currentType = typeSelect.value;
+    form.elements.published.checked = true;
+    form.elements.sortOrder.value = '0';
+    formTitle.textContent = 'New entry';
+    editingNote.hidden = true;
+    saveButton.textContent = 'Save to Supabase';
+    cancelEditButton.hidden = true;
+    updateFieldVisibility();
+  }
+
+  function contentTypeLabel(table) {
+    return {
+      documents: 'document',
+      videos: 'video',
+      events: 'event',
+      announcements: 'announcement'
+    }[table] || 'entry';
+  }
+
+  async function persistDraggedOrder() {
+    const cards = Array.from(list.querySelectorAll('[data-entry-card]'));
+    if (!cards.length) return;
+    setStatus('Saving display order...');
+    const total = cards.length;
+    for (const [index, card] of cards.entries()) {
+      const id = card.dataset.entryId;
+      const sortOrder = (total - index) * 10;
+      const { error } = await supabase.from(currentType).update({ sort_order: sortOrder }).eq('id', id);
+      if (error) {
+        setStatus(error.message);
+        await renderList();
+        return;
+      }
+    }
+    setStatus('Display order saved.');
+    await renderList();
+  }
+
+  function clearDropTargets() {
+    list.querySelectorAll('.is-drop-target').forEach((card) => card.classList.remove('is-drop-target'));
+  }
+
+  function cssEscape(value) {
+    if (window.CSS && typeof window.CSS.escape === 'function') return window.CSS.escape(value);
+    return String(value).replace(/"/g, '\\"');
   }
 
   function slugify(value) {

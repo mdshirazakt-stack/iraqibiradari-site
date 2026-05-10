@@ -10,6 +10,10 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <script>tailwind.config={theme:{extend:{colors:{archive:{cream:'#fbf7ed',paper:'#f3ead8',green:'#173f31',gold:'#b99045',goldSoft:'#ead7a2',ink:'#201c17',muted:'#746b5f',line:'#ded2bc',maroon:'#743a32'}},fontFamily:{body:['Lato','Arial','sans-serif'],display:['Amiri','serif']},boxShadow:{soft:'0 18px 45px rgba(32,28,23,.12)'}}}};</script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/><link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet"/>
+<style>
+  [data-entry-card].is-dragging { opacity: .45; }
+  [data-entry-card].is-drop-target { outline: 2px solid #b99045; outline-offset: 4px; }
+</style>
 </head>
 <body class="bg-archive-cream font-body text-archive-ink">
   <header class="border-b border-archive-line bg-archive-cream/95 shadow-soft">
@@ -49,7 +53,10 @@
 
         <section data-admin-panel hidden class="grid gap-8 lg:grid-cols-[0.82fr_1.18fr]">
         <form data-admin-form class="grid gap-4 border border-archive-line bg-white p-6">
-          <h2 class="font-display text-3xl font-bold text-archive-green">New entry</h2>
+          <div>
+            <h2 data-form-title class="font-display text-3xl font-bold text-archive-green">New entry</h2>
+            <p data-editing-note hidden class="mt-2 text-sm font-bold text-archive-muted">Editing an existing entry. Saving will update it instead of creating a new post.</p>
+          </div>
           <label class="grid gap-2 text-sm font-bold text-archive-muted">Content type
             <select name="type" class="border border-archive-line bg-archive-cream p-3 text-archive-ink">
               <option value="documents">Document</option>
@@ -78,7 +85,7 @@
           </label>
           <label data-field="sortOrder" class="grid gap-2 text-sm font-bold text-archive-muted">Display order
             <input name="sortOrder" type="number" value="0" class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
-            <span class="text-xs font-normal leading-5 text-archive-muted">Higher numbers appear first. Use the move buttons below for quick adjustments.</span>
+            <span class="text-xs font-normal leading-5 text-archive-muted">Higher numbers appear first. You can also drag cards in the list to rearrange them.</span>
           </label>
           <label class="grid gap-2 text-sm font-bold text-archive-muted">Description
             <textarea name="description" rows="4" class="border border-archive-line bg-archive-cream p-3 text-archive-ink"></textarea>
@@ -86,7 +93,8 @@
           <label class="flex items-center gap-3 text-sm font-bold text-archive-muted">
             <input name="published" type="checkbox" checked class="h-5 w-5"/> Published
           </label>
-          <button class="min-h-12 bg-archive-gold px-5 text-sm font-black uppercase tracking-[0.12em] text-archive-ink" type="submit">Save to Supabase</button>
+          <button data-save-button class="min-h-12 bg-archive-gold px-5 text-sm font-black uppercase tracking-[0.12em] text-archive-ink" type="submit">Save to Supabase</button>
+          <button data-cancel-edit hidden class="min-h-12 border border-archive-gold px-5 text-sm font-black uppercase tracking-[0.12em] text-archive-green" type="button">Cancel edit</button>
           <button data-logout class="min-h-12 border border-archive-line px-5 text-sm font-black uppercase tracking-[0.12em] text-archive-muted" type="button">Sign out</button>
         </form>
 
