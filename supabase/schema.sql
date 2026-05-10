@@ -52,25 +52,78 @@ create table if not exists public.videos (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists public.matrimony_profiles (
+  id uuid primary key default gen_random_uuid(),
+  candidate_name text not null,
+  candidate_gender text not null,
+  age integer,
+  marital_status text,
+  education text,
+  profession text,
+  city text,
+  country text,
+  family_background text,
+  expectations text,
+  contact_person_name text not null,
+  relationship_to_candidate text,
+  phone_whatsapp text not null,
+  email text,
+  consent_confirmed boolean not null default false,
+  status text not null default 'new',
+  admin_notes text,
+  browser_hint text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.matrimony_requests (
+  id uuid primary key default gen_random_uuid(),
+  seeker_name text not null,
+  seeking_for text,
+  preferred_gender text,
+  preferred_age_range text,
+  preferred_location text,
+  expectations text,
+  contact_person_name text not null,
+  phone_whatsapp text not null,
+  email text,
+  consent_confirmed boolean not null default false,
+  status text not null default 'new',
+  admin_notes text,
+  browser_hint text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 alter table public.announcements enable row level security;
 alter table public.events enable row level security;
 alter table public.documents enable row level security;
 alter table public.videos enable row level security;
+alter table public.matrimony_profiles enable row level security;
+alter table public.matrimony_requests enable row level security;
 
 drop policy if exists "Public can read published announcements" on public.announcements;
 drop policy if exists "Public can read published events" on public.events;
 drop policy if exists "Public can read published documents" on public.documents;
 drop policy if exists "Public can read published videos" on public.videos;
+drop policy if exists "Public can submit matrimony profiles" on public.matrimony_profiles;
+drop policy if exists "Public can submit matrimony requests" on public.matrimony_requests;
 
 create policy "Public can read published announcements" on public.announcements for select using (published = true);
 create policy "Public can read published events" on public.events for select using (published = true);
 create policy "Public can read published documents" on public.documents for select using (published = true);
 create policy "Public can read published videos" on public.videos for select using (published = true);
+create policy "Public can submit matrimony profiles" on public.matrimony_profiles for insert
+  with check (consent_confirmed = true and status = 'new');
+create policy "Public can submit matrimony requests" on public.matrimony_requests for insert
+  with check (consent_confirmed = true and status = 'new');
 
 drop policy if exists "Admin can manage announcements" on public.announcements;
 drop policy if exists "Admin can manage events" on public.events;
 drop policy if exists "Admin can manage documents" on public.documents;
 drop policy if exists "Admin can manage videos" on public.videos;
+drop policy if exists "Admin can manage matrimony profiles" on public.matrimony_profiles;
+drop policy if exists "Admin can manage matrimony requests" on public.matrimony_requests;
 
 create policy "Admin can manage announcements" on public.announcements for all
   using ((auth.jwt() ->> 'email') = 'mdshiraz.ib@outlook.com')
@@ -87,6 +140,17 @@ create policy "Admin can manage documents" on public.documents for all
 create policy "Admin can manage videos" on public.videos for all
   using ((auth.jwt() ->> 'email') = 'mdshiraz.ib@outlook.com')
   with check ((auth.jwt() ->> 'email') = 'mdshiraz.ib@outlook.com');
+
+create policy "Admin can manage matrimony profiles" on public.matrimony_profiles for all
+  using ((auth.jwt() ->> 'email') = 'mdshiraz.ib@outlook.com')
+  with check ((auth.jwt() ->> 'email') = 'mdshiraz.ib@outlook.com');
+
+create policy "Admin can manage matrimony requests" on public.matrimony_requests for all
+  using ((auth.jwt() ->> 'email') = 'mdshiraz.ib@outlook.com')
+  with check ((auth.jwt() ->> 'email') = 'mdshiraz.ib@outlook.com');
+
+create index if not exists matrimony_profiles_status_created_idx on public.matrimony_profiles (status, created_at desc);
+create index if not exists matrimony_requests_status_created_idx on public.matrimony_requests (status, created_at desc);
 
 insert into public.announcements (id, title, body, date, published)
 values

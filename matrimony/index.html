@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Matrimony — Iraqi Biradari</title>
+<meta name="description" content="Private, moderated Iraqi Biradari matrimony assistance for community families and verified seekers."/>
+<link rel="icon" href="/iraqi_biradari_favicon.ico" sizes="any"/>
+<link rel="icon" type="image/png" sizes="32x32" href="/iraqi_biradari_favicon_32x32.png"/>
+<link rel="icon" type="image/png" sizes="16x16" href="/iraqi_biradari_favicon_16x16.png"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={theme:{extend:{colors:{archive:{cream:'#fbf7ed',paper:'#f3ead8',green:'#173f31',moss:'#496b4a',gold:'#b99045',goldSoft:'#ead7a2',ink:'#201c17',muted:'#746b5f',line:'#ded2bc',maroon:'#743a32'}},fontFamily:{body:['Lato','Arial','sans-serif'],display:['Amiri','serif']},boxShadow:{soft:'0 18px 45px rgba(32,28,23,.12)'}}}};</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet"/>
+<style>
+  body { background: #fbf7ed; }
+  .brand-mark { mix-blend-mode: multiply; filter: drop-shadow(0 2px 5px rgba(32,28,23,.12)); }
+</style>
+</head>
+<body class="font-body text-archive-ink antialiased">
+  <header class="border-b border-archive-line bg-archive-cream/95 shadow-soft">
+    <div class="mx-auto flex w-[min(1120px,calc(100%-36px))] flex-col gap-4 py-5 lg:flex-row lg:items-center lg:justify-between">
+      <a href="/" class="flex items-center gap-3" aria-label="Iraqi Biradari home">
+        <img class="brand-mark h-14 w-14 rounded object-cover" src="/Iraquibiradari-final-logo-2.png" alt="Iraqi Biradari logo"/>
+        <span class="flex flex-col">
+          <span class="font-display text-4xl font-bold leading-none text-archive-green">Iraqi Biradari</span>
+          <span class="mt-1 text-xs font-black uppercase tracking-[0.18em] text-archive-muted">Iraqi Biradari Heritage Platform</span>
+        </span>
+      </a>
+      <nav class="flex flex-wrap gap-x-5 gap-y-2 text-xs font-black uppercase tracking-[0.12em] text-archive-muted" aria-label="Main navigation">
+        <a class="hover:text-archive-green" href="/about/">About</a>
+        <a class="hover:text-archive-green" href="/announcements/">Announcements</a>
+        <a class="hover:text-archive-green" href="/events/">Events</a>
+        <a class="hover:text-archive-green" href="/documents/">Documents</a>
+        <a class="hover:text-archive-green" href="/videos/">Videos</a>
+        <a class="text-archive-green" href="/matrimony/">Matrimony</a>
+        <a class="hover:text-archive-green" href="https://apnonkitalash.com/">Shajra</a>
+        <a class="hover:text-archive-green" href="/contact/">Support</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="bg-archive-green py-10 text-archive-cream md:py-12">
+      <div class="mx-auto grid w-[min(1120px,calc(100%-36px))] gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-end">
+        <div>
+          <p class="text-xs font-black uppercase tracking-[0.18em] text-archive-goldSoft">Matrimony Assistance</p>
+          <h1 class="mt-3 max-w-4xl font-display text-4xl font-bold leading-tight text-white md:text-5xl">Private community support for marriage introductions.</h1>
+          <p class="mt-4 max-w-3xl text-base leading-7 text-archive-paper">Submit candidate details or share match requirements with the Iraqi Biradari coordination team. Information is kept private and reviewed before any next step.</p>
+        </div>
+        <div class="border border-archive-gold/50 bg-[#102d24] p-5">
+          <h2 class="text-sm font-black uppercase tracking-[0.14em] text-archive-goldSoft">How privacy is handled</h2>
+          <ul class="mt-4 space-y-3 text-sm leading-6 text-archive-paper">
+            <li>No public profile browsing or searchable matrimony directory.</li>
+            <li>Submissions are reviewed by admins before any introduction.</li>
+            <li>Submit details only with the candidate or family’s consent.</li>
+            <li>Misuse, spam, or incomplete entries can be rejected or archived.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="border-b border-archive-line py-14">
+      <div class="mx-auto w-[min(1120px,calc(100%-36px))]">
+        <p data-matrimony-status class="mb-6 hidden border-l-4 border-archive-gold bg-white p-4 text-sm font-bold text-archive-muted"></p>
+        <div class="grid gap-8 lg:grid-cols-2">
+          <form data-matrimony-profile-form class="grid gap-4 border border-archive-line bg-white p-6 shadow-soft">
+            <div>
+              <p class="text-xs font-black uppercase tracking-[0.18em] text-archive-gold">Part 1</p>
+              <h2 class="mt-2 font-display text-3xl font-bold text-archive-green">Submit candidate details</h2>
+              <p class="mt-2 text-sm leading-6 text-archive-muted">For families or candidates who want their profile considered by the community coordination team.</p>
+            </div>
+
+            <input name="website" tabindex="-1" autocomplete="off" class="hidden" aria-hidden="true"/>
+
+            <label class="grid gap-2 text-sm font-bold text-archive-muted">Candidate full name
+              <input name="candidate_name" required class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
+            </label>
+            <div class="grid gap-4 md:grid-cols-2">
+              <label class="grid gap-2 text-sm font-bold text-archive-muted">Gender
+                <select name="candidate_gender" required class="border border-archive-line bg-archive-cream p-3 text-archive-ink">
+                  <option value="">Select</option>
+                  <option>Female</option>
+                  <option>Male</option>
+                </select>
+              </label>
+              <label class="grid gap-2 text-sm font-bold text-archive-muted">Age
+                <input name="age" type="number" min="18" max="80" class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
+              </label>
+            </div>
+            <div class="grid gap-4 md:grid-cols-2">
+              <label class="grid gap-2 text-sm font-bold text-archive-muted">Marital status
+                <input name="marital_status" placeholder="Never married, divorced, widowed..." class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
+              </label>
+              <label class="grid gap-2 text-sm font-bold text-archive-muted">City / town
+                <input name="city" class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
+              </label>
+            </div>
+            <div class="grid gap-4 md:grid-cols-2">
+              <label class="grid gap-2 text-sm font-bold text-archive-muted">Education
+                <input name="education" class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
+              </label>
+              <label class="grid gap-2 text-sm font-bold text-archive-muted">Profession
+                <input name="profession" class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
+              </label>
+            </div>
+            <label class="grid gap-2 text-sm font-bold text-archive-muted">Family background
+              <textarea name="family_background" rows="4" class="border border-archive-line bg-archive-cream p-3 text-archive-ink"></textarea>
+            </label>
+            <label class="grid gap-2 text-sm font-bold text-archive-muted">Expectations
+              <textarea name="expectations" rows="4" class="border border-archive-line bg-archive-cream p-3 text-archive-ink"></textarea>
+            </label>
+            <div class="grid gap-4 md:grid-cols-2">
+              <label class="grid gap-2 text-sm font-bold text-archive-muted">Contact person
+                <input name="contact_person_name" required class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
+              </label>
+              <label class="grid gap-2 text-sm font-bold text-archive-muted">Relationship to candidate
+                <input name="relationship_to_candidate" placeholder="Self, father, mother, brother..." class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
+              </label>
+            </div>
+            <div class="grid gap-4 md:grid-cols-2">
+              <label class="grid gap-2 text-sm font-bold text-archive-muted">WhatsApp / phone
+                <input name="phone_whatsapp" required class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
+              </label>
+              <label class="grid gap-2 text-sm font-bold text-archive-muted">Email
+                <input name="email" type="email" class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
+              </label>
+            </div>
+            <label class="flex gap-3 text-sm font-bold leading-6 text-archive-muted">
+              <input name="consent" type="checkbox" required class="mt-1 h-5 w-5 shrink-0"/>
+              I confirm that these details are shared with consent and may be reviewed by Iraqi Biradari matrimony coordinators.
+            </label>
+            <button class="min-h-12 bg-archive-gold px-5 text-sm font-black uppercase tracking-[0.12em] text-archive-ink" type="submit">Submit profile</button>
+          </form>
+
+          <form data-matrimony-request-form class="grid gap-4 border border-archive-line bg-white p-6 shadow-soft">
+            <div>
+              <p class="text-xs font-black uppercase tracking-[0.18em] text-archive-gold">Part 2</p>
+              <h2 class="mt-2 font-display text-3xl font-bold text-archive-green">Share match requirement</h2>
+              <p class="mt-2 text-sm leading-6 text-archive-muted">For seekers or families who want to share what kind of proposal they are looking for.</p>
+            </div>
+
+            <input name="website" tabindex="-1" autocomplete="off" class="hidden" aria-hidden="true"/>
+
+            <label class="grid gap-2 text-sm font-bold text-archive-muted">Seeker / family name
+              <input name="seeker_name" required class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
+            </label>
+            <div class="grid gap-4 md:grid-cols-2">
+              <label class="grid gap-2 text-sm font-bold text-archive-muted">Seeking for
+                <select name="seeking_for" class="border border-archive-line bg-archive-cream p-3 text-archive-ink">
+                  <option>Self</option>
+                  <option>Daughter</option>
+                  <option>Son</option>
+                  <option>Sister</option>
+                  <option>Brother</option>
+                  <option>Relative</option>
+                </select>
+              </label>
+              <label class="grid gap-2 text-sm font-bold text-archive-muted">Preferred gender
+                <select name="preferred_gender" class="border border-archive-line bg-archive-cream p-3 text-archive-ink">
+                  <option value="">Select</option>
+                  <option>Female</option>
+                  <option>Male</option>
+                </select>
+              </label>
+            </div>
+            <div class="grid gap-4 md:grid-cols-2">
+              <label class="grid gap-2 text-sm font-bold text-archive-muted">Preferred age range
+                <input name="preferred_age_range" placeholder="Example: 24-30" class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
+              </label>
+              <label class="grid gap-2 text-sm font-bold text-archive-muted">Preferred location
+                <input name="preferred_location" placeholder="City, state, country" class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
+              </label>
+            </div>
+            <label class="grid gap-2 text-sm font-bold text-archive-muted">Requirement details
+              <textarea name="expectations" rows="7" class="border border-archive-line bg-archive-cream p-3 text-archive-ink"></textarea>
+            </label>
+            <div class="grid gap-4 md:grid-cols-2">
+              <label class="grid gap-2 text-sm font-bold text-archive-muted">Contact person
+                <input name="contact_person_name" required class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
+              </label>
+              <label class="grid gap-2 text-sm font-bold text-archive-muted">WhatsApp / phone
+                <input name="phone_whatsapp" required class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
+              </label>
+            </div>
+            <label class="grid gap-2 text-sm font-bold text-archive-muted">Email
+              <input name="email" type="email" class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
+            </label>
+            <label class="flex gap-3 text-sm font-bold leading-6 text-archive-muted">
+              <input name="consent" type="checkbox" required class="mt-1 h-5 w-5 shrink-0"/>
+              I confirm that this request is genuine and may be reviewed by Iraqi Biradari matrimony coordinators.
+            </label>
+            <button class="min-h-12 bg-archive-gold px-5 text-sm font-black uppercase tracking-[0.12em] text-archive-ink" type="submit">Submit requirement</button>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="bg-[#17130f] py-9 text-archive-paper">
+    <div class="mx-auto flex w-[min(1120px,calc(100%-36px))] flex-col gap-5 md:flex-row md:items-center md:justify-between">
+      <div>
+        <p class="font-display text-3xl font-bold text-archive-goldSoft">Iraqi Biradari</p>
+        <p class="mt-1 text-sm text-[#bdb2a3]">Copyright © 2026 iraqibiradari. All Rights Reserved.</p>
+      </div>
+      <div class="flex flex-wrap gap-4 text-xs font-black uppercase tracking-[0.12em] text-[#d8cfbf]">
+        <a class="hover:text-archive-goldSoft" href="/announcements/">Announcements</a>
+        <a class="hover:text-archive-goldSoft" href="/documents/">Documents</a>
+        <a class="hover:text-archive-goldSoft" href="/events/">Events</a>
+        <a class="hover:text-archive-goldSoft" href="/matrimony/">Matrimony</a>
+        <a class="hover:text-archive-goldSoft" href="/contact/">Support</a>
+      </div>
+    </div>
+  </footer>
+
+  <script type="module" src="/assets/js/matrimony.js"></script>
+</body>
+</html>

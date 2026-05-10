@@ -15,6 +15,8 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
   const editingNote = document.querySelector('[data-editing-note]');
   const saveButton = document.querySelector('[data-save-button]');
   const cancelEditButton = document.querySelector('[data-cancel-edit]');
+  const matrimonyList = document.querySelector('[data-matrimony-list]');
+  const matrimonyTypeButtons = Array.from(document.querySelectorAll('[data-matrimony-type]'));
   const fieldRows = {
     category: document.querySelector('[data-field="category"]'),
     itemType: document.querySelector('[data-field="itemType"]'),
@@ -26,6 +28,7 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
   if (!authPanel || !adminPanel || !form || !list) return;
 
   let currentType = typeSelect.value;
+  let currentMatrimonyType = 'matrimony_profiles';
   let editingEntry = null;
   let draggedEntryId = null;
   updateFieldVisibility();
@@ -170,6 +173,45 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
     }
   });
 
+  matrimonyTypeButtons.forEach((button) => {
+    button.addEventListener('click', async () => {
+      currentMatrimonyType = button.dataset.matrimonyType;
+      updateMatrimonyTypeButtons();
+      await renderMatrimonyList();
+    });
+  });
+
+  if (matrimonyList) {
+    matrimonyList.addEventListener('click', async (event) => {
+      const button = event.target.closest('button[data-matrimony-action]');
+      if (!button) return;
+      const card = button.closest('[data-matrimony-card]');
+      const id = card && card.dataset.matrimonyId;
+      if (!id) return;
+      const action = button.dataset.matrimonyAction;
+
+      if (action === 'status') {
+        const statusValue = button.dataset.statusValue;
+        const { error } = await supabase
+          .from(currentMatrimonyType)
+          .update({ status: statusValue, updated_at: new Date().toISOString() })
+          .eq('id', id);
+        setStatus(error ? error.message : `Matrimony status updated to ${statusValue}.`);
+      }
+
+      if (action === 'notes') {
+        const notes = card.querySelector('[data-admin-notes]').value;
+        const { error } = await supabase
+          .from(currentMatrimonyType)
+          .update({ admin_notes: notes, updated_at: new Date().toISOString() })
+          .eq('id', id);
+        setStatus(error ? error.message : 'Matrimony notes saved.');
+      }
+
+      await renderMatrimonyList();
+    });
+  }
+
   async function reflectSession(session) {
     const email = session && session.user && session.user.email;
     const allowed = email === ADMIN_EMAIL;
@@ -179,6 +221,7 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
     if (allowed) {
       setStatus(`Signed in as ${email}.`);
       await renderList();
+      await renderMatrimonyList();
     }
   }
 
@@ -347,6 +390,103 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
       events: 'event',
       announcements: 'announcement'
     }[table] || 'entry';
+  }
+
+  async function renderMatrimonyList() {
+    if (!matrimonyList) return;
+    const { data, error } = await supabase
+      .from(currentMatrimonyType)
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(100);
+
+    if (error) {
+      matrimonyList.innerHTML = `<div class="border border-archive-line bg-archive-cream p-5 text-archive-muted">${escapeHtml(error.message)}</div>`;
+      return;
+    }
+
+    updateMatrimonyTypeButtons();
+    matrimonyList.innerHTML = (data || []).map((row) => matrimonyCard(row)).join('') ||
+      '<div class="border border-archive-line bg-archive-cream p-5 text-archive-muted">No matrimony submissions yet.</div>';
+  }
+
+  function matrimonyCard(row) {
+    const isProfile = currentMatrimonyType === 'matrimony_profiles';
+    const title = isProfile ? row.candidate_name : row.seeker_name;
+    const subtitle = isProfile
+      ? [row.candidate_gender, row.age ? `${row.age} years` : '', row.city].filter(Boolean).join(' · ')
+      : [row.seeking_for, row.preferred_gender ? `Seeking ${row.preferred_gender}` : '', row.preferred_age_range].filter(Boolean).join(' · ');
+    const details = isProfile
+      ? [
+          ['Education', row.education],
+          ['Profession', row.profession],
+          ['Marital status', row.marital_status],
+          ['Family background', row.family_background],
+          ['Expectations', row.expectations]
+        ]
+      : [
+          ['Preferred location', row.preferred_location],
+          ['Requirement details', row.expectations]
+        ];
+    const createdAt = row.created_at ? new Date(row.created_at).toLocaleString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    }) : '';
+
+    return `
+      <article data-matrimony-card data-matrimony-id="${escapeHtml(row.id)}" class="border border-archive-line bg-archive-cream p-5">
+        <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+          <div>
+            <p class="text-xs font-black uppercase tracking-[0.14em] text-archive-gold">${isProfile ? 'Candidate Profile' : 'Seeker Requirement'} · ${escapeHtml(row.status || 'new')}</p>
+            <h3 class="mt-2 text-2xl font-black text-archive-green">${escapeHtml(title)}</h3>
+            <p class="mt-1 text-sm font-bold text-archive-muted">${escapeHtml(subtitle || 'No summary provided')}</p>
+            <p class="mt-2 text-xs font-bold text-archive-muted">${escapeHtml(createdAt)}</p>
+          </div>
+          <div class="border border-archive-line bg-white px-4 py-3 text-sm leading-6 text-archive-muted">
+            <p><strong class="text-archive-ink">Contact:</strong> ${escapeHtml(row.contact_person_name)}</p>
+            <p><strong class="text-archive-ink">Phone:</strong> ${escapeHtml(row.phone_whatsapp)}</p>
+            ${row.email ? `<p><strong class="text-archive-ink">Email:</strong> ${escapeHtml(row.email)}</p>` : ''}
+            ${row.relationship_to_candidate ? `<p><strong class="text-archive-ink">Relation:</strong> ${escapeHtml(row.relationship_to_candidate)}</p>` : ''}
+          </div>
+        </div>
+        <dl class="mt-5 grid gap-3 md:grid-cols-2">
+          ${details.map(([label, value]) => value ? `
+            <div class="border border-archive-line bg-white p-4">
+              <dt class="text-xs font-black uppercase tracking-[0.12em] text-archive-gold">${escapeHtml(label)}</dt>
+              <dd class="mt-2 text-sm leading-6 text-archive-muted">${escapeHtml(value)}</dd>
+            </div>
+          ` : '').join('')}
+          ${row.browser_hint ? `
+            <div class="border border-archive-line bg-white p-4">
+              <dt class="text-xs font-black uppercase tracking-[0.12em] text-archive-gold">Device hint</dt>
+              <dd class="mt-2 text-sm leading-6 text-archive-muted">${escapeHtml(row.browser_hint)}</dd>
+            </div>
+          ` : ''}
+        </dl>
+        <label class="mt-5 grid gap-2 text-sm font-bold text-archive-muted">Private admin notes
+          <textarea data-admin-notes rows="3" class="border border-archive-line bg-white p-3 text-archive-ink">${escapeHtml(row.admin_notes || '')}</textarea>
+        </label>
+        <div class="mt-4 flex flex-wrap gap-2">
+          <button data-matrimony-action="notes" class="border border-archive-gold bg-archive-gold px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-archive-ink" type="button">Save notes</button>
+          ${['new', 'reviewing', 'approved', 'matched', 'rejected', 'archived'].map((statusValue) => `
+            <button data-matrimony-action="status" data-status-value="${statusValue}" class="border ${row.status === statusValue ? 'border-archive-gold bg-white text-archive-green' : 'border-archive-line text-archive-muted'} px-3 py-2 text-xs font-black uppercase tracking-[0.12em]" type="button">${statusValue}</button>
+          `).join('')}
+        </div>
+      </article>
+    `;
+  }
+
+  function updateMatrimonyTypeButtons() {
+    matrimonyTypeButtons.forEach((button) => {
+      const isActive = button.dataset.matrimonyType === currentMatrimonyType;
+      button.className = isActive
+        ? 'bg-archive-gold px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-archive-ink'
+        : 'border border-archive-gold px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-archive-green';
+    });
   }
 
   async function persistDraggedOrder() {

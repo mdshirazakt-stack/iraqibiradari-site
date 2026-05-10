@@ -25,6 +25,7 @@
         <a class="hover:text-archive-green" href="/documents/">Documents</a>
         <a class="hover:text-archive-green" href="/videos/">Videos</a>
         <a class="hover:text-archive-green" href="/events/">Events</a>
+        <a class="hover:text-archive-green" href="/matrimony/">Matrimony</a>
       </nav>
     </div>
   </header>
@@ -112,6 +113,21 @@
             <p class="mt-3 text-sm leading-6 text-archive-muted">For events, the homepage ribbon shows only published entries with a registration URL and an event date today or later. To delist an event, unpublish it here or let the event date pass.</p>
           </details>
         </div>
+
+        <section class="lg:col-span-2 border border-archive-line bg-white p-6">
+          <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div>
+              <p class="text-xs font-black uppercase tracking-[0.18em] text-archive-gold">Private Review Desk</p>
+              <h2 class="mt-2 font-display text-3xl font-bold text-archive-green">Matrimony submissions</h2>
+              <p class="mt-2 max-w-3xl text-sm leading-6 text-archive-muted">These entries are never published publicly. Review consent, contact the family when appropriate, and move each submission through a private status.</p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <button data-matrimony-type="matrimony_profiles" class="bg-archive-gold px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-archive-ink" type="button">Profiles</button>
+              <button data-matrimony-type="matrimony_requests" class="border border-archive-gold px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-archive-green" type="button">Seekers</button>
+            </div>
+          </div>
+          <div data-matrimony-list class="mt-6 grid gap-4"></div>
+        </section>
         </section>
       </div>
     </section>
