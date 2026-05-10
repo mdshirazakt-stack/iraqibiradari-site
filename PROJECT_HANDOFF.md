@@ -1,9 +1,9 @@
 # Iraqi Biradari Website Handoff
 
-Last updated: 10 May 2026  
+Last updated: 10 May 2026, after matrimony table creation and photograph-link update  
 Repository: `/Users/shiraz/apnonkitalash/iraqibiradari-site`  
 Branch: `main`  
-Latest pushed commit: `19c6676 Add private matrimony workflow`  
+Latest pushed commit: `c2ff68e Add matrimony photograph link`  
 Live domain: `https://iraqibiradari.com/`  
 Related genealogy platform: `https://apnonkitalash.com/`
 
@@ -252,6 +252,15 @@ Supabase tables added:
 - `matrimony_profiles`
 - `matrimony_requests`
 
+Confirmed in Supabase Table Editor:
+
+- `announcements`
+- `documents`
+- `events`
+- `matrimony_profiles`
+- `matrimony_requests`
+- `videos`
+
 Design decision:
 
 - There is **no public profile directory**.
@@ -264,6 +273,7 @@ Two public submission flows:
 1. **Submit candidate details**
    - For candidate/family profile submission.
    - Includes an optional private photograph link visible only in admin review.
+   - Current implementation stores a private photo URL, not an uploaded image file. This avoids opening an anonymous public upload bucket at this stage.
 
 2. **Share match requirement**
    - For seekers/families looking for a suitable match.
@@ -296,6 +306,7 @@ The latest schema includes:
 
 - Existing content tables
 - New matrimony tables
+- `photo_url` on `matrimony_profiles`
 - RLS policies
 - Admin-only management policies
 - Public insert-only policies for matrimony
@@ -303,12 +314,21 @@ The latest schema includes:
 
 Important:
 
-After the latest code push, the new matrimony forms will only work live after running the updated `supabase/schema.sql` in the Iraqi Biradari Supabase SQL editor.
+The matrimony table creation SQL has now been run in the Iraqi Biradari Supabase project connected to `mdshiraz.ib@outlook.com`. The Table Editor shows `matrimony_profiles` and `matrimony_requests` alongside the existing content tables.
+
+If the full schema is not rerun later, the minimum photo-link migration is:
+
+```sql
+alter table public.matrimony_profiles
+add column if not exists photo_url text;
+```
 
 ## 5. Latest Pushed Commits
 
 Recent Iraqi Biradari commits:
 
+- `c2ff68e Add matrimony photograph link`
+- `a5a26ee Add project handoff document`
 - `19c6676 Add private matrimony workflow`
 - `f250a23 Update support bank details`
 - `c7a364d Move founding year into community detail`
@@ -360,8 +380,10 @@ Data-migration direction discussed:
 
 ### Iraqi Biradari
 
-1. **Run Supabase schema**
-   - Required for matrimony tables before live submissions work.
+1. **Verify matrimony form save**
+   - Matrimony tables are now visible in Supabase.
+   - Submit one test candidate profile with a photo link and one seeker requirement.
+   - Confirm both appear in `/admin/`.
 
 2. **Matrimony moderation policy**
    - The page is structurally private, but the human review rules still need to be decided:
@@ -389,7 +411,7 @@ Data-migration direction discussed:
 
 7. **Visual QA after deploy**
    - Check `/matrimony/` on mobile and desktop after GitHub Pages/deploy finishes.
-   - Check `/admin/` after schema is run.
+   - Check the admin matrimony review section with real Supabase data.
 
 ### AKT / Shajra
 
@@ -411,10 +433,10 @@ Data-migration direction discussed:
 
 ### Immediate
 
-1. Run the latest Iraqi Biradari `supabase/schema.sql` in Supabase.
-2. Test `/matrimony/` by submitting one test candidate profile.
-3. Test one seeker requirement submission.
-4. Sign into `/admin/` and verify both submissions appear.
+1. Test `/matrimony/` by submitting one test candidate profile with a photograph link.
+2. Test one seeker requirement submission.
+3. Sign into `/admin/` and verify both submissions appear.
+4. Open the photograph link from the admin review card.
 5. Change statuses and save private notes.
 6. Archive or delete test records directly in Supabase if not needed.
 
@@ -423,12 +445,13 @@ Data-migration direction discussed:
 1. Add admin-side delete button for matrimony submissions, with confirmation.
 2. Add an email notification mechanism for new matrimony submissions.
 3. Add a short privacy/disclaimer section on `/matrimony/`.
-4. Add optional fields:
+4. Decide whether to keep photo links or move to private Supabase Storage signed URLs.
+5. Add optional fields:
    - caste/sub-community notes, if appropriate
    - preferred education
    - preferred profession
    - family contact verification status
-5. Add admin filters:
+6. Add admin filters:
    - status
    - gender
    - city
