@@ -421,6 +421,7 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
           ['Education', row.education],
           ['Profession', row.profession],
           ['Marital status', row.marital_status],
+          ['Photograph', row.photo_url],
           ['Family background', row.family_background],
           ['Expectations', row.expectations]
         ]
@@ -457,7 +458,7 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
           ${details.map(([label, value]) => value ? `
             <div class="border border-archive-line bg-white p-4">
               <dt class="text-xs font-black uppercase tracking-[0.12em] text-archive-gold">${escapeHtml(label)}</dt>
-              <dd class="mt-2 text-sm leading-6 text-archive-muted">${escapeHtml(value)}</dd>
+              <dd class="mt-2 text-sm leading-6 text-archive-muted">${label === 'Photograph' ? photoLink(value) : escapeHtml(value)}</dd>
             </div>
           ` : '').join('')}
           ${row.browser_hint ? `
@@ -487,6 +488,21 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
         ? 'bg-archive-gold px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-archive-ink'
         : 'border border-archive-gold px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-archive-green';
     });
+  }
+
+  function photoLink(value) {
+    const url = safeExternalUrl(value);
+    if (!url) return escapeHtml(value);
+    return `<a class="font-bold text-archive-green underline decoration-archive-gold underline-offset-4" href="${escapeHtml(url)}" target="_blank" rel="noopener">Open photograph</a>`;
+  }
+
+  function safeExternalUrl(value) {
+    try {
+      const url = new URL(String(value || '').trim());
+      return ['http:', 'https:'].includes(url.protocol) ? url.href : '';
+    } catch (_error) {
+      return '';
+    }
   }
 
   async function persistDraggedOrder() {

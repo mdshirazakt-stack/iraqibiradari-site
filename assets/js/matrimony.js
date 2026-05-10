@@ -56,6 +56,7 @@ import { createSupabaseClient } from './supabase-config.js';
   function profilePayload(data) {
     return {
       candidate_name: text(data, 'candidate_name'),
+      photo_url: text(data, 'photo_url') || null,
       candidate_gender: text(data, 'candidate_gender'),
       age: numberOrNull(data.get('age')),
       marital_status: text(data, 'marital_status') || null,

@@ -263,6 +263,7 @@ Two public submission flows:
 
 1. **Submit candidate details**
    - For candidate/family profile submission.
+   - Includes an optional private photograph link visible only in admin review.
 
 2. **Share match requirement**
    - For seekers/families looking for a suitable match.
@@ -490,4 +491,3 @@ The current architecture keeps the two products cleanly separated:
 - **Iraqi Biradari** is the public-facing heritage and community platform.
 
 That separation should be preserved unless there is a strong reason to merge functionality later.
-

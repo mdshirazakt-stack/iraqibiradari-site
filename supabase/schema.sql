@@ -55,6 +55,7 @@ create table if not exists public.videos (
 create table if not exists public.matrimony_profiles (
   id uuid primary key default gen_random_uuid(),
   candidate_name text not null,
+  photo_url text,
   candidate_gender text not null,
   age integer,
   marital_status text,
@@ -75,6 +76,8 @@ create table if not exists public.matrimony_profiles (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.matrimony_profiles add column if not exists photo_url text;
 
 create table if not exists public.matrimony_requests (
   id uuid primary key default gen_random_uuid(),
