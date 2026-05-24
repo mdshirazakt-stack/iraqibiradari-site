@@ -4,10 +4,11 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
   const supabase = await createSupabaseClient();
 
   // ── Element refs ─────────────────────────────────────────────────────
-  const authPanel        = document.querySelector('[data-auth-panel]');
-  const adminPanel       = document.querySelector('[data-admin-panel]');
-  const contentSection   = document.querySelector('[data-content-section]');
-  const matrimonySection = document.querySelector('[data-matrimony-section]');
+  const authPanel          = document.querySelector('[data-auth-panel]');
+  const adminPanel         = document.querySelector('[data-admin-panel]');
+  const contentSection     = document.querySelector('[data-content-section]');
+  const matrimonySection   = document.querySelector('[data-matrimony-section]');
+  const submissionsSection = document.querySelector('[data-submissions-section]');
 
   const loginForm      = document.querySelector('[data-login-form]');
   const signinButton   = document.querySelector('[data-signin-button]');
@@ -20,6 +21,7 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
   const form             = document.querySelector('[data-admin-form]');
   const list             = document.querySelector('[data-admin-list]');
   const formTitle        = document.querySelector('[data-form-title]');
+  const formTitleLabel   = document.querySelector('[data-form-title-label]');
   const editingNote      = document.querySelector('[data-editing-note]');
   const saveButton       = document.querySelector('[data-save-button]');
   const cancelEditButton = document.querySelector('[data-cancel-edit]');
@@ -27,6 +29,7 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
 
   const sectionTabs          = Array.from(document.querySelectorAll('[data-section-tab]'));
   const matrimonyList        = document.querySelector('[data-matrimony-list]');
+  const submissionsList      = document.querySelector('[data-submissions-list]');
   const matrimonyTypeButtons = Array.from(document.querySelectorAll('[data-matrimony-type]'));
 
   const fieldRows = {
@@ -42,6 +45,14 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
     body:            document.querySelector('[data-field="body"]'),
     descriptionText: document.querySelector('[data-field="descriptionText"]'),
     ribbon:          document.querySelector('[data-field="ribbon"]'),
+    // People
+    designation:     document.querySelector('[data-field="designation"]'),
+    photoUrl:        document.querySelector('[data-field="photoUrl"]'),
+    // Stories
+    author:          document.querySelector('[data-field="author"]'),
+    coverImageUrl:   document.querySelector('[data-field="coverImageUrl"]'),
+    cultureCategory: document.querySelector('[data-field="cultureCategory"]'),
+    // All
     sortOrder:       document.querySelector('[data-field="sortOrder"]'),
   };
 
@@ -64,7 +75,6 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
         ],
       },
     });
-    // Override image handler: prompt for URL instead of base64
     quill.getModule('toolbar').addHandler('image', () => {
       const url = prompt('Enter image URL:');
       if (url) {
@@ -122,7 +132,6 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
 
-    // Flush Quill content into the hidden input before reading FormData
     if (quill) {
       const html = quill.root.innerHTML;
       const bodyInput = form.querySelector('[name="body"]');
@@ -266,7 +275,6 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
           .eq('id', id);
         setStatus(error ? error.message : `Status updated to "${button.dataset.statusValue}".`);
       }
-
       if (button.dataset.matrimonyAction === 'notes') {
         const notes = card.querySelector('[data-admin-notes]').value;
         const { error } = await supabase
@@ -275,8 +283,35 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
           .eq('id', id);
         setStatus(error ? error.message : 'Notes saved.');
       }
-
       await renderMatrimonyList();
+    });
+  }
+
+  // ── Story submissions ─────────────────────────────────────────────────
+  if (submissionsList) {
+    submissionsList.addEventListener('click', async (event) => {
+      const button = event.target.closest('button[data-submission-action]');
+      if (!button) return;
+      const card = button.closest('[data-submission-card]');
+      const id   = card && card.dataset.submissionId;
+      if (!id) return;
+
+      if (button.dataset.submissionAction === 'status') {
+        const { error } = await supabase
+          .from('story_submissions')
+          .update({ status: button.dataset.statusValue, updated_at: new Date().toISOString() })
+          .eq('id', id);
+        setStatus(error ? error.message : `Status updated to "${button.dataset.statusValue}".`);
+      }
+      if (button.dataset.submissionAction === 'notes') {
+        const notes = card.querySelector('[data-submission-notes]').value;
+        const { error } = await supabase
+          .from('story_submissions')
+          .update({ admin_notes: notes, updated_at: new Date().toISOString() })
+          .eq('id', id);
+        setStatus(error ? error.message : 'Notes saved.');
+      }
+      await renderSubmissions();
     });
   }
 
@@ -292,15 +327,19 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
   }
 
   function switchSection(section) {
-    const isMatrimony = section === 'matrimony';
+    const isMatrimony    = section === 'matrimony';
+    const showSubmissions = section === 'stories';
+
     updateSectionTabs(section);
-    if (contentSection)   contentSection.style.display   = isMatrimony ? 'none' : 'grid';
-    if (matrimonySection) matrimonySection.style.display = isMatrimony ? 'block' : 'none';
+    if (contentSection)     contentSection.style.display     = isMatrimony ? 'none' : 'grid';
+    if (matrimonySection)   matrimonySection.style.display   = isMatrimony ? 'block' : 'none';
+    if (submissionsSection) submissionsSection.style.display = showSubmissions ? 'block' : 'none';
 
     if (!isMatrimony) {
       currentType = section;
       resetFormState(section);
       renderList();
+      if (showSubmissions) renderSubmissions();
     } else {
       renderMatrimonyList();
     }
@@ -344,7 +383,13 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
       const publishedDot = row.published
         ? '<span class="inline-block h-2 w-2 rounded-full bg-green-500 mr-1.5" title="Published"></span>'
         : '<span class="inline-block h-2 w-2 rounded-full bg-archive-muted mr-1.5" title="Draft"></span>';
-      const preview = stripHtml(row.description || row.body || '');
+      const preview   = stripHtml(row.description || row.excerpt || row.body || '');
+      const subLabel  = row.designation
+        ? `<p class="mt-0.5 text-xs font-bold text-archive-muted">${escapeHtml(row.designation)}</p>`
+        : row.author
+          ? `<p class="mt-0.5 text-xs text-archive-muted">By ${escapeHtml(row.author)}</p>`
+          : '';
+
       return `
         <article data-entry-card data-entry-id="${escapeHtml(row.id)}" class="border border-archive-line bg-white p-5">
           <div class="mb-3 flex items-start justify-between gap-4">
@@ -359,6 +404,7 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
             ${publishedDot}${escapeHtml(row.category || row.content_type || date || 'Archive')}${typeBadge}${ribbonBadge}
           </p>
           <h2 class="mt-2 text-lg font-black leading-snug text-archive-green">${escapeHtml(row.title)}</h2>
+          ${subLabel}
           ${date ? `<p class="mt-1 text-xs font-bold text-archive-muted">${escapeHtml(date)}</p>` : ''}
           ${row.location ? `<p class="mt-0.5 text-xs text-archive-muted">${escapeHtml(row.location)}</p>` : ''}
           ${preview ? `<p class="mt-2 line-clamp-2 text-sm leading-6 text-archive-muted">${escapeHtml(preview)}</p>` : ''}
@@ -413,6 +459,31 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
       return { ...base, video_date: String(data.get('date') || '') || null };
     }
 
+    if (table === 'people') {
+      return {
+        id: base.id, title: base.title,
+        designation: String(data.get('designation') || '').trim() || null,
+        photo_url:   String(data.get('photoUrl') || '').trim() || null,
+        category:    base.category,
+        body:        String(data.get('body') || '').trim() || null,
+        published:   base.published,
+        sort_order:  base.sort_order,
+      };
+    }
+
+    if (table === 'stories') {
+      return {
+        id: base.id, title: base.title,
+        author:           String(data.get('author') || '').trim() || null,
+        category:         String(data.get('cultureCategory') || '').trim() || null,
+        cover_image_url:  String(data.get('coverImageUrl') || '').trim() || null,
+        excerpt:          String(data.get('shortSummary') || '').trim() || null,
+        body:             String(data.get('body') || '').trim() || null,
+        published:        base.published,
+        sort_order:       base.sort_order,
+      };
+    }
+
     // documents
     return { ...base, content_type: String(data.get('itemType') || '').trim() || null };
   }
@@ -452,6 +523,8 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
       announcements: ['body', 'sortOrder'],
       documents:     ['category', 'itemType', 'url', 'descriptionText', 'sortOrder'],
       videos:        ['category', 'url', 'date', 'descriptionText', 'sortOrder'],
+      people:        ['designation', 'photoUrl', 'category', 'body', 'sortOrder'],
+      stories:       ['author', 'cultureCategory', 'coverImageUrl', 'shortSummary', 'body', 'sortOrder'],
     };
     const visible = new Set(visibleByType[currentType] || []);
     for (const [name, row] of Object.entries(fieldRows)) {
@@ -464,31 +537,41 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
     }
   }
 
+  function updateTitleLabel(type) {
+    if (!formTitleLabel) return;
+    const labels = { people: 'Name', stories: 'Story title', announcements: 'Title', events: 'Title', documents: 'Title', videos: 'Title' };
+    formTitleLabel.textContent = labels[type] || 'Title';
+  }
+
   function loadEntryForEdit(table, row) {
     editingEntry = { table, id: row.id };
     currentType  = table;
 
     updateSectionTabs(table);
-    if (contentSection)   contentSection.style.display   = 'grid';
-    if (matrimonySection) matrimonySection.style.display = 'none';
+    if (contentSection)     contentSection.style.display     = 'grid';
+    if (matrimonySection)   matrimonySection.style.display   = 'none';
+    if (submissionsSection) submissionsSection.style.display = table === 'stories' ? 'block' : 'none';
 
     form.elements.title.value           = row.title       || '';
     form.elements.category.value        = row.category    || '';
-    form.elements.itemType.value        = row.content_type || '';
-    form.elements.url.value             = row.url          || '';
-    form.elements.registrationUrl.value = row.registration_url || '';
-    form.elements.date.value            = row.event_date   || row.video_date || row.date || '';
     form.elements.sortOrder.value       = Number(row.sort_order || 0);
-    form.elements.published.checked     = row.published    !== false;
-    form.elements.location.value        = row.location     || '';
-    form.elements.videoUrl.value        = row.video_url    || '';
-    form.elements.shortSummary.value    = row.description  || '';
-    form.elements.ribbon.checked        = Boolean(row.ribbon);
+    form.elements.published.checked     = row.published   !== false;
 
-    // Plain description for docs/videos
-    if (form.elements.description) {
-      form.elements.description.value = row.description || row.body || '';
-    }
+    // Type-specific fields
+    if (form.elements.itemType)        form.elements.itemType.value        = row.content_type         || '';
+    if (form.elements.url)             form.elements.url.value             = row.url                  || '';
+    if (form.elements.registrationUrl) form.elements.registrationUrl.value = row.registration_url     || '';
+    if (form.elements.date)            form.elements.date.value            = row.event_date || row.video_date || row.date || '';
+    if (form.elements.location)        form.elements.location.value        = row.location             || '';
+    if (form.elements.videoUrl)        form.elements.videoUrl.value        = row.video_url            || '';
+    if (form.elements.shortSummary)    form.elements.shortSummary.value    = row.description || row.excerpt || '';
+    if (form.elements.ribbon)          form.elements.ribbon.checked        = Boolean(row.ribbon);
+    if (form.elements.description)     form.elements.description.value     = row.description || row.body || '';
+    if (form.elements.designation)     form.elements.designation.value     = row.designation          || '';
+    if (form.elements.photoUrl)        form.elements.photoUrl.value        = row.photo_url            || '';
+    if (form.elements.author)          form.elements.author.value          = row.author               || '';
+    if (form.elements.coverImageUrl)   form.elements.coverImageUrl.value   = row.cover_image_url      || '';
+    if (form.elements.cultureCategory) form.elements.cultureCategory.value = row.category             || '';
 
     // Quill rich body
     if (quill) quill.root.innerHTML = row.body || '';
@@ -501,6 +584,7 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
     }
 
     updateFieldVisibility();
+    updateTitleLabel(table);
     formTitle.textContent    = `Edit ${contentTypeLabel(table)}`;
     editingNote.hidden       = false;
     saveButton.textContent   = 'Update';
@@ -523,10 +607,18 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
     cancelEditButton.hidden         = true;
     if (quill) quill.root.innerHTML = '';
     updateFieldVisibility();
+    updateTitleLabel(type);
   }
 
   function contentTypeLabel(table) {
-    return { events: 'event', announcements: 'announcement', documents: 'document', videos: 'video' }[table] || 'entry';
+    return {
+      events:        'event',
+      announcements: 'announcement',
+      documents:     'document',
+      videos:        'video',
+      people:        'person',
+      stories:       'story',
+    }[table] || 'entry';
   }
 
   // ── Matrimony ────────────────────────────────────────────────────────
@@ -617,6 +709,66 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
         ? 'bg-archive-gold px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-archive-ink'
         : 'border border-archive-gold px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-archive-green';
     });
+  }
+
+  // ── Story submissions ─────────────────────────────────────────────────
+
+  async function renderSubmissions() {
+    if (!submissionsList) return;
+    const { data, error } = await supabase
+      .from('story_submissions')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(100);
+
+    if (error) {
+      submissionsList.innerHTML = `<div class="border border-archive-line bg-archive-cream p-5 text-archive-muted">${escapeHtml(error.message)}</div>`;
+      return;
+    }
+
+    submissionsList.innerHTML = (data || []).map(row => submissionCard(row)).join('')
+      || '<div class="border border-archive-line bg-archive-cream p-5 text-archive-muted">No community story submissions yet.</div>';
+  }
+
+  function submissionCard(row) {
+    const createdAt = row.created_at
+      ? new Date(row.created_at).toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })
+      : '';
+    const STATUSES = ['pending', 'approved', 'rejected', 'archived'];
+    return `
+      <article data-submission-card data-submission-id="${escapeHtml(row.id)}" class="border border-archive-line bg-archive-cream p-5">
+        <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+          <div>
+            <p class="text-xs font-black uppercase tracking-[0.14em] text-archive-gold">
+              Story Submission · ${escapeHtml(row.status || 'pending')}${row.category ? ` · ${escapeHtml(row.category)}` : ''}
+            </p>
+            <h3 class="mt-2 text-2xl font-black text-archive-green">${escapeHtml(row.title)}</h3>
+            <p class="mt-1 text-sm font-bold text-archive-muted">By ${escapeHtml(row.author_name)}</p>
+            <p class="mt-2 text-xs font-bold text-archive-muted">${escapeHtml(createdAt)}</p>
+          </div>
+          ${row.email ? `
+          <div class="border border-archive-line bg-white px-4 py-3 text-sm leading-6 text-archive-muted">
+            <p><strong class="text-archive-ink">Email:</strong> ${escapeHtml(row.email)}</p>
+          </div>` : ''}
+        </div>
+        <div class="mt-4 border border-archive-line bg-white p-4">
+          <p class="mb-2 text-xs font-black uppercase tracking-[0.12em] text-archive-gold">Story content</p>
+          <p class="whitespace-pre-wrap text-sm leading-7 text-archive-ink">${escapeHtml(row.content || '')}</p>
+        </div>
+        <label class="mt-5 grid gap-2 text-sm font-bold text-archive-muted">
+          Admin notes
+          <textarea data-submission-notes rows="2" class="border border-archive-line bg-white p-3 text-archive-ink">${escapeHtml(row.admin_notes || '')}</textarea>
+        </label>
+        <div class="mt-4 flex flex-wrap gap-2">
+          <button data-submission-action="notes" class="border border-archive-gold bg-archive-gold px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-archive-ink" type="button">Save notes</button>
+          ${STATUSES.map(s => `
+            <button data-submission-action="status" data-status-value="${s}"
+              class="border ${row.status === s ? 'border-archive-gold bg-white text-archive-green font-black' : 'border-archive-line text-archive-muted'}
+              px-3 py-2 text-xs font-black uppercase tracking-[0.12em]" type="button">${s}</button>
+          `).join('')}
+        </div>
+      </article>
+    `;
   }
 
   // ── Drag helpers ─────────────────────────────────────────────────────

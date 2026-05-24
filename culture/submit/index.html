@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Share Your Story — Iraqi Biradari</title>
+<link rel="icon" href="/iraqi_biradari_favicon.ico" sizes="any"/>
+<link rel="icon" type="image/png" sizes="32x32" href="/iraqi_biradari_favicon_32x32.png"/>
+<link rel="icon" type="image/png" sizes="16x16" href="/iraqi_biradari_favicon_16x16.png"/>
+<link rel="apple-touch-icon" href="/Iraquibiradari-final-logo-2.png"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={theme:{extend:{colors:{archive:{cream:'#fbf7ed',paper:'#f3ead8',green:'#173f31',gold:'#b99045',goldSoft:'#ead7a2',ink:'#201c17',muted:'#746b5f',line:'#ded2bc',maroon:'#743a32'}},fontFamily:{body:['Lato','Arial','sans-serif'],display:['Amiri','serif']},boxShadow:{soft:'0 18px 45px rgba(32,28,23,.12)'}}}};</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet"/>
+</head>
+<body class="bg-archive-cream font-body text-archive-ink">
+  <main>
+
+    <!-- Hero -->
+    <section class="bg-archive-green py-10 md:py-14 text-archive-cream">
+      <div class="mx-auto w-[min(1120px,calc(100%-36px))]">
+        <a href="/culture/" class="mb-6 inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.14em] text-archive-goldSoft transition-colors hover:text-white">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" style="width:14px;height:14px;flex-shrink:0" aria-hidden="true"><path fill-rule="evenodd" d="M17 10a.75.75 0 0 1-.75.75H5.612l4.158 3.96a.75.75 0 1 1-1.04 1.08l-5.5-5.25a.75.75 0 0 1 0-1.08l5.5-5.25a.75.75 0 1 1 1.04 1.08L5.612 9.25H16.25A.75.75 0 0 1 17 10z" clip-rule="evenodd"/></svg>
+          Our Culture
+        </a>
+        <p class="text-xs font-black uppercase tracking-[0.18em] text-archive-goldSoft">Community Stories</p>
+        <h1 class="mt-3 max-w-4xl font-display text-4xl font-bold leading-tight text-white md:text-5xl">Share your story.</h1>
+        <p class="mt-3 max-w-3xl text-base leading-7 text-archive-paper">Write about our food, our rituals, our celebrations, or any memory worth preserving. Your submission will be reviewed by our team before being published.</p>
+      </div>
+    </section>
+
+    <!-- Form section -->
+    <section class="py-14">
+      <div class="mx-auto w-[min(760px,calc(100%-36px))]">
+
+        <!-- Success message — hidden until submission -->
+        <div id="submit-success" style="display:none"
+          class="mb-8 border-l-4 border-archive-gold bg-white p-6">
+          <p class="font-display text-2xl font-bold text-archive-green">Thank you for sharing!</p>
+          <p class="mt-2 text-sm leading-7 text-archive-muted">Your story has been received. Our team will review it and publish it on the Our Culture page. We appreciate your contribution to the community's memory.</p>
+          <a href="/culture/" class="mt-5 inline-block text-xs font-black uppercase tracking-[0.12em] text-archive-gold underline underline-offset-4 hover:text-archive-green">Back to Our Culture →</a>
+        </div>
+
+        <!-- Error message -->
+        <div id="submit-error" style="display:none"
+          class="mb-8 border-l-4 border-red-400 bg-white p-4">
+          <p id="submit-error-text" class="text-sm font-bold text-archive-muted"></p>
+        </div>
+
+        <form id="story-submit-form" class="grid gap-6 border border-archive-line bg-white p-8">
+
+          <div class="mb-2">
+            <h2 class="font-display text-3xl font-bold text-archive-green">Your story</h2>
+            <p class="mt-1 text-sm text-archive-muted">All fields marked <span class="text-archive-maroon font-bold">*</span> are required.</p>
+          </div>
+
+          <label class="grid gap-2 text-sm font-bold text-archive-muted">
+            Your name <span class="font-normal text-archive-maroon">*</span>
+            <input id="f-name" name="author_name" type="text" required
+              placeholder="As you'd like it to appear on the story"
+              class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
+          </label>
+
+          <label class="grid gap-2 text-sm font-bold text-archive-muted">
+            Email address
+            <input id="f-email" name="email" type="email"
+              placeholder="Optional — in case we need to reach you"
+              class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
+            <span class="text-xs font-normal text-archive-muted">We will not share your email publicly.</span>
+          </label>
+
+          <label class="grid gap-2 text-sm font-bold text-archive-muted">
+            Category <span class="font-normal text-archive-maroon">*</span>
+            <select id="f-category" name="category" required
+              class="border border-archive-line bg-archive-cream p-3 text-archive-ink">
+              <option value="">— Choose a category —</option>
+              <option value="Food &amp; Cuisine">Food &amp; Cuisine</option>
+              <option value="Marriages &amp; Celebrations">Marriages &amp; Celebrations</option>
+              <option value="Rituals &amp; Customs">Rituals &amp; Customs</option>
+              <option value="History &amp; Heritage">History &amp; Heritage</option>
+              <option value="Community Life">Community Life</option>
+              <option value="General">General</option>
+            </select>
+          </label>
+
+          <label class="grid gap-2 text-sm font-bold text-archive-muted">
+            Story title <span class="font-normal text-archive-maroon">*</span>
+            <input id="f-title" name="title" type="text" required
+              placeholder="A short, descriptive title for your story"
+              class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
+          </label>
+
+          <label class="grid gap-2 text-sm font-bold text-archive-muted">
+            Your story <span class="font-normal text-archive-maroon">*</span>
+            <span class="text-xs font-normal text-archive-muted">Write as much as you like. Plain text is fine — our editors will format it.</span>
+            <textarea id="f-content" name="content" required rows="14"
+              placeholder="Tell your story here…"
+              class="border border-archive-line bg-archive-cream p-3 text-archive-ink leading-7"></textarea>
+          </label>
+
+          <div class="flex items-start gap-3 rounded border border-archive-goldSoft bg-archive-paper p-4">
+            <input id="f-consent" name="consent" type="checkbox" required
+              class="mt-0.5 h-5 w-5 shrink-0 accent-archive-green"/>
+            <label for="f-consent" class="cursor-pointer text-sm text-archive-muted">
+              I agree to have my story reviewed and published on the Iraqi Biradari website. I confirm this is my own original writing.
+            </label>
+          </div>
+
+          <button id="submit-btn" type="submit"
+            class="min-h-12 bg-archive-gold px-6 text-sm font-black uppercase tracking-[0.12em] text-archive-ink">
+            Submit story
+          </button>
+
+        </form>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="bg-[#17130f] py-9 text-archive-paper">
+    <div class="mx-auto flex w-[min(1120px,calc(100%-36px))] flex-wrap items-center justify-between gap-5">
+      <p class="font-display text-3xl font-bold text-archive-goldSoft">Iraqi Biradari</p>
+      <a class="text-xs font-black uppercase tracking-[0.12em] hover:text-archive-goldSoft" href="https://apnonkitalash.com/">Open Shajra</a>
+    </div>
+  </footer>
+
+  <script type="module" src="/assets/js/nav.js"></script>
+  <script type="module" src="/assets/js/culture-submit.js"></script>
+</body>
+</html>

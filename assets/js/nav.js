@@ -6,17 +6,19 @@ const GROUPS = [
   { label: 'About', href: '/about/' },
   {
     label: 'Community',
-    pages: ['/announcements', '/events'],
+    pages: ['/announcements', '/events', '/people'],
     children: [
       { label: 'Announcements', href: '/announcements/' },
       { label: 'Events', href: '/events/' },
+      { label: 'Achievers', href: '/people/' },
     ],
   },
   {
     label: 'Heritage',
-    pages: ['/documents'],
+    pages: ['/documents', '/culture'],
     children: [
       { label: 'Documents', href: '/documents/' },
+      { label: 'Our Culture', href: '/culture/' },
       { label: 'Shajra', href: 'https://apnonkitalash.com/', external: true },
     ],
   },

@@ -56,6 +56,8 @@
               <button data-section-tab="announcements" role="tab" type="button" class="min-h-9 px-4 text-xs font-black uppercase tracking-[0.1em]">Announcements</button>
               <button data-section-tab="documents"     role="tab" type="button" class="min-h-9 px-4 text-xs font-black uppercase tracking-[0.1em]">Documents</button>
               <button data-section-tab="videos"        role="tab" type="button" class="min-h-9 px-4 text-xs font-black uppercase tracking-[0.1em]">Videos</button>
+              <button data-section-tab="people"        role="tab" type="button" class="min-h-9 px-4 text-xs font-black uppercase tracking-[0.1em]">People</button>
+              <button data-section-tab="stories"       role="tab" type="button" class="min-h-9 px-4 text-xs font-black uppercase tracking-[0.1em]">Culture</button>
               <button data-section-tab="matrimony"     role="tab" type="button" class="min-h-9 px-4 text-xs font-black uppercase tracking-[0.1em]">Matrimony</button>
             </div>
             <button data-logout type="button" class="text-xs font-black uppercase tracking-[0.1em] text-archive-muted hover:text-archive-ink">Sign out</button>
@@ -79,7 +81,7 @@
 
               <!-- Title (all types) -->
               <label class="grid gap-2 text-sm font-bold text-archive-muted">
-                Title <span class="font-normal text-archive-maroon">*</span>
+                <span data-form-title-label>Title</span> <span class="font-normal text-archive-maroon">*</span>
                 <input name="title" required class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
               </label>
 
@@ -159,6 +161,45 @@
                 <textarea name="description" rows="4" class="border border-archive-line bg-archive-cream p-3 text-archive-ink"></textarea>
               </label>
 
+              <!-- Designation — people only -->
+              <label data-field="designation" class="grid gap-2 text-sm font-bold text-archive-muted">
+                Designation / Role
+                <input name="designation" placeholder="e.g. Community Leader, Scholar, Physician…" class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
+              </label>
+
+              <!-- Photo URL — people only -->
+              <label data-field="photoUrl" class="grid gap-2 text-sm font-bold text-archive-muted">
+                Photo URL
+                <input name="photoUrl" type="url" placeholder="https://… (portrait photo)" class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
+                <span class="text-xs font-normal text-archive-muted">Direct link to a publicly hosted photograph.</span>
+              </label>
+
+              <!-- Author — stories only -->
+              <label data-field="author" class="grid gap-2 text-sm font-bold text-archive-muted">
+                Author
+                <input name="author" placeholder="Name as it should appear on the story" class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
+              </label>
+
+              <!-- Cover image URL — stories only -->
+              <label data-field="coverImageUrl" class="grid gap-2 text-sm font-bold text-archive-muted">
+                Cover image URL
+                <input name="coverImageUrl" type="url" placeholder="https://… (landscape image for story card)" class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
+              </label>
+
+              <!-- Culture category select — stories only -->
+              <label data-field="cultureCategory" class="grid gap-2 text-sm font-bold text-archive-muted">
+                Category
+                <select name="cultureCategory" class="border border-archive-line bg-archive-cream p-3 text-archive-ink">
+                  <option value="">— Select category —</option>
+                  <option value="Food &amp; Cuisine">Food &amp; Cuisine</option>
+                  <option value="Marriages &amp; Celebrations">Marriages &amp; Celebrations</option>
+                  <option value="Rituals &amp; Customs">Rituals &amp; Customs</option>
+                  <option value="History &amp; Heritage">History &amp; Heritage</option>
+                  <option value="Community Life">Community Life</option>
+                  <option value="General">General</option>
+                </select>
+              </label>
+
               <!-- Ribbon — events only -->
               <div data-field="ribbon" class="flex items-start gap-3 rounded border border-archive-goldSoft bg-archive-paper p-4">
                 <input name="ribbon" id="ribbon-check" type="checkbox" class="mt-0.5 h-5 w-5 accent-archive-green shrink-0"/>
@@ -192,6 +233,16 @@
               </details>
             </div>
           </div>
+
+          <!-- Story submissions — shown when Culture tab is active -->
+          <section data-submissions-section hidden class="mt-6 border border-archive-line bg-white p-6">
+            <div>
+              <p class="text-xs font-black uppercase tracking-[0.18em] text-archive-gold">Community Contributions</p>
+              <h2 class="mt-2 font-display text-3xl font-bold text-archive-green">Story submissions</h2>
+              <p class="mt-2 max-w-3xl text-sm leading-6 text-archive-muted">Stories submitted through the public form. Review each submission, save notes, and update its status. Approved submissions can be manually turned into published stories via the form above.</p>
+            </div>
+            <div data-submissions-list class="mt-6 grid gap-4"></div>
+          </section>
 
           <!-- Matrimony section — shown when Matrimony tab is active -->
           <section data-matrimony-section hidden class="mt-6 border border-archive-line bg-white p-6">
