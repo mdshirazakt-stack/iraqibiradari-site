@@ -21,100 +21,169 @@
     <section class="bg-archive-green py-10 md:py-12 text-archive-cream">
       <div class="mx-auto w-[min(1120px,calc(100%-36px))]">
         <p class="text-xs font-black uppercase tracking-[0.18em] text-archive-goldSoft">Admin Console</p>
-        <h1 class="mt-3 max-w-4xl font-display text-4xl font-bold leading-tight text-white md:text-5xl">Curate archive content.</h1>
-        <p class="mt-3 max-w-3xl text-base leading-7 text-archive-paper">Add videos, meeting notes, documents, events, and announcements. Access is restricted through Supabase Auth.</p>
+        <h1 class="mt-3 max-w-4xl font-display text-4xl font-bold leading-tight text-white md:text-5xl">Manage content.</h1>
+        <p class="mt-3 max-w-3xl text-base leading-7 text-archive-paper">Create, edit, and publish events, announcements, documents, and more. Access is restricted to authorised admins.</p>
       </div>
     </section>
 
     <section class="py-12">
       <div class="mx-auto w-[min(1120px,calc(100%-36px))]">
-        <p data-status class="mb-6 border-l-4 border-archive-gold bg-white p-4 text-sm font-bold text-archive-muted"></p>
 
+        <!-- Status message — hidden until JS sets it -->
+        <div data-status-wrap style="display:none" class="mb-6 flex items-start gap-3 border-l-4 border-archive-gold bg-white p-4">
+          <p data-status class="flex-1 text-sm font-bold text-archive-muted"></p>
+          <button data-status-dismiss type="button" class="shrink-0 text-xl leading-none text-archive-muted hover:text-archive-ink" aria-label="Dismiss">×</button>
+        </div>
+
+        <!-- Sign-in panel -->
         <section data-auth-panel class="border border-archive-line bg-white p-6">
           <h2 class="font-display text-3xl font-bold text-archive-green">Admin sign in</h2>
-          <p class="mt-3 max-w-2xl text-archive-muted">Use the Supabase Auth account for <strong>mdshiraz.ib@outlook.com</strong>. A magic sign-in link will be sent by email.</p>
+          <p class="mt-3 max-w-2xl text-archive-muted">Enter your admin email below. A magic sign-in link will be sent to your inbox.</p>
           <form data-login-form class="mt-5 flex flex-col gap-3 md:flex-row">
             <input name="email" type="email" required value="mdshiraz.ib@outlook.com" class="min-h-12 flex-1 border border-archive-line bg-archive-cream px-4 text-archive-ink"/>
-            <button class="min-h-12 bg-archive-gold px-5 text-sm font-black uppercase tracking-[0.12em] text-archive-ink" type="submit">Send sign-in link</button>
+            <button data-signin-button class="min-h-12 bg-archive-gold px-5 text-sm font-black uppercase tracking-[0.12em] text-archive-ink" type="submit">Send sign-in link</button>
           </form>
         </section>
 
-        <section data-admin-panel hidden class="grid gap-8 lg:grid-cols-[0.82fr_1.18fr]">
-        <form data-admin-form class="grid gap-4 border border-archive-line bg-white p-6">
-          <div>
-            <h2 data-form-title class="font-display text-3xl font-bold text-archive-green">New entry</h2>
-            <p data-editing-note hidden class="mt-2 text-sm font-bold text-archive-muted">Editing an existing entry. Saving will update it instead of creating a new post.</p>
-          </div>
-          <label class="grid gap-2 text-sm font-bold text-archive-muted">Content type
-            <select name="type" class="border border-archive-line bg-archive-cream p-3 text-archive-ink">
-              <option value="documents">Document</option>
-              <option value="videos">Video</option>
-              <option value="events">Event</option>
-              <option value="announcements">Announcement</option>
-            </select>
-          </label>
-          <label class="grid gap-2 text-sm font-bold text-archive-muted">Title
-            <input name="title" required class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
-          </label>
-          <label data-field="category" class="grid gap-2 text-sm font-bold text-archive-muted">Category
-            <input name="category" placeholder="Books, Meeting Notes, Meeting Videos..." class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
-          </label>
-          <label data-field="itemType" class="grid gap-2 text-sm font-bold text-archive-muted">Document type
-            <input name="itemType" placeholder="PDF, Drive video, Notice..." class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
-          </label>
-          <label data-field="url" class="grid gap-2 text-sm font-bold text-archive-muted">Drive or public URL
-            <input name="url" type="url" class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
-          </label>
-          <label data-field="registrationUrl" hidden class="grid gap-2 text-sm font-bold text-archive-muted">Registration URL
-            <input name="registrationUrl" type="url" class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
-          </label>
-          <label data-field="date" class="grid gap-2 text-sm font-bold text-archive-muted">Event date
-            <input name="date" type="date" class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
-          </label>
-          <label data-field="sortOrder" class="grid gap-2 text-sm font-bold text-archive-muted">Display order
-            <input name="sortOrder" type="number" value="0" class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
-            <span class="text-xs font-normal leading-5 text-archive-muted">Higher numbers appear first. You can also drag cards in the list to rearrange them.</span>
-          </label>
-          <label class="grid gap-2 text-sm font-bold text-archive-muted">Description
-            <textarea name="description" rows="4" class="border border-archive-line bg-archive-cream p-3 text-archive-ink"></textarea>
-          </label>
-          <label class="flex items-center gap-3 text-sm font-bold text-archive-muted">
-            <input name="published" type="checkbox" checked class="h-5 w-5"/> Published
-          </label>
-          <button data-save-button class="min-h-12 bg-archive-gold px-5 text-sm font-black uppercase tracking-[0.12em] text-archive-ink" type="submit">Save to Supabase</button>
-          <button data-cancel-edit hidden class="min-h-12 border border-archive-gold px-5 text-sm font-black uppercase tracking-[0.12em] text-archive-green" type="button">Cancel edit</button>
-          <button data-logout class="min-h-12 border border-archive-line px-5 text-sm font-black uppercase tracking-[0.12em] text-archive-muted" type="button">Sign out</button>
-        </form>
+        <!-- Admin panel — hidden until authenticated -->
+        <section data-admin-panel hidden>
 
-        <div class="grid gap-6">
-          <div data-admin-list class="grid gap-4 md:grid-cols-2"></div>
-          <details class="border border-archive-line bg-white p-6">
-            <summary class="cursor-pointer font-display text-3xl font-bold text-archive-green">One-time migration tools</summary>
-            <div class="flex flex-wrap items-center justify-between gap-3">
-              <h2 class="mt-5 font-display text-2xl font-bold text-archive-green">Seed starter archive</h2>
+          <!-- Section tab bar -->
+          <div class="flex flex-wrap items-center justify-between gap-3 border border-archive-line bg-white px-5 py-4">
+            <div class="flex flex-wrap gap-2" role="tablist" aria-label="Content sections">
+              <button data-section-tab="events"        role="tab" type="button" class="min-h-9 px-4 text-xs font-black uppercase tracking-[0.1em]">Events</button>
+              <button data-section-tab="announcements" role="tab" type="button" class="min-h-9 px-4 text-xs font-black uppercase tracking-[0.1em]">Announcements</button>
+              <button data-section-tab="documents"     role="tab" type="button" class="min-h-9 px-4 text-xs font-black uppercase tracking-[0.1em]">Documents</button>
+              <button data-section-tab="videos"        role="tab" type="button" class="min-h-9 px-4 text-xs font-black uppercase tracking-[0.1em]">Videos</button>
+              <button data-section-tab="matrimony"     role="tab" type="button" class="min-h-9 px-4 text-xs font-black uppercase tracking-[0.1em]">Matrimony</button>
+            </div>
+            <button data-logout type="button" class="text-xs font-black uppercase tracking-[0.1em] text-archive-muted hover:text-archive-ink">Sign out</button>
+          </div>
+
+          <!-- Content section — Events / Announcements / Documents / Videos -->
+          <div data-content-section class="mt-6 grid gap-8 lg:grid-cols-[0.82fr_1.18fr]">
+
+            <!-- Left: form -->
+            <form data-admin-form class="grid gap-5 border border-archive-line bg-white p-6 content-start">
+              <div class="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h2 data-form-title class="font-display text-3xl font-bold text-archive-green">New event</h2>
+                  <p data-editing-note hidden class="mt-1 text-sm font-bold text-archive-gold">Editing existing entry — save will update it.</p>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                  <button data-save-button class="min-h-10 bg-archive-gold px-5 text-sm font-black uppercase tracking-[0.12em] text-archive-ink" type="submit">Save</button>
+                  <button data-cancel-edit hidden class="min-h-10 border border-archive-gold px-4 text-sm font-black uppercase tracking-[0.12em] text-archive-green" type="button">Cancel</button>
+                </div>
+              </div>
+
+              <!-- Title (all types) -->
+              <label class="grid gap-2 text-sm font-bold text-archive-muted">
+                Title <span class="font-normal text-archive-maroon">*</span>
+                <input name="title" required class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
+              </label>
+
+              <!-- Event type radio (events only) -->
+              <div data-field="eventType" class="grid gap-2">
+                <p class="text-sm font-bold text-archive-muted">Event type</p>
+                <div class="flex flex-wrap gap-5">
+                  <label class="flex cursor-pointer items-center gap-2 text-sm font-bold text-archive-muted">
+                    <input name="eventType" type="radio" value="live" checked class="h-4 w-4 accent-archive-green"/> Live / In-person
+                  </label>
+                  <label class="flex cursor-pointer items-center gap-2 text-sm font-bold text-archive-muted">
+                    <input name="eventType" type="radio" value="webinar" class="h-4 w-4 accent-archive-green"/> Webinar / Online
+                  </label>
+                </div>
+              </div>
+
+              <!-- Date (events + videos) -->
+              <label data-field="date" class="grid gap-2 text-sm font-bold text-archive-muted">
+                Date
+                <input name="date" type="date" class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
+              </label>
+
+              <!-- Location (events only) -->
+              <label data-field="location" class="grid gap-2 text-sm font-bold text-archive-muted">
+                Location
+                <input name="location" placeholder="City, venue, or online platform" class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
+              </label>
+
+              <!-- Video / stream URL (events only) -->
+              <label data-field="videoUrl" class="grid gap-2 text-sm font-bold text-archive-muted">
+                Video / stream URL
+                <input name="videoUrl" type="url" placeholder="YouTube, Zoom, or recording link" class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
+              </label>
+
+              <!-- Registration URL (events only) -->
+              <label data-field="registrationUrl" class="grid gap-2 text-sm font-bold text-archive-muted">
+                Registration URL
+                <input name="registrationUrl" type="url" class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
+              </label>
+
+              <!-- Category (documents + videos + events) -->
+              <label data-field="category" class="grid gap-2 text-sm font-bold text-archive-muted">
+                Category
+                <input name="category" placeholder="e.g. Books, Meeting Notes, Heritage…" class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
+              </label>
+
+              <!-- Document type (documents only) -->
+              <label data-field="itemType" class="grid gap-2 text-sm font-bold text-archive-muted">
+                Document type
+                <input name="itemType" placeholder="e.g. PDF, Drive link, Notice…" class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
+              </label>
+
+              <!-- Drive / public URL (documents + videos) -->
+              <label data-field="url" class="grid gap-2 text-sm font-bold text-archive-muted">
+                Drive or public URL
+                <input name="url" type="url" class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
+              </label>
+
+              <!-- Description / body (all types) -->
+              <label class="grid gap-2 text-sm font-bold text-archive-muted">
+                Description
+                <textarea name="description" rows="4" class="border border-archive-line bg-archive-cream p-3 text-archive-ink"></textarea>
+              </label>
+
+              <!-- Sort order (all types) -->
+              <label data-field="sortOrder" class="grid gap-2 text-sm font-bold text-archive-muted">
+                Display order
+                <input name="sortOrder" type="number" value="0" class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
+                <span class="text-xs font-normal leading-5 text-archive-muted">Higher numbers appear first. Drag cards in the list to reorder.</span>
+              </label>
+
+              <!-- Published toggle (all types) -->
+              <label class="flex items-center gap-3 text-sm font-bold text-archive-muted">
+                <input name="published" type="checkbox" checked class="h-5 w-5 accent-archive-green"/> Published
+              </label>
+
+            </form>
+
+            <!-- Right: list + tools -->
+            <div class="grid gap-6 content-start">
+              <div data-admin-list class="grid gap-4"></div>
+              <details class="border border-archive-line bg-white p-6">
+                <summary class="cursor-pointer font-display text-2xl font-bold text-archive-green">One-time migration tools</summary>
+                <p class="mt-4 text-sm leading-6 text-archive-muted">Seed starter data from the local JSON file into Supabase. Only use this once after a fresh schema setup — normal publishing uses Save to Supabase.</p>
+                <button data-seed-json class="mt-4 border border-archive-gold px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-archive-green" type="button">Seed starter data (one-time only)</button>
+              </details>
+            </div>
+          </div>
+
+          <!-- Matrimony section — shown when Matrimony tab is active -->
+          <section data-matrimony-section hidden class="mt-6 border border-archive-line bg-white p-6">
+            <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+              <div>
+                <p class="text-xs font-black uppercase tracking-[0.18em] text-archive-gold">Private Review Desk</p>
+                <h2 class="mt-2 font-display text-3xl font-bold text-archive-green">Matrimony submissions</h2>
+                <p class="mt-2 max-w-3xl text-sm leading-6 text-archive-muted">These are never published publicly. Review consent, contact the family when appropriate, and update each submission's status.</p>
+              </div>
               <div class="flex flex-wrap gap-2">
-                <button data-seed-json class="border border-archive-gold px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-archive-green" type="button">One-time seed starter data</button>
+                <button data-matrimony-type="matrimony_profiles" type="button" class="bg-archive-gold px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-archive-ink">Profiles</button>
+                <button data-matrimony-type="matrimony_requests" type="button" class="border border-archive-gold px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-archive-green">Seekers</button>
               </div>
             </div>
-            <p class="mt-3 text-sm leading-6 text-archive-muted">Use this only after a fresh Supabase schema setup to copy the curated local JSON into the live tables. Normal publishing happens through Save to Supabase and does not require seeding again.</p>
-            <p class="mt-3 text-sm leading-6 text-archive-muted">For events, the homepage ribbon shows only published entries with a registration URL and an event date today or later. To delist an event, unpublish it here or let the event date pass.</p>
-          </details>
-        </div>
+            <div data-matrimony-list class="mt-6 grid gap-4"></div>
+          </section>
 
-        <section class="lg:col-span-2 border border-archive-line bg-white p-6">
-          <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-            <div>
-              <p class="text-xs font-black uppercase tracking-[0.18em] text-archive-gold">Private Review Desk</p>
-              <h2 class="mt-2 font-display text-3xl font-bold text-archive-green">Matrimony submissions</h2>
-              <p class="mt-2 max-w-3xl text-sm leading-6 text-archive-muted">These entries are never published publicly. Review consent, contact the family when appropriate, and move each submission through a private status.</p>
-            </div>
-            <div class="flex flex-wrap gap-2">
-              <button data-matrimony-type="matrimony_profiles" class="bg-archive-gold px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-archive-ink" type="button">Profiles</button>
-              <button data-matrimony-type="matrimony_requests" class="border border-archive-gold px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-archive-green" type="button">Seekers</button>
-            </div>
-          </div>
-          <div data-matrimony-list class="mt-6 grid gap-4"></div>
-        </section>
         </section>
       </div>
     </section>
