@@ -752,8 +752,8 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
           </div>` : ''}
         </div>
         <div class="mt-4 border border-archive-line bg-white p-4">
-          <p class="mb-2 text-xs font-black uppercase tracking-[0.12em] text-archive-gold">Story content</p>
-          <p class="whitespace-pre-wrap text-sm leading-7 text-archive-ink">${escapeHtml(row.content || '')}</p>
+          <p class="mb-3 text-xs font-black uppercase tracking-[0.12em] text-archive-gold">Story content</p>
+          <div class="prose-submission text-sm">${row.content || '<em class="text-archive-muted">No content provided.</em>'}</div>
         </div>
         <label class="mt-5 grid gap-2 text-sm font-bold text-archive-muted">
           Admin notes
