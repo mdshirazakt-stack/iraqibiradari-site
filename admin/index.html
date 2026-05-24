@@ -7,6 +7,7 @@
 <link rel="icon" href="/iraqi_biradari_favicon.ico" sizes="any"/>
 <link rel="icon" type="image/png" sizes="32x32" href="/iraqi_biradari_favicon_32x32.png"/>
 <link rel="icon" type="image/png" sizes="16x16" href="/iraqi_biradari_favicon_16x16.png"/>
+<link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet"/>
 <script src="https://cdn.tailwindcss.com"></script>
 <script>tailwind.config={theme:{extend:{colors:{archive:{cream:'#fbf7ed',paper:'#f3ead8',green:'#173f31',gold:'#b99045',goldSoft:'#ead7a2',ink:'#201c17',muted:'#746b5f',line:'#ded2bc',maroon:'#743a32'}},fontFamily:{body:['Lato','Arial','sans-serif'],display:['Amiri','serif']},boxShadow:{soft:'0 18px 45px rgba(32,28,23,.12)'}}}};</script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/><link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet"/>
@@ -137,11 +138,35 @@
                 <input name="url" type="url" class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
               </label>
 
-              <!-- Description / body (all types) -->
-              <label class="grid gap-2 text-sm font-bold text-archive-muted">
+              <!-- Short summary — events only, plain text for list cards -->
+              <label data-field="shortSummary" class="grid gap-2 text-sm font-bold text-archive-muted">
+                Short summary
+                <span class="text-xs font-normal text-archive-muted">Shown on the events listing card — one or two lines.</span>
+                <input name="shortSummary" placeholder="Brief description for list cards…" class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
+              </label>
+
+              <!-- Rich body — events + announcements -->
+              <div data-field="body" class="grid gap-2">
+                <p class="text-sm font-bold text-archive-muted">Full content</p>
+                <span class="text-xs font-normal text-archive-muted">Rich text shown on the detail page. Supports headings, links, images.</span>
+                <div id="quill-editor" style="min-height:220px;background:#fbf7ed;font-family:inherit"></div>
+                <input type="hidden" name="body"/>
+              </div>
+
+              <!-- Plain description — documents + videos -->
+              <label data-field="descriptionText" class="grid gap-2 text-sm font-bold text-archive-muted">
                 Description
                 <textarea name="description" rows="4" class="border border-archive-line bg-archive-cream p-3 text-archive-ink"></textarea>
               </label>
+
+              <!-- Ribbon — events only -->
+              <div data-field="ribbon" class="flex items-start gap-3 rounded border border-archive-goldSoft bg-archive-paper p-4">
+                <input name="ribbon" id="ribbon-check" type="checkbox" class="mt-0.5 h-5 w-5 accent-archive-green shrink-0"/>
+                <label for="ribbon-check" class="cursor-pointer">
+                  <p class="text-sm font-bold text-archive-ink">Show on homepage ribbon</p>
+                  <p class="text-xs text-archive-muted">Ticking this pins the event to the top maroon banner on every page.</p>
+                </label>
+              </div>
 
               <!-- Sort order (all types) -->
               <label data-field="sortOrder" class="grid gap-2 text-sm font-bold text-archive-muted">
@@ -189,6 +214,7 @@
     </section>
   </main>
 
+  <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
   <script type="module" src="/assets/js/nav.js"></script>
   <script type="module" src="/assets/js/admin.js"></script>
 </body>

@@ -17,13 +17,13 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
   const statusEl      = document.querySelector('[data-status]');
   const statusDismiss = document.querySelector('[data-status-dismiss]');
 
-  const form            = document.querySelector('[data-admin-form]');
-  const list            = document.querySelector('[data-admin-list]');
-  const formTitle       = document.querySelector('[data-form-title]');
-  const editingNote     = document.querySelector('[data-editing-note]');
-  const saveButton      = document.querySelector('[data-save-button]');
+  const form             = document.querySelector('[data-admin-form]');
+  const list             = document.querySelector('[data-admin-list]');
+  const formTitle        = document.querySelector('[data-form-title]');
+  const editingNote      = document.querySelector('[data-editing-note]');
+  const saveButton       = document.querySelector('[data-save-button]');
   const cancelEditButton = document.querySelector('[data-cancel-edit]');
-  const seedButton      = document.querySelector('[data-seed-json]');
+  const seedButton       = document.querySelector('[data-seed-json]');
 
   const sectionTabs          = Array.from(document.querySelectorAll('[data-section-tab]'));
   const matrimonyList        = document.querySelector('[data-matrimony-list]');
@@ -38,10 +38,41 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
     category:        document.querySelector('[data-field="category"]'),
     itemType:        document.querySelector('[data-field="itemType"]'),
     url:             document.querySelector('[data-field="url"]'),
+    shortSummary:    document.querySelector('[data-field="shortSummary"]'),
+    body:            document.querySelector('[data-field="body"]'),
+    descriptionText: document.querySelector('[data-field="descriptionText"]'),
+    ribbon:          document.querySelector('[data-field="ribbon"]'),
     sortOrder:       document.querySelector('[data-field="sortOrder"]'),
   };
 
   if (!authPanel || !adminPanel || !form || !list) return;
+
+  // ── Quill rich-text editor ───────────────────────────────────────────
+  let quill = null;
+  const quillContainer = document.querySelector('#quill-editor');
+  if (window.Quill && quillContainer) {
+    quill = new Quill(quillContainer, {
+      theme: 'snow',
+      placeholder: 'Write event details, agenda, or announcement content…',
+      modules: {
+        toolbar: [
+          [{ header: [2, 3, false] }],
+          ['bold', 'italic', 'underline'],
+          [{ list: 'ordered' }, { list: 'bullet' }],
+          ['link', 'image'],
+          ['clean'],
+        ],
+      },
+    });
+    // Override image handler: prompt for URL instead of base64
+    quill.getModule('toolbar').addHandler('image', () => {
+      const url = prompt('Enter image URL:');
+      if (url) {
+        const range = quill.getSelection(true);
+        quill.insertEmbed(range.index, 'image', url, 'user');
+      }
+    });
+  }
 
   // ── State ────────────────────────────────────────────────────────────
   let currentType          = 'events';
@@ -49,7 +80,6 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
   let editingEntry         = null;
   let draggedEntryId       = null;
 
-  // Initialise tab visuals before session loads (panel is hidden — no flash)
   updateSectionTabs('events');
   updateFieldVisibility();
 
@@ -91,6 +121,14 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
   // ── Form submit ──────────────────────────────────────────────────────
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
+
+    // Flush Quill content into the hidden input before reading FormData
+    if (quill) {
+      const html = quill.root.innerHTML;
+      const bodyInput = form.querySelector('[name="body"]');
+      if (bodyInput) bodyInput.value = (html === '<p><br></p>' ? '' : html);
+    }
+
     const payload = formPayload(new FormData(form), currentType);
     if (editingEntry && editingEntry.table === currentType) payload.id = editingEntry.id;
     if (!payload.title) return;
@@ -300,9 +338,13 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
       const typeBadge = row.event_type
         ? `<span class="ml-2 inline-block px-2 py-0.5 text-xs font-black uppercase tracking-wide ${row.event_type === 'webinar' ? 'bg-archive-goldSoft text-archive-ink' : 'bg-archive-green text-archive-cream'}">${escapeHtml(row.event_type)}</span>`
         : '';
+      const ribbonBadge = row.ribbon
+        ? '<span class="ml-2 inline-block bg-archive-maroon px-2 py-0.5 text-xs font-black uppercase tracking-wide text-white">Ribbon</span>'
+        : '';
       const publishedDot = row.published
-        ? '<span class="inline-block h-2 w-2 rounded-full bg-green-500 mr-1" title="Published"></span>'
-        : '<span class="inline-block h-2 w-2 rounded-full bg-archive-muted mr-1" title="Draft"></span>';
+        ? '<span class="inline-block h-2 w-2 rounded-full bg-green-500 mr-1.5" title="Published"></span>'
+        : '<span class="inline-block h-2 w-2 rounded-full bg-archive-muted mr-1.5" title="Draft"></span>';
+      const preview = stripHtml(row.description || row.body || '');
       return `
         <article data-entry-card data-entry-id="${escapeHtml(row.id)}" class="border border-archive-line bg-white p-5">
           <div class="mb-3 flex items-start justify-between gap-4">
@@ -313,13 +355,13 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
             </button>
             <span class="text-xs font-black uppercase tracking-[0.1em] text-archive-muted">Order: ${sortOrder}</span>
           </div>
-          <p class="flex items-center text-xs font-black uppercase tracking-[0.14em] text-archive-gold">
-            ${publishedDot}${escapeHtml(row.category || row.content_type || date || 'Archive')}${typeBadge}
+          <p class="flex flex-wrap items-center gap-1 text-xs font-black uppercase tracking-[0.14em] text-archive-gold">
+            ${publishedDot}${escapeHtml(row.category || row.content_type || date || 'Archive')}${typeBadge}${ribbonBadge}
           </p>
           <h2 class="mt-2 text-lg font-black leading-snug text-archive-green">${escapeHtml(row.title)}</h2>
           ${date ? `<p class="mt-1 text-xs font-bold text-archive-muted">${escapeHtml(date)}</p>` : ''}
-          ${row.location ? `<p class="mt-1 text-xs text-archive-muted">${escapeHtml(row.location)}</p>` : ''}
-          <p class="mt-2 line-clamp-2 text-sm leading-6 text-archive-muted">${escapeHtml(row.description || row.body || '')}</p>
+          ${row.location ? `<p class="mt-0.5 text-xs text-archive-muted">${escapeHtml(row.location)}</p>` : ''}
+          ${preview ? `<p class="mt-2 line-clamp-2 text-sm leading-6 text-archive-muted">${escapeHtml(preview)}</p>` : ''}
           <div class="mt-4 flex flex-wrap gap-2">
             <button data-action="edit"   data-table="${currentType}" data-id="${escapeHtml(row.id)}"
               class="border border-archive-gold bg-archive-gold px-3 py-1.5 text-xs font-black uppercase tracking-[0.1em] text-archive-ink" type="button">Edit</button>
@@ -347,7 +389,8 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
     if (table === 'announcements') {
       return {
         id: base.id, title: base.title,
-        body: base.description, date: null,
+        body: String(data.get('body') || '').trim() || null,
+        date: null,
         published: base.published, sort_order: base.sort_order,
       };
     }
@@ -355,6 +398,9 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
     if (table === 'events') {
       return {
         ...base,
+        description:      String(data.get('shortSummary') || '').trim() || null,
+        body:             String(data.get('body') || '').trim() || null,
+        ribbon:           data.get('ribbon') === 'on',
         event_type:       String(data.get('eventType') || 'live'),
         event_date:       String(data.get('date') || '') || null,
         location:         String(data.get('location') || '').trim() || null,
@@ -385,6 +431,9 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
       ['eventType',       item.event_type || 'live'],
       ['location',        item.location || ''],
       ['videoUrl',        item.video_url || ''],
+      ['shortSummary',    item.description || ''],
+      ['body',            item.body || ''],
+      ['ribbon',          item.ribbon ? 'on' : ''],
     ]);
     const payload = formPayload({ get: key => data.get(key) }, table);
     payload.id = item.id || payload.id;
@@ -393,24 +442,23 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
 
   function setStatus(message) {
     if (!statusWrap || !statusEl) return;
-    statusEl.textContent       = message || '';
-    statusWrap.style.display   = message ? 'flex' : 'none';
+    statusEl.textContent     = message || '';
+    statusWrap.style.display = message ? 'flex' : 'none';
   }
 
   function updateFieldVisibility() {
     const visibleByType = {
-      events:        ['eventType', 'date', 'location', 'videoUrl', 'registrationUrl', 'category', 'sortOrder'],
-      announcements: ['sortOrder'],
-      documents:     ['category', 'itemType', 'url', 'sortOrder'],
-      videos:        ['category', 'url', 'date', 'sortOrder'],
+      events:        ['eventType', 'date', 'location', 'videoUrl', 'registrationUrl', 'category', 'shortSummary', 'body', 'ribbon', 'sortOrder'],
+      announcements: ['body', 'sortOrder'],
+      documents:     ['category', 'itemType', 'url', 'descriptionText', 'sortOrder'],
+      videos:        ['category', 'url', 'date', 'descriptionText', 'sortOrder'],
     };
     const visible = new Set(visibleByType[currentType] || []);
     for (const [name, row] of Object.entries(fieldRows)) {
       if (!row) continue;
       const show = visible.has(name);
-      // Use inline style — Tailwind utility classes (grid, flex) override [hidden] attribute
       row.style.display = show ? '' : 'none';
-      row.querySelectorAll('input, textarea, select').forEach(ctrl => {
+      row.querySelectorAll('input:not([type="hidden"]), textarea, select').forEach(ctrl => {
         ctrl.disabled = !show;
       });
     }
@@ -420,7 +468,6 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
     editingEntry = { table, id: row.id };
     currentType  = table;
 
-    // Switch to correct tab without resetting the form
     updateSectionTabs(table);
     if (contentSection)   contentSection.style.display   = 'grid';
     if (matrimonySection) matrimonySection.style.display = 'none';
@@ -432,11 +479,21 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
     form.elements.registrationUrl.value = row.registration_url || '';
     form.elements.date.value            = row.event_date   || row.video_date || row.date || '';
     form.elements.sortOrder.value       = Number(row.sort_order || 0);
-    form.elements.description.value     = row.description  || row.body || '';
     form.elements.published.checked     = row.published    !== false;
     form.elements.location.value        = row.location     || '';
     form.elements.videoUrl.value        = row.video_url    || '';
+    form.elements.shortSummary.value    = row.description  || '';
+    form.elements.ribbon.checked        = Boolean(row.ribbon);
 
+    // Plain description for docs/videos
+    if (form.elements.description) {
+      form.elements.description.value = row.description || row.body || '';
+    }
+
+    // Quill rich body
+    if (quill) quill.root.innerHTML = row.body || '';
+
+    // Event type radio
     if (row.event_type) {
       form.querySelectorAll('[name="eventType"]').forEach(r => {
         r.checked = r.value === row.event_type;
@@ -464,6 +521,7 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
     saveButton.textContent          = 'Save';
     saveButton.disabled             = false;
     cancelEditButton.hidden         = true;
+    if (quill) quill.root.innerHTML = '';
     updateFieldVisibility();
   }
 
@@ -582,6 +640,10 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
   }
 
   // ── Utilities ────────────────────────────────────────────────────────
+
+  function stripHtml(html) {
+    return String(html || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  }
 
   function photoLink(value) {
     const url = safeExternalUrl(value);

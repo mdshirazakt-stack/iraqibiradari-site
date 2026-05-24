@@ -211,20 +211,29 @@ async function loadRibbon() {
     const supabase = await createSupabaseClient();
     const { data } = await supabase
       .from('events')
-      .select('title, registration_url, event_date')
+      .select('id, title, registration_url, video_url, event_date')
       .eq('published', true)
-      .not('registration_url', 'is', null)
-      .gte('event_date', new Date().toISOString().slice(0, 10))
-      .order('event_date', { ascending: true })
+      .eq('ribbon', true)
+      .order('event_date', { ascending: true, nullsFirst: false })
       .limit(1);
     const ev = data?.[0];
     if (!ev) return;
     const a = document.createElement('a');
     a.className = 'font-bold underline decoration-archive-goldSoft underline-offset-4';
-    a.href = ev.registration_url;
-    a.target = '_blank';
-    a.rel = 'noopener';
-    a.textContent = `Upcoming: ${ev.title} — Register`;
+    if (ev.registration_url) {
+      a.href = ev.registration_url;
+      a.target = '_blank';
+      a.rel = 'noopener';
+      a.textContent = `Upcoming: ${ev.title} — Register`;
+    } else if (ev.video_url) {
+      a.href = ev.video_url;
+      a.target = '_blank';
+      a.rel = 'noopener';
+      a.textContent = `Watch: ${ev.title}`;
+    } else {
+      a.href = `/events/detail/?id=${encodeURIComponent(ev.id)}`;
+      a.textContent = ev.title;
+    }
     el.replaceWith(a);
   } catch { /* show default text */ }
 }
