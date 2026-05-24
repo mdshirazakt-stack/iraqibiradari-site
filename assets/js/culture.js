@@ -13,6 +13,7 @@ import { createSupabaseClient } from './supabase-config.js';
     'Rituals & Customs',
     'History & Heritage',
     'Community Life',
+    'Ancestral Places',
     'General',
   ];
 
