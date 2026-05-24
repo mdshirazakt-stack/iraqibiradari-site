@@ -18,6 +18,12 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
   const statusEl      = document.querySelector('[data-status]');
   const statusDismiss = document.querySelector('[data-status-dismiss]');
 
+  // Drawer
+  const drawer        = document.querySelector('[data-drawer]');
+  const drawerPanel   = document.querySelector('[data-drawer-panel]');
+  const drawerBackdrop= document.querySelector('[data-drawer-backdrop]');
+  const drawerClose   = document.querySelector('[data-drawer-close]');
+
   const form             = document.querySelector('[data-admin-form]');
   const list             = document.querySelector('[data-admin-list]');
   const formTitle        = document.querySelector('[data-form-title]');
@@ -32,6 +38,12 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
   const submissionsList      = document.querySelector('[data-submissions-list]');
   const matrimonyTypeButtons = Array.from(document.querySelectorAll('[data-matrimony-type]'));
 
+  const filterBar       = document.querySelector('[data-filter-bar]');
+  const searchInput     = document.querySelector('[data-search]');
+  const newEntryButton  = document.querySelector('[data-new-entry]');
+  const sectionHeading  = document.querySelector('[data-section-heading]');
+  const sectionStats    = document.querySelector('[data-section-stats]');
+
   const fieldRows = {
     eventType:       document.querySelector('[data-field="eventType"]'),
     date:            document.querySelector('[data-field="date"]'),
@@ -45,14 +57,11 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
     body:            document.querySelector('[data-field="body"]'),
     descriptionText: document.querySelector('[data-field="descriptionText"]'),
     ribbon:          document.querySelector('[data-field="ribbon"]'),
-    // People
     designation:     document.querySelector('[data-field="designation"]'),
     photoUrl:        document.querySelector('[data-field="photoUrl"]'),
-    // Stories
     author:          document.querySelector('[data-field="author"]'),
     coverImageUrl:   document.querySelector('[data-field="coverImageUrl"]'),
     cultureCategory: document.querySelector('[data-field="cultureCategory"]'),
-    // All
     sortOrder:       document.querySelector('[data-field="sortOrder"]'),
   };
 
@@ -89,9 +98,12 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
   let currentMatrimonyType = 'matrimony_profiles';
   let editingEntry         = null;
   let draggedEntryId       = null;
+  let currentFilter        = 'all';
+  let allEntries           = [];  // cache for client-side filter + search
 
   updateSectionTabs('events');
   updateFieldVisibility();
+  updateNewEntryButton('events');
 
   // ── Session ──────────────────────────────────────────────────────────
   const { data: sessionData } = await supabase.auth.getSession();
@@ -123,9 +135,57 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
 
   statusDismiss?.addEventListener('click', () => setStatus(''));
 
+  // ── Drawer ───────────────────────────────────────────────────────────
+  function openDrawer() {
+    if (!drawer) return;
+    drawer.removeAttribute('aria-hidden');
+    drawer.classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeDrawer() {
+    if (!drawer) return;
+    drawer.setAttribute('aria-hidden', 'true');
+    drawer.classList.remove('is-open');
+    document.body.style.overflow = '';
+  }
+
+  drawerClose?.addEventListener('click', () => {
+    closeDrawer();
+    resetFormState(currentType);
+    setStatus('Edit cancelled.');
+  });
+
+  drawerBackdrop?.addEventListener('click', () => {
+    closeDrawer();
+    resetFormState(currentType);
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && drawer?.classList.contains('is-open')) {
+      closeDrawer();
+      resetFormState(currentType);
+    }
+  });
+
+  // ── New entry button ─────────────────────────────────────────────────
+  newEntryButton?.addEventListener('click', () => {
+    resetFormState(currentType);
+    openDrawer();
+    // Focus the title input once the drawer slides open
+    setTimeout(() => form?.elements?.title?.focus(), 280);
+  });
+
   // ── Section tabs ─────────────────────────────────────────────────────
   sectionTabs.forEach(tab => {
     tab.addEventListener('click', () => switchSection(tab.dataset.sectionTab));
+  });
+
+  // ── Search ───────────────────────────────────────────────────────────
+  let searchDebounce = null;
+  searchInput?.addEventListener('input', () => {
+    clearTimeout(searchDebounce);
+    searchDebounce = setTimeout(() => renderFilteredList(), 220);
   });
 
   // ── Form submit ──────────────────────────────────────────────────────
@@ -149,16 +209,18 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
 
     const { error } = await supabase.from(currentType).upsert(payload, { onConflict: 'id' });
     saveButton.disabled = false;
-    saveButton.textContent = editingEntry ? 'Update' : 'Save';
+    saveButton.textContent = 'Save';
 
     if (error) { setStatus(error.message); return; }
 
+    closeDrawer();
     resetFormState(savedType);
     setStatus('Saved successfully.');
     await renderList();
   });
 
   cancelEditButton.addEventListener('click', () => {
+    closeDrawer();
     resetFormState(currentType);
     setStatus('Edit cancelled.');
   });
@@ -231,7 +293,7 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
   });
 
   // ── Seed tool ────────────────────────────────────────────────────────
-  seedButton.addEventListener('click', async () => {
+  seedButton?.addEventListener('click', async () => {
     if (!confirm('This seeds starter data into Supabase. Only do this once after a fresh schema setup. Continue?')) return;
     setStatus('Seeding data…');
     try {
@@ -326,11 +388,28 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
     });
   }
 
+  function updateNewEntryButton(type) {
+    if (!newEntryButton) return;
+    const labels = {
+      events: '+ New event',
+      announcements: '+ New announcement',
+      documents: '+ New document',
+      videos: '+ New video',
+      people: '+ New person',
+      stories: '+ New story',
+    };
+    newEntryButton.textContent = labels[type] || '+ New entry';
+  }
+
   function switchSection(section) {
     const isMatrimony    = section === 'matrimony';
     const showSubmissions = section === 'stories';
 
+    closeDrawer();
     updateSectionTabs(section);
+    currentFilter = 'all';
+    if (searchInput) searchInput.value = '';
+
     if (contentSection)     contentSection.style.display     = isMatrimony ? 'none' : 'grid';
     if (matrimonySection)   matrimonySection.style.display   = isMatrimony ? 'block' : 'none';
     if (submissionsSection) submissionsSection.style.display = showSubmissions ? 'block' : 'none';
@@ -338,9 +417,18 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
     if (!isMatrimony) {
       currentType = section;
       resetFormState(section);
+      updateNewEntryButton(section);
+      if (sectionHeading) {
+        const labels = {
+          events:'Events', announcements:'Announcements', documents:'Documents',
+          videos:'Videos', people:'People', stories:'Culture',
+        };
+        sectionHeading.textContent = labels[section] || section;
+      }
       renderList();
       if (showSubmissions) renderSubmissions();
     } else {
+      if (contentSection) contentSection.style.display = 'none';
       renderMatrimonyList();
     }
   }
@@ -367,58 +455,234 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
       .order('created_at', { ascending: false });
 
     if (error) {
-      list.innerHTML = `<div class="border border-archive-line bg-white p-5 text-archive-muted">${escapeHtml(error.message)}</div>`;
+      list.innerHTML = `<div class="col-span-2 border border-archive-line bg-white p-5 text-archive-muted">${escapeHtml(error.message)}</div>`;
       return;
     }
 
-    list.innerHTML = (data || []).map(row => {
-      const date      = row.date || row.event_date || row.video_date || '';
-      const sortOrder = Number(row.sort_order || 0);
-      const typeBadge = row.event_type
-        ? `<span class="ml-2 inline-block px-2 py-0.5 text-xs font-black uppercase tracking-wide ${row.event_type === 'webinar' ? 'bg-archive-goldSoft text-archive-ink' : 'bg-archive-green text-archive-cream'}">${escapeHtml(row.event_type)}</span>`
-        : '';
-      const ribbonBadge = row.ribbon
-        ? '<span class="ml-2 inline-block bg-archive-maroon px-2 py-0.5 text-xs font-black uppercase tracking-wide text-white">Ribbon</span>'
-        : '';
-      const publishedDot = row.published
-        ? '<span class="inline-block h-2 w-2 rounded-full bg-green-500 mr-1.5" title="Published"></span>'
-        : '<span class="inline-block h-2 w-2 rounded-full bg-archive-muted mr-1.5" title="Draft"></span>';
-      const preview   = stripHtml(row.description || row.excerpt || row.body || '');
-      const subLabel  = row.designation
-        ? `<p class="mt-0.5 text-xs font-bold text-archive-muted">${escapeHtml(row.designation)}</p>`
-        : row.author
-          ? `<p class="mt-0.5 text-xs text-archive-muted">By ${escapeHtml(row.author)}</p>`
+    allEntries = data || [];
+    renderFilterChips();
+    renderFilteredList();
+  }
+
+  function renderFilteredList() {
+    const query  = (searchInput?.value || '').trim().toLowerCase();
+    const today  = new Date().toISOString().slice(0, 10);
+
+    // Apply filter chip
+    let filtered = allEntries.filter(row => {
+      if (currentFilter === 'all') return true;
+      if (currentFilter === 'published') return row.published === true;
+      if (currentFilter === 'drafts')    return row.published !== true;
+      // Events-specific
+      if (currentFilter === 'live')     return row.published === true;
+      if (currentFilter === 'upcoming') return (row.event_date || '') >= today;
+      if (currentFilter === 'past')     return row.event_date && row.event_date < today;
+      return true;
+    });
+
+    // Apply search
+    if (query) {
+      filtered = filtered.filter(row => {
+        const searchable = [row.title, row.description, row.excerpt, row.body,
+          row.category, row.location, row.author, row.designation].join(' ').toLowerCase();
+        return searchable.includes(query);
+      });
+    }
+
+    // Update stats
+    updateSectionStats(allEntries, today);
+
+    if (!filtered.length) {
+      list.innerHTML = `<div class="col-span-2 border border-archive-line bg-white p-8 text-center text-archive-muted">
+        No ${contentTypeLabel(currentType)}s${query ? ` matching "${escapeHtml(query)}"` : ''}.
+        ${!query && currentFilter === 'all' ? `<button data-new-entry type="button" class="ml-1 font-bold text-archive-green underline underline-offset-2">Create one</button>` : ''}
+      </div>`;
+      return;
+    }
+
+    // For events: group into Upcoming and Past with dividers
+    if (currentType === 'events' && currentFilter === 'all' && !query) {
+      const upcoming = filtered.filter(r => !r.event_date || r.event_date >= today);
+      const past     = filtered.filter(r => r.event_date && r.event_date < today);
+      past.sort((a, b) => (b.event_date || '').localeCompare(a.event_date || ''));
+
+      let html = '';
+      if (upcoming.length) {
+        html += groupDivider('Upcoming', upcoming.length);
+        html += upcoming.map(entryCard).join('');
+      }
+      if (past.length) {
+        html += groupDivider('Past', past.length);
+        html += past.map(entryCard).join('');
+      }
+      list.innerHTML = html;
+    } else {
+      list.innerHTML = filtered.map(entryCard).join('');
+    }
+
+    // Re-attach new-entry button inside list if rendered
+    list.querySelector('[data-new-entry]')?.addEventListener('click', () => {
+      resetFormState(currentType);
+      openDrawer();
+    });
+  }
+
+  function groupDivider(label, count) {
+    return `
+      <div class="col-span-2 flex items-center gap-3 pt-2 pb-1">
+        <span class="text-xs font-black uppercase tracking-[0.16em] text-archive-muted">${escapeHtml(label)}</span>
+        <span class="text-xs font-bold text-archive-muted/60">(${count})</span>
+        <div class="flex-1 border-t border-archive-line"></div>
+      </div>`;
+  }
+
+  function updateSectionStats(entries, today) {
+    if (!sectionStats) return;
+    if (currentType === 'events') {
+      const live     = entries.filter(r => r.published).length;
+      const upcoming = entries.filter(r => !r.event_date || r.event_date >= today).length;
+      const drafts   = entries.filter(r => !r.published).length;
+      const past     = entries.filter(r => r.event_date && r.event_date < today).length;
+      sectionStats.textContent = `${live} published · ${upcoming} upcoming · ${drafts} draft · ${past} past`;
+    } else {
+      const pub    = entries.filter(r => r.published).length;
+      const drafts = entries.filter(r => !r.published).length;
+      sectionStats.textContent = `${pub} published · ${drafts} draft`;
+    }
+  }
+
+  function renderFilterChips() {
+    if (!filterBar) return;
+    const today = new Date().toISOString().slice(0, 10);
+
+    let chips;
+    if (currentType === 'events') {
+      chips = [
+        { key: 'all',      label: 'All',      count: allEntries.length },
+        { key: 'live',     label: 'Published', count: allEntries.filter(r => r.published).length },
+        { key: 'upcoming', label: 'Upcoming',  count: allEntries.filter(r => !r.event_date || r.event_date >= today).length },
+        { key: 'drafts',   label: 'Drafts',    count: allEntries.filter(r => !r.published).length },
+        { key: 'past',     label: 'Past',      count: allEntries.filter(r => r.event_date && r.event_date < today).length },
+      ];
+    } else {
+      chips = [
+        { key: 'all',       label: 'All',       count: allEntries.length },
+        { key: 'published', label: 'Published',  count: allEntries.filter(r => r.published).length },
+        { key: 'drafts',    label: 'Drafts',     count: allEntries.filter(r => !r.published).length },
+      ];
+    }
+
+    filterBar.innerHTML = chips.map(c => {
+      const active = c.key === currentFilter;
+      return `
+        <button data-filter="${escapeHtml(c.key)}" type="button"
+          class="${active
+            ? 'min-h-8 px-4 text-xs font-black uppercase tracking-[0.1em] bg-archive-green text-archive-cream'
+            : 'min-h-8 px-4 text-xs font-black uppercase tracking-[0.1em] border border-archive-line text-archive-muted hover:text-archive-green hover:border-archive-green'}">
+          ${escapeHtml(c.label)}
+          <span class="${active ? 'ml-1.5 text-archive-goldSoft' : 'ml-1.5 text-archive-muted/60'}">${c.count}</span>
+        </button>`;
+    }).join('');
+
+    filterBar.addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-filter]');
+      if (!btn) return;
+      currentFilter = btn.dataset.filter;
+      renderFilterChips();
+      renderFilteredList();
+    });
+  }
+
+  function entryCard(row) {
+    const table    = currentType;
+    const dateStr  = row.event_date || row.video_date || row.date || '';
+    const sortOrder = Number(row.sort_order || 0);
+
+    // Parse date for stamp block
+    let stampHtml = '';
+    if (dateStr) {
+      const d = new Date(dateStr + 'T00:00:00');
+      if (!isNaN(d)) {
+        const day   = d.getDate();
+        const month = d.toLocaleString('en-GB', { month: 'short' }).toUpperCase();
+        const year  = d.getFullYear();
+        stampHtml = `
+          <div class="flex flex-col items-center justify-center bg-archive-green text-center px-4 py-5 shrink-0 min-w-[64px]">
+            <span class="text-2xl font-black text-white leading-none">${day}</span>
+            <span class="mt-1 text-xs font-bold uppercase tracking-wide text-archive-goldSoft">${month}</span>
+            <span class="text-xs text-archive-paper/70">${year}</span>
+          </div>`;
+      }
+    }
+
+    // Status pills
+    const pills = [];
+    if (row.published) {
+      pills.push(`<span class="inline-block px-2 py-0.5 text-[10px] font-black uppercase tracking-wide bg-green-100 text-green-800">Live</span>`);
+    } else {
+      pills.push(`<span class="inline-block px-2 py-0.5 text-[10px] font-black uppercase tracking-wide bg-archive-paper text-archive-muted border border-archive-line">Draft</span>`);
+    }
+    if (row.event_type) {
+      pills.push(`<span class="inline-block px-2 py-0.5 text-[10px] font-black uppercase tracking-wide ${row.event_type === 'webinar' ? 'bg-archive-goldSoft text-archive-ink' : 'bg-archive-green/10 text-archive-green'}">${escapeHtml(row.event_type)}</span>`);
+    }
+    if (row.ribbon) {
+      pills.push(`<span class="inline-block px-2 py-0.5 text-[10px] font-black uppercase tracking-wide bg-archive-maroon text-white">Ribbon</span>`);
+    }
+    if (row.category && currentType !== 'events') {
+      pills.push(`<span class="inline-block px-2 py-0.5 text-[10px] font-black uppercase tracking-wide border border-archive-line text-archive-muted">${escapeHtml(row.category)}</span>`);
+    }
+
+    const preview   = stripHtml(row.description || row.excerpt || row.body || '').slice(0, 120);
+    const subLabel  = row.designation
+      ? escapeHtml(row.designation)
+      : row.author
+        ? `By ${escapeHtml(row.author)}`
+        : row.location
+          ? escapeHtml(row.location)
           : '';
 
-      return `
-        <article data-entry-card data-entry-id="${escapeHtml(row.id)}" class="border border-archive-line bg-white p-5">
-          <div class="mb-3 flex items-start justify-between gap-4">
-            <button data-drag-handle data-id="${escapeHtml(row.id)}" draggable="true"
-              class="inline-flex cursor-grab items-center gap-2 border border-archive-line bg-archive-cream px-3 py-1.5 text-xs font-black uppercase tracking-[0.1em] text-archive-muted active:cursor-grabbing"
-              type="button" aria-label="Drag to reorder">
-              <span class="text-base leading-none text-archive-gold" aria-hidden="true">⋮⋮</span>Drag
-            </button>
-            <span class="text-xs font-black uppercase tracking-[0.1em] text-archive-muted">Order: ${sortOrder}</span>
+    // SVG icons
+    const iconEdit = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 1.5l3 3L4 13H1v-3L9.5 1.5z"/></svg>`;
+    const iconEyeOn  = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><ellipse cx="7" cy="7" rx="5.5" ry="3.5"/><circle cx="7" cy="7" r="1.5" fill="currentColor" stroke="none"/></svg>`;
+    const iconEyeOff = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M1 1l12 12M5.4 5.5A3.5 3.5 0 0 0 6.9 10.5M8.6 8.5A3.5 3.5 0 0 0 7.1 3.5"/><path d="M2.2 6.2C1.5 6.7 1 7 1 7s1.6 3.5 6 3.5a7 7 0 0 0 1.8-.3M11.8 7.8C12.5 7.3 13 7 13 7c-.4-.9-1.3-2.2-2.8-3"/></svg>`;
+    const iconTrash  = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3.5h10M5 3.5V2h4v1.5M5.5 6v4.5M8.5 6v4.5M3.5 3.5l.7 8h5.6l.7-8"/></svg>`;
+    const iconDrag   = `<svg width="12" height="14" viewBox="0 0 12 14" fill="currentColor" aria-hidden="true"><circle cx="4" cy="3" r="1.2"/><circle cx="8" cy="3" r="1.2"/><circle cx="4" cy="7" r="1.2"/><circle cx="8" cy="7" r="1.2"/><circle cx="4" cy="11" r="1.2"/><circle cx="8" cy="11" r="1.2"/></svg>`;
+
+    return `
+      <article data-entry-card data-entry-id="${escapeHtml(row.id)}"
+        class="flex border border-archive-line bg-white overflow-hidden transition-shadow hover:shadow-soft">
+        ${stampHtml}
+        <div class="flex flex-1 flex-col p-4 min-w-0">
+          <!-- Pills + actions row -->
+          <div class="flex items-start justify-between gap-2">
+            <div class="flex flex-wrap gap-1.5 items-center min-w-0">
+              ${pills.join('')}
+            </div>
+            <div class="flex items-center gap-0 shrink-0 -mr-1">
+              <button data-drag-handle data-id="${escapeHtml(row.id)}" draggable="true"
+                class="p-2 text-archive-muted/50 hover:text-archive-muted cursor-grab active:cursor-grabbing"
+                type="button" aria-label="Drag to reorder">${iconDrag}</button>
+              <button data-action="edit" data-table="${table}" data-id="${escapeHtml(row.id)}"
+                class="p-2 text-archive-muted hover:text-archive-green" type="button" aria-label="Edit">${iconEdit}</button>
+              <button data-action="toggle" data-table="${table}" data-id="${escapeHtml(row.id)}" data-published="${row.published}"
+                class="p-2 ${row.published ? 'text-green-600 hover:text-archive-muted' : 'text-archive-muted hover:text-green-600'}"
+                type="button" aria-label="${row.published ? 'Unpublish' : 'Publish'}">${row.published ? iconEyeOn : iconEyeOff}</button>
+              <button data-action="delete" data-table="${table}" data-id="${escapeHtml(row.id)}"
+                class="p-2 text-archive-muted/50 hover:text-red-500" type="button" aria-label="Delete">${iconTrash}</button>
+            </div>
           </div>
-          <p class="flex flex-wrap items-center gap-1 text-xs font-black uppercase tracking-[0.14em] text-archive-gold">
-            ${publishedDot}${escapeHtml(row.category || row.content_type || date || 'Archive')}${typeBadge}${ribbonBadge}
-          </p>
-          <h2 class="mt-2 text-lg font-black leading-snug text-archive-green">${escapeHtml(row.title)}</h2>
-          ${subLabel}
-          ${date ? `<p class="mt-1 text-xs font-bold text-archive-muted">${escapeHtml(date)}</p>` : ''}
-          ${row.location ? `<p class="mt-0.5 text-xs text-archive-muted">${escapeHtml(row.location)}</p>` : ''}
-          ${preview ? `<p class="mt-2 line-clamp-2 text-sm leading-6 text-archive-muted">${escapeHtml(preview)}</p>` : ''}
-          <div class="mt-4 flex flex-wrap gap-2">
-            <button data-action="edit"   data-table="${currentType}" data-id="${escapeHtml(row.id)}"
-              class="border border-archive-gold bg-archive-gold px-3 py-1.5 text-xs font-black uppercase tracking-[0.1em] text-archive-ink" type="button">Edit</button>
-            <button data-action="toggle" data-table="${currentType}" data-id="${escapeHtml(row.id)}" data-published="${row.published}"
-              class="border border-archive-gold px-3 py-1.5 text-xs font-black uppercase tracking-[0.1em] text-archive-green" type="button">${row.published ? 'Unpublish' : 'Publish'}</button>
-            <button data-action="delete" data-table="${currentType}" data-id="${escapeHtml(row.id)}"
-              class="border border-archive-line px-3 py-1.5 text-xs font-black uppercase tracking-[0.1em] text-archive-muted hover:border-red-300 hover:text-red-600" type="button">Delete</button>
+
+          <!-- Title + subtitle -->
+          <h2 class="mt-2 font-display text-lg font-bold leading-snug text-archive-green">${escapeHtml(row.title)}</h2>
+          ${subLabel ? `<p class="mt-0.5 text-xs font-bold text-archive-muted">${subLabel}</p>` : ''}
+          ${preview ? `<p class="mt-1.5 line-clamp-2 text-xs leading-5 text-archive-muted">${escapeHtml(preview)}</p>` : ''}
+
+          <!-- Footer: order number -->
+          <div class="mt-auto pt-3 flex items-center justify-between">
+            <span class="text-xs text-archive-muted/50">Order ${sortOrder}</span>
           </div>
-        </article>
-      `;
-    }).join('') || `<div class="border border-archive-line bg-white p-5 text-archive-muted">No ${contentTypeLabel(currentType)}s yet. Create one using the form.</div>`;
+        </div>
+      </article>`;
   }
 
   function formPayload(data, table) {
@@ -548,16 +812,15 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
     currentType  = table;
 
     updateSectionTabs(table);
-    if (contentSection)     contentSection.style.display     = 'grid';
-    if (matrimonySection)   matrimonySection.style.display   = 'none';
-    if (submissionsSection) submissionsSection.style.display = table === 'stories' ? 'block' : 'none';
+    contentSection.style.display     = 'grid';
+    matrimonySection.style.display   = 'none';
+    submissionsSection.style.display = table === 'stories' ? 'block' : 'none';
 
     form.elements.title.value           = row.title       || '';
     form.elements.category.value        = row.category    || '';
     form.elements.sortOrder.value       = Number(row.sort_order || 0);
     form.elements.published.checked     = row.published   !== false;
 
-    // Type-specific fields
     if (form.elements.itemType)        form.elements.itemType.value        = row.content_type         || '';
     if (form.elements.url)             form.elements.url.value             = row.url                  || '';
     if (form.elements.registrationUrl) form.elements.registrationUrl.value = row.registration_url     || '';
@@ -573,10 +836,8 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
     if (form.elements.coverImageUrl)   form.elements.coverImageUrl.value   = row.cover_image_url      || '';
     if (form.elements.cultureCategory) form.elements.cultureCategory.value = row.category             || '';
 
-    // Quill rich body
     if (quill) quill.root.innerHTML = row.body || '';
 
-    // Event type radio
     if (row.event_type) {
       form.querySelectorAll('[name="eventType"]').forEach(r => {
         r.checked = r.value === row.event_type;
@@ -585,12 +846,13 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
 
     updateFieldVisibility();
     updateTitleLabel(table);
-    formTitle.textContent    = `Edit ${contentTypeLabel(table)}`;
-    editingNote.hidden       = false;
-    saveButton.textContent   = 'Update';
-    saveButton.disabled      = false;
-    cancelEditButton.hidden  = false;
-    form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    formTitle.textContent        = `Edit ${contentTypeLabel(table)}`;
+    editingNote.style.display    = 'block';
+    saveButton.textContent       = 'Update';
+    saveButton.disabled          = false;
+
+    openDrawer();
     setStatus(`Editing "${row.title || 'entry'}".`);
   }
 
@@ -598,26 +860,22 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
     editingEntry = null;
     form.reset();
     currentType = type;
-    form.elements.published.checked = true;
-    form.elements.sortOrder.value   = '0';
-    formTitle.textContent           = `New ${contentTypeLabel(type)}`;
-    editingNote.hidden              = true;
-    saveButton.textContent          = 'Save';
-    saveButton.disabled             = false;
-    cancelEditButton.hidden         = true;
-    if (quill) quill.root.innerHTML = '';
+    form.elements.published.checked  = true;
+    form.elements.sortOrder.value    = '0';
+    formTitle.textContent            = `New ${contentTypeLabel(type)}`;
+    editingNote.style.display        = 'none';
+    saveButton.textContent           = 'Save';
+    saveButton.disabled              = false;
+    // Cancel is always visible in the drawer — it closes without saving
+    if (quill) quill.root.innerHTML  = '';
     updateFieldVisibility();
     updateTitleLabel(type);
   }
 
   function contentTypeLabel(table) {
     return {
-      events:        'event',
-      announcements: 'announcement',
-      documents:     'document',
-      videos:        'video',
-      people:        'person',
-      stories:       'story',
+      events: 'event', announcements: 'announcement', documents: 'document',
+      videos: 'video', people: 'person', stories: 'story',
     }[table] || 'entry';
   }
 
@@ -698,8 +956,7 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
               px-3 py-2 text-xs font-black uppercase tracking-[0.12em]" type="button">${s}</button>
           `).join('')}
         </div>
-      </article>
-    `;
+      </article>`;
   }
 
   function updateMatrimonyTypeButtons() {
@@ -767,8 +1024,7 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
               px-3 py-2 text-xs font-black uppercase tracking-[0.12em]" type="button">${s}</button>
           `).join('')}
         </div>
-      </article>
-    `;
+      </article>`;
   }
 
   // ── Drag helpers ─────────────────────────────────────────────────────
