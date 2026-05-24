@@ -14,23 +14,34 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet"/>
 <style>
-  /* Drawer */
-  [data-drawer] { opacity:0; pointer-events:none; transition:opacity .2s; }
-  [data-drawer].is-open { opacity:1; pointer-events:auto; }
-  [data-drawer-panel] { transform:translateX(100%); transition:transform .25s cubic-bezier(.4,0,.2,1); }
-  [data-drawer].is-open [data-drawer-panel] { transform:translateX(0); }
-
   /* Drag states */
   [data-entry-card].is-dragging { opacity:.4; }
   [data-entry-card].is-drop-target { outline:2px solid #b99045; outline-offset:2px; }
 
-  /* Quill toolbar overrides */
+  /* Large editorial title input */
+  .editor-title-input {
+    width:100%; border:0; border-bottom:2px solid #ded2bc; background:transparent;
+    font-family:Amiri,serif; font-size:2.5rem; font-weight:700; line-height:1.2;
+    color:#201c17; padding-bottom:.5rem;
+  }
+  .editor-title-input::placeholder { color:rgba(116,107,95,.35); }
+  .editor-title-input:focus { outline:none; border-bottom-color:#b99045; }
+
+  /* Sub-field inputs in editor left column */
+  .editor-sub-input {
+    width:100%; border:0; border-bottom:1px solid #ded2bc; background:transparent;
+    font-size:.9375rem; color:#201c17; padding:.5rem 0;
+  }
+  .editor-sub-input::placeholder { color:rgba(116,107,95,.5); }
+  .editor-sub-input:focus { outline:none; border-bottom-color:#b99045; }
+
+  /* Quill */
   .ql-toolbar.ql-snow { background:#fff; border-color:#ded2bc; border-radius:2px 2px 0 0; }
-  .ql-container.ql-snow { border-color:#ded2bc; border-radius:0 0 2px 2px; background:#fbf7ed; font-family:Lato,Arial,sans-serif; font-size:14px; }
-  .ql-editor { min-height:200px; line-height:1.75; color:#201c17; }
+  .ql-container.ql-snow { border-color:#ded2bc; border-radius:0 0 2px 2px; background:#fbf7ed; font-family:Lato,Arial,sans-serif; font-size:15px; }
+  .ql-editor { min-height:280px; line-height:1.8; color:#201c17; }
   .ql-editor.ql-blank::before { color:#746b5f; font-style:normal; }
 
-  /* Rendered Quill HTML in submission cards */
+  /* Prose in submissions */
   .prose-submission p  { margin:.5rem 0; line-height:1.75; color:#201c17; }
   .prose-submission h2 { font-family:Amiri,serif; font-size:1.25rem; font-weight:700; color:#173f31; margin:1rem 0 .4rem; }
   .prose-submission h3 { font-family:Amiri,serif; font-size:1.1rem; font-weight:700; color:#173f31; margin:.75rem 0 .3rem; }
@@ -40,195 +51,14 @@
   .prose-submission a  { color:#173f31; text-decoration:underline; }
   .prose-submission img { max-width:100%; margin:.75rem 0; border:1px solid #ded2bc; }
   .prose-submission .ql-video { display:block; width:100%; aspect-ratio:16/9; border:none; margin:1rem 0; }
+
+  /* Cover image hatching placeholder */
+  .cover-placeholder {
+    background: repeating-linear-gradient(45deg,#f3ead8,#f3ead8 6px,#fbf7ed 6px,#fbf7ed 12px);
+  }
 </style>
 </head>
 <body class="bg-archive-cream font-body text-archive-ink">
-
-<!-- ── Slide-over drawer ─────────────────────────────────────── -->
-<div data-drawer class="fixed inset-0 z-50" aria-hidden="true">
-  <div data-drawer-backdrop class="absolute inset-0 bg-archive-ink/40"></div>
-  <div data-drawer-panel class="absolute right-0 top-0 h-full w-full max-w-[600px] flex flex-col bg-white shadow-2xl">
-
-    <!-- Drawer header -->
-    <div class="flex items-start justify-between gap-4 bg-archive-green px-6 py-5 shrink-0">
-      <div>
-        <h2 data-form-title class="font-display text-2xl font-bold text-white">New event</h2>
-        <p data-editing-note class="mt-1 text-sm text-archive-goldSoft" style="display:none">Editing existing entry — save will update it.</p>
-      </div>
-      <button data-drawer-close type="button"
-        class="mt-0.5 flex h-8 w-8 items-center justify-center text-archive-cream hover:text-white"
-        aria-label="Close drawer">
-        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-          <path d="M3 3l12 12M15 3L3 15"/>
-        </svg>
-      </button>
-    </div>
-
-    <!-- Drawer body — scrollable form -->
-    <div class="flex-1 overflow-y-auto px-6 py-6">
-      <form id="admin-form-inner" data-admin-form class="grid gap-5">
-
-        <!-- Title (all types) -->
-        <label class="grid gap-2 text-sm font-bold text-archive-muted">
-          <span data-form-title-label>Title</span>
-          <span class="sr-only">*</span>
-          <input name="title" required class="border border-archive-line bg-archive-paper p-3 text-archive-ink placeholder:text-archive-muted/60"/>
-        </label>
-
-        <!-- Event type (events only) -->
-        <div data-field="eventType" class="grid gap-2">
-          <p class="text-sm font-bold text-archive-muted">Event type</p>
-          <div class="flex flex-wrap gap-5">
-            <label class="flex cursor-pointer items-center gap-2 text-sm font-bold text-archive-muted">
-              <input name="eventType" type="radio" value="live" checked class="h-4 w-4 accent-archive-green"/> Live / In-person
-            </label>
-            <label class="flex cursor-pointer items-center gap-2 text-sm font-bold text-archive-muted">
-              <input name="eventType" type="radio" value="webinar" class="h-4 w-4 accent-archive-green"/> Webinar / Online
-            </label>
-          </div>
-        </div>
-
-        <!-- Date (events + videos) -->
-        <label data-field="date" class="grid gap-2 text-sm font-bold text-archive-muted">
-          Date
-          <input name="date" type="date" class="border border-archive-line bg-archive-paper p-3 text-archive-ink"/>
-        </label>
-
-        <!-- Location (events only) -->
-        <label data-field="location" class="grid gap-2 text-sm font-bold text-archive-muted">
-          Location
-          <input name="location" placeholder="City, venue, or online platform" class="border border-archive-line bg-archive-paper p-3 text-archive-ink placeholder:text-archive-muted/60"/>
-        </label>
-
-        <!-- Video / stream URL (events only) -->
-        <label data-field="videoUrl" class="grid gap-2 text-sm font-bold text-archive-muted">
-          Video / stream URL
-          <input name="videoUrl" type="url" placeholder="YouTube, Zoom, or recording link" class="border border-archive-line bg-archive-paper p-3 text-archive-ink placeholder:text-archive-muted/60"/>
-        </label>
-
-        <!-- Registration URL (events only) -->
-        <label data-field="registrationUrl" class="grid gap-2 text-sm font-bold text-archive-muted">
-          Registration URL
-          <input name="registrationUrl" type="url" class="border border-archive-line bg-archive-paper p-3 text-archive-ink"/>
-        </label>
-
-        <!-- Category (documents + videos + events + people) -->
-        <label data-field="category" class="grid gap-2 text-sm font-bold text-archive-muted">
-          Category
-          <input name="category" placeholder="e.g. Books, Meeting Notes, Heritage…" class="border border-archive-line bg-archive-paper p-3 text-archive-ink placeholder:text-archive-muted/60"/>
-        </label>
-
-        <!-- Document type (documents only) -->
-        <label data-field="itemType" class="grid gap-2 text-sm font-bold text-archive-muted">
-          Document type
-          <input name="itemType" placeholder="e.g. PDF, Drive link, Notice…" class="border border-archive-line bg-archive-paper p-3 text-archive-ink placeholder:text-archive-muted/60"/>
-        </label>
-
-        <!-- Drive / public URL (documents + videos) -->
-        <label data-field="url" class="grid gap-2 text-sm font-bold text-archive-muted">
-          Drive or public URL
-          <input name="url" type="url" class="border border-archive-line bg-archive-paper p-3 text-archive-ink"/>
-        </label>
-
-        <!-- Short summary (events + stories) -->
-        <label data-field="shortSummary" class="grid gap-2 text-sm font-bold text-archive-muted">
-          Short summary
-          <span class="text-xs font-normal text-archive-muted">Shown on listing cards — one or two lines.</span>
-          <input name="shortSummary" placeholder="Brief description…" class="border border-archive-line bg-archive-paper p-3 text-archive-ink placeholder:text-archive-muted/60"/>
-        </label>
-
-        <!-- Rich body (events + announcements + people + stories) -->
-        <div data-field="body" class="grid gap-2">
-          <p class="text-sm font-bold text-archive-muted">Full content</p>
-          <span class="text-xs font-normal text-archive-muted">Rich text for the detail page. Supports headings, links, images.</span>
-          <div id="quill-editor" style="background:#fbf7ed"></div>
-          <input type="hidden" name="body"/>
-        </div>
-
-        <!-- Plain description (documents + videos) -->
-        <label data-field="descriptionText" class="grid gap-2 text-sm font-bold text-archive-muted">
-          Description
-          <textarea name="description" rows="4" class="border border-archive-line bg-archive-paper p-3 text-archive-ink"></textarea>
-        </label>
-
-        <!-- Designation (people only) -->
-        <label data-field="designation" class="grid gap-2 text-sm font-bold text-archive-muted">
-          Designation / Role
-          <input name="designation" placeholder="e.g. Community Leader, Scholar, Physician…" class="border border-archive-line bg-archive-paper p-3 text-archive-ink placeholder:text-archive-muted/60"/>
-        </label>
-
-        <!-- Photo URL (people only) -->
-        <label data-field="photoUrl" class="grid gap-2 text-sm font-bold text-archive-muted">
-          Photo URL
-          <input name="photoUrl" type="url" placeholder="https://… (portrait photo)" class="border border-archive-line bg-archive-paper p-3 text-archive-ink placeholder:text-archive-muted/60"/>
-          <span class="text-xs font-normal text-archive-muted">Direct link to a publicly hosted photograph.</span>
-        </label>
-
-        <!-- Author (stories only) -->
-        <label data-field="author" class="grid gap-2 text-sm font-bold text-archive-muted">
-          Author
-          <input name="author" placeholder="Name as it should appear on the story" class="border border-archive-line bg-archive-paper p-3 text-archive-ink placeholder:text-archive-muted/60"/>
-        </label>
-
-        <!-- Cover image URL (stories only) -->
-        <label data-field="coverImageUrl" class="grid gap-2 text-sm font-bold text-archive-muted">
-          Cover image URL
-          <input name="coverImageUrl" type="url" placeholder="https://… (landscape image)" class="border border-archive-line bg-archive-paper p-3 text-archive-ink placeholder:text-archive-muted/60"/>
-        </label>
-
-        <!-- Culture category select (stories only) -->
-        <label data-field="cultureCategory" class="grid gap-2 text-sm font-bold text-archive-muted">
-          Category
-          <select name="cultureCategory" class="border border-archive-line bg-archive-paper p-3 text-archive-ink">
-            <option value="">— Select category —</option>
-            <option value="Food &amp; Cuisine">Food &amp; Cuisine</option>
-            <option value="Marriages &amp; Celebrations">Marriages &amp; Celebrations</option>
-            <option value="Rituals &amp; Customs">Rituals &amp; Customs</option>
-            <option value="History &amp; Heritage">History &amp; Heritage</option>
-            <option value="Community Life">Community Life</option>
-            <option value="Ancestral Places">Ancestral Places</option>
-            <option value="General">General</option>
-          </select>
-        </label>
-
-        <!-- Ribbon (events only) -->
-        <div data-field="ribbon" class="flex items-start gap-3 rounded border border-archive-goldSoft bg-archive-paper p-4">
-          <input name="ribbon" id="ribbon-check" type="checkbox" class="mt-0.5 h-5 w-5 accent-archive-green shrink-0"/>
-          <label for="ribbon-check" class="cursor-pointer">
-            <p class="text-sm font-bold text-archive-ink">Show on homepage ribbon</p>
-            <p class="text-xs text-archive-muted">Pins the event to the top banner on every page.</p>
-          </label>
-        </div>
-
-        <!-- Sort order (all types) -->
-        <label data-field="sortOrder" class="grid gap-2 text-sm font-bold text-archive-muted">
-          Display order
-          <input name="sortOrder" type="number" value="0" class="border border-archive-line bg-archive-paper p-3 text-archive-ink"/>
-          <span class="text-xs font-normal leading-5 text-archive-muted">Higher numbers appear first. Drag cards to reorder.</span>
-        </label>
-
-        <!-- Published toggle (all types) -->
-        <label class="flex items-center gap-3 text-sm font-bold text-archive-muted">
-          <input name="published" type="checkbox" checked class="h-5 w-5 accent-archive-green"/> Published
-        </label>
-
-      </form>
-    </div>
-
-    <!-- Drawer footer — save / cancel -->
-    <div class="flex items-center gap-3 border-t border-archive-line bg-white px-6 py-4 shrink-0">
-      <button data-save-button form="admin-form-inner" type="submit"
-        class="min-h-10 bg-archive-gold px-6 text-sm font-black uppercase tracking-[0.12em] text-archive-ink">
-        Save
-      </button>
-      <button data-cancel-edit type="button"
-        class="min-h-10 border border-archive-line px-5 text-sm font-black uppercase tracking-[0.12em] text-archive-muted hover:border-archive-ink hover:text-archive-ink">
-        Cancel
-      </button>
-    </div>
-  </div>
-</div>
-<!-- ── /drawer ──────────────────────────────────────────────── -->
 
 <main>
   <!-- Hero -->
@@ -240,120 +70,357 @@
     </div>
   </section>
 
-  <section class="py-12">
-    <div class="mx-auto w-[min(1120px,calc(100%-36px))]">
+  <section class="pb-20">
 
-      <!-- Status message -->
-      <div data-status-wrap style="display:none"
-        class="mb-6 flex items-start gap-3 border-l-4 border-archive-gold bg-white p-4">
-        <p data-status class="flex-1 text-sm font-bold text-archive-muted"></p>
-        <button data-status-dismiss type="button"
-          class="shrink-0 text-xl leading-none text-archive-muted hover:text-archive-ink" aria-label="Dismiss">×</button>
+    <!-- Status message -->
+    <div data-status-wrap style="display:none"
+      class="mx-auto mt-6 w-[min(1120px,calc(100%-36px))] flex items-start gap-3 border-l-4 border-archive-gold bg-white p-4">
+      <p data-status class="flex-1 text-sm font-bold text-archive-muted"></p>
+      <button data-status-dismiss type="button"
+        class="shrink-0 text-xl leading-none text-archive-muted hover:text-archive-ink">×</button>
+    </div>
+
+    <!-- Sign-in panel -->
+    <section data-auth-panel class="mx-auto mt-6 w-[min(1120px,calc(100%-36px))] border border-archive-line bg-white p-6">
+      <h2 class="font-display text-3xl font-bold text-archive-green">Admin sign in</h2>
+      <p class="mt-3 max-w-2xl text-archive-muted">Enter your admin email below. A magic sign-in link will be sent to your inbox.</p>
+      <form data-login-form class="mt-5 flex flex-col gap-3 md:flex-row">
+        <input name="email" type="email" required value="mdshiraz.ib@outlook.com"
+          class="min-h-12 flex-1 border border-archive-line bg-archive-cream px-4 text-archive-ink"/>
+        <button data-signin-button
+          class="min-h-12 bg-archive-gold px-5 text-sm font-black uppercase tracking-[0.12em] text-archive-ink" type="submit">
+          Send sign-in link
+        </button>
+      </form>
+    </section>
+
+    <!-- Admin panel -->
+    <section data-admin-panel hidden>
+
+      <!-- Tab bar -->
+      <div class="mx-auto mt-6 w-[min(1120px,calc(100%-36px))] flex flex-wrap items-center justify-between gap-3 border border-archive-line bg-white px-5 py-3">
+        <div class="flex flex-wrap gap-1.5" role="tablist" aria-label="Content sections">
+          <button data-section-tab="events"        role="tab" type="button" class="min-h-9 px-4 text-xs font-black uppercase tracking-[0.1em]">Events</button>
+          <button data-section-tab="announcements" role="tab" type="button" class="min-h-9 px-4 text-xs font-black uppercase tracking-[0.1em]">Announcements</button>
+          <button data-section-tab="documents"     role="tab" type="button" class="min-h-9 px-4 text-xs font-black uppercase tracking-[0.1em]">Documents</button>
+          <button data-section-tab="videos"        role="tab" type="button" class="min-h-9 px-4 text-xs font-black uppercase tracking-[0.1em]">Videos</button>
+          <button data-section-tab="people"        role="tab" type="button" class="min-h-9 px-4 text-xs font-black uppercase tracking-[0.1em]">People</button>
+          <button data-section-tab="stories"       role="tab" type="button" class="min-h-9 px-4 text-xs font-black uppercase tracking-[0.1em]">Culture</button>
+          <button data-section-tab="matrimony"     role="tab" type="button" class="min-h-9 px-4 text-xs font-black uppercase tracking-[0.1em]">Matrimony</button>
+        </div>
+        <button data-logout type="button" class="text-xs font-black uppercase tracking-[0.1em] text-archive-muted hover:text-archive-ink">Sign out</button>
       </div>
 
-      <!-- Sign-in panel -->
-      <section data-auth-panel class="border border-archive-line bg-white p-6">
-        <h2 class="font-display text-3xl font-bold text-archive-green">Admin sign in</h2>
-        <p class="mt-3 max-w-2xl text-archive-muted">Enter your admin email below. A magic sign-in link will be sent to your inbox.</p>
-        <form data-login-form class="mt-5 flex flex-col gap-3 md:flex-row">
-          <input name="email" type="email" required value="mdshiraz.ib@outlook.com"
-            class="min-h-12 flex-1 border border-archive-line bg-archive-cream px-4 text-archive-ink"/>
-          <button data-signin-button
-            class="min-h-12 bg-archive-gold px-5 text-sm font-black uppercase tracking-[0.12em] text-archive-ink" type="submit">
-            Send sign-in link
-          </button>
-        </form>
-      </section>
+      <!-- ── LIST VIEW ───────────────────────────────────────────── -->
+      <div data-content-section class="mx-auto mt-6 w-[min(1120px,calc(100%-36px))] grid gap-6">
 
-      <!-- Admin panel — hidden until authenticated -->
-      <section data-admin-panel hidden>
+        <!-- Filter chips -->
+        <div data-filter-bar class="flex flex-wrap gap-2"></div>
 
-        <!-- Tab bar -->
-        <div class="flex flex-wrap items-center justify-between gap-3 border border-archive-line bg-white px-5 py-3">
-          <div class="flex flex-wrap gap-1.5" role="tablist" aria-label="Content sections">
-            <button data-section-tab="events"        role="tab" type="button" class="min-h-9 px-4 text-xs font-black uppercase tracking-[0.1em]">Events</button>
-            <button data-section-tab="announcements" role="tab" type="button" class="min-h-9 px-4 text-xs font-black uppercase tracking-[0.1em]">Announcements</button>
-            <button data-section-tab="documents"     role="tab" type="button" class="min-h-9 px-4 text-xs font-black uppercase tracking-[0.1em]">Documents</button>
-            <button data-section-tab="videos"        role="tab" type="button" class="min-h-9 px-4 text-xs font-black uppercase tracking-[0.1em]">Videos</button>
-            <button data-section-tab="people"        role="tab" type="button" class="min-h-9 px-4 text-xs font-black uppercase tracking-[0.1em]">People</button>
-            <button data-section-tab="stories"       role="tab" type="button" class="min-h-9 px-4 text-xs font-black uppercase tracking-[0.1em]">Culture</button>
-            <button data-section-tab="matrimony"     role="tab" type="button" class="min-h-9 px-4 text-xs font-black uppercase tracking-[0.1em]">Matrimony</button>
-          </div>
-          <button data-logout type="button" class="text-xs font-black uppercase tracking-[0.1em] text-archive-muted hover:text-archive-ink">Sign out</button>
-        </div>
-
-        <!-- Main content section (full-width list) -->
-        <div data-content-section class="mt-6 grid gap-6">
-
-          <!-- Filter chips row -->
-          <div data-filter-bar class="flex flex-wrap gap-2"></div>
-
-          <!-- Section sub-header: heading + stats + search + new button -->
-          <div data-section-header class="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h2 data-section-heading class="font-display text-2xl font-bold text-archive-green">Events</h2>
-              <p data-section-stats class="mt-0.5 text-xs font-bold text-archive-muted"></p>
-            </div>
-            <div class="flex items-center gap-3">
-              <div class="relative">
-                <svg class="absolute left-3 top-1/2 -translate-y-1/2 text-archive-muted pointer-events-none" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                  <circle cx="6" cy="6" r="4.5"/><path d="M9.5 9.5l3 3" stroke-linecap="round"/>
-                </svg>
-                <input data-search type="search" placeholder="Search…"
-                  class="min-h-9 w-52 border border-archive-line bg-white py-1 pl-8 pr-3 text-xs text-archive-ink placeholder:text-archive-muted/70 focus:outline-none focus:border-archive-green"/>
-              </div>
-              <button data-new-entry type="button"
-                class="min-h-9 bg-archive-gold px-5 text-xs font-black uppercase tracking-[0.12em] text-archive-ink">
-                + New event
-              </button>
-            </div>
-          </div>
-
-          <!-- Card list (2-column on wider screens) -->
-          <div data-admin-list class="grid gap-3 md:grid-cols-2"></div>
-
-          <!-- Migration tools (collapsible) -->
-          <details class="border border-archive-line bg-white">
-            <summary class="cursor-pointer px-5 py-4 text-sm font-black uppercase tracking-[0.1em] text-archive-muted hover:text-archive-ink">
-              One-time migration tools
-            </summary>
-            <div class="border-t border-archive-line px-5 pb-5 pt-4">
-              <p class="text-sm leading-6 text-archive-muted">Seed starter data from the local JSON file into Supabase. Only use this once after a fresh schema setup.</p>
-              <button data-seed-json class="mt-4 border border-archive-gold px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-archive-green" type="button">
-                Seed starter data (one-time only)
-              </button>
-            </div>
-          </details>
-        </div>
-
-        <!-- Story submissions — shown when Culture tab is active -->
-        <section data-submissions-section hidden class="mt-6 border border-archive-line bg-white p-6">
+        <!-- Section sub-header -->
+        <div data-section-header class="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p class="text-xs font-black uppercase tracking-[0.18em] text-archive-gold">Community Contributions</p>
-            <h2 class="mt-2 font-display text-3xl font-bold text-archive-green">Story submissions</h2>
-            <p class="mt-2 max-w-3xl text-sm leading-6 text-archive-muted">Stories submitted through the public form. Review each submission, save notes, and update its status. Approved submissions can be manually turned into published stories via the form above.</p>
+            <h2 data-section-heading class="font-display text-2xl font-bold text-archive-green">Events</h2>
+            <p data-section-stats class="mt-0.5 text-xs font-bold text-archive-muted"></p>
           </div>
-          <div data-submissions-list class="mt-6 grid gap-4"></div>
-        </section>
-
-        <!-- Matrimony section — shown when Matrimony tab is active -->
-        <section data-matrimony-section hidden class="mt-6 border border-archive-line bg-white p-6">
-          <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-            <div>
-              <p class="text-xs font-black uppercase tracking-[0.18em] text-archive-gold">Private Review Desk</p>
-              <h2 class="mt-2 font-display text-3xl font-bold text-archive-green">Matrimony submissions</h2>
-              <p class="mt-2 max-w-3xl text-sm leading-6 text-archive-muted">These are never published publicly. Review consent, contact the family when appropriate, and update each submission's status.</p>
+          <div class="flex items-center gap-3">
+            <div class="relative">
+              <svg class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-archive-muted" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                <circle cx="6" cy="6" r="4.5"/><path d="M9.5 9.5l3 3" stroke-linecap="round"/>
+              </svg>
+              <input data-search type="search" placeholder="Search…"
+                class="min-h-9 w-52 border border-archive-line bg-white py-1 pl-8 pr-3 text-xs text-archive-ink placeholder:text-archive-muted/70 focus:outline-none focus:border-archive-green"/>
             </div>
-            <div class="flex flex-wrap gap-2">
-              <button data-matrimony-type="matrimony_profiles" type="button" class="bg-archive-gold px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-archive-ink">Profiles</button>
-              <button data-matrimony-type="matrimony_requests" type="button" class="border border-archive-gold px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-archive-green">Seekers</button>
+            <button data-new-entry type="button"
+              class="min-h-9 bg-archive-gold px-5 text-xs font-black uppercase tracking-[0.12em] text-archive-ink">
+              + New event
+            </button>
+          </div>
+        </div>
+
+        <!-- Card grid -->
+        <div data-admin-list class="grid gap-3 md:grid-cols-2"></div>
+
+        <!-- Migration tools -->
+        <details class="border border-archive-line bg-white">
+          <summary class="cursor-pointer px-5 py-4 text-sm font-black uppercase tracking-[0.1em] text-archive-muted hover:text-archive-ink">
+            One-time migration tools
+          </summary>
+          <div class="border-t border-archive-line px-5 pb-5 pt-4">
+            <p class="text-sm leading-6 text-archive-muted">Seed starter data from the local JSON file into Supabase. Only use this once after a fresh schema setup.</p>
+            <button data-seed-json class="mt-4 border border-archive-gold px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-archive-green" type="button">
+              Seed starter data (one-time only)
+            </button>
+          </div>
+        </details>
+      </div>
+
+      <!-- ── EDITOR VIEW ─────────────────────────────────────────── -->
+      <div data-editor-view style="display:none">
+
+        <!-- Sticky editor top bar -->
+        <div class="sticky top-[62px] z-20 border-b border-archive-line bg-white">
+          <div class="mx-auto flex w-[min(1120px,calc(100%-36px))] flex-wrap items-center justify-between gap-3 py-3">
+
+            <!-- Back + breadcrumb -->
+            <div class="flex items-center gap-3">
+              <button data-back-to-list type="button"
+                class="flex items-center gap-1.5 text-xs font-black uppercase tracking-[0.1em] text-archive-muted hover:text-archive-green">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M9 2L4 7l5 5"/>
+                </svg>
+                Back
+              </button>
+              <div class="border-l border-archive-line pl-3">
+                <p data-editor-breadcrumb class="text-xs font-black uppercase tracking-[0.12em] text-archive-gold">Events</p>
+                <p data-form-title class="text-sm font-bold text-archive-green">New event</p>
+              </div>
+            </div>
+
+            <!-- Status + actions -->
+            <div class="flex items-center gap-3">
+              <p data-editing-note class="text-xs text-archive-muted" style="display:none">Editing existing entry.</p>
+              <button data-cancel-edit type="button"
+                class="min-h-9 border border-archive-line px-4 text-xs font-black uppercase tracking-[0.1em] text-archive-muted hover:border-archive-ink hover:text-archive-ink">
+                Cancel
+              </button>
+              <button data-save-button form="admin-form-inner" type="submit"
+                class="min-h-9 bg-archive-gold px-6 text-xs font-black uppercase tracking-[0.12em] text-archive-ink">
+                Publish
+              </button>
             </div>
           </div>
-          <div data-matrimony-list class="mt-6 grid gap-4"></div>
-        </section>
+        </div>
 
+        <!-- Editor body: 2-column form -->
+        <form id="admin-form-inner" data-admin-form
+          class="mx-auto grid w-[min(1120px,calc(100%-36px))] gap-8 py-10 lg:grid-cols-[1fr_300px]">
+
+          <!-- ── LEFT COLUMN: main content ─────────────────────── -->
+          <div class="grid gap-6 content-start">
+
+            <!-- Large title input -->
+            <input name="title" required class="editor-title-input"
+              placeholder="Title…" autocomplete="off"/>
+
+            <!-- Designation (people only) -->
+            <div data-field="designation">
+              <input name="designation" class="editor-sub-input"
+                placeholder="Designation / role (e.g. Community Leader, Scholar…)"/>
+            </div>
+
+            <!-- Author (stories only) -->
+            <div data-field="author">
+              <input name="author" class="editor-sub-input"
+                placeholder="Author name as it should appear on the story…"/>
+            </div>
+
+            <!-- Short summary (events + stories) -->
+            <div data-field="shortSummary" class="grid gap-2">
+              <p class="text-xs font-black uppercase tracking-[0.12em] text-archive-gold">Short summary</p>
+              <textarea name="shortSummary" rows="3"
+                placeholder="Short summary shown on the listing card (1–2 lines)…"
+                class="w-full border border-archive-line bg-archive-paper px-4 py-3 text-sm text-archive-ink placeholder:text-archive-muted/50 focus:outline-none focus:border-archive-gold resize-none"></textarea>
+            </div>
+
+            <!-- Rich text body (events, announcements, people, stories) -->
+            <div data-field="body" class="grid gap-2">
+              <p class="text-xs font-black uppercase tracking-[0.12em] text-archive-gold">Content</p>
+              <div id="quill-editor" style="background:#fbf7ed"></div>
+              <input type="hidden" name="body"/>
+            </div>
+
+            <!-- Plain description (documents, videos) -->
+            <div data-field="descriptionText" class="grid gap-2">
+              <p class="text-xs font-black uppercase tracking-[0.12em] text-archive-gold">Description</p>
+              <textarea name="description" rows="5"
+                class="w-full border border-archive-line bg-archive-paper px-4 py-3 text-sm text-archive-ink focus:outline-none focus:border-archive-gold resize-none"></textarea>
+            </div>
+
+          </div>
+
+          <!-- ── RIGHT COLUMN: meta sidebar ───────────────────── -->
+          <div class="grid gap-4 content-start">
+
+            <!-- Cover image (stories) -->
+            <div data-field="coverImageUrl" class="border border-archive-line bg-white p-4">
+              <p class="mb-3 text-xs font-black uppercase tracking-[0.12em] text-archive-gold">Cover image</p>
+              <div data-cover-preview class="cover-placeholder aspect-video flex items-center justify-center overflow-hidden border border-archive-line">
+                <p class="px-4 text-center text-xs text-archive-muted/60">Landscape 1200×630 — drop or paste URL</p>
+              </div>
+              <input name="coverImageUrl" type="url" placeholder="https://… (cover image)"
+                class="mt-2 w-full border border-archive-line bg-archive-cream p-2 text-xs text-archive-ink placeholder:text-archive-muted/50 focus:outline-none focus:border-archive-green"/>
+            </div>
+
+            <!-- Photo (people) -->
+            <div data-field="photoUrl" class="border border-archive-line bg-white p-4">
+              <p class="mb-2 text-xs font-black uppercase tracking-[0.12em] text-archive-gold">Portrait photo</p>
+              <input name="photoUrl" type="url" placeholder="https://… (portrait photo)"
+                class="w-full border border-archive-line bg-archive-cream p-2 text-xs text-archive-ink placeholder:text-archive-muted/50 focus:outline-none focus:border-archive-green"/>
+              <p class="mt-1.5 text-xs text-archive-muted">Direct link to a publicly hosted photograph.</p>
+            </div>
+
+            <!-- Event type (events) -->
+            <div data-field="eventType" class="border border-archive-line bg-white p-4">
+              <p class="mb-3 text-xs font-black uppercase tracking-[0.12em] text-archive-gold">Event type</p>
+              <div class="flex flex-col gap-2.5">
+                <label class="flex cursor-pointer items-center gap-2 text-sm text-archive-muted">
+                  <input name="eventType" type="radio" value="live" checked class="h-4 w-4 accent-archive-green"/> Live / In-person
+                </label>
+                <label class="flex cursor-pointer items-center gap-2 text-sm text-archive-muted">
+                  <input name="eventType" type="radio" value="webinar" class="h-4 w-4 accent-archive-green"/> Webinar / Online
+                </label>
+              </div>
+            </div>
+
+            <!-- Date (events + videos) -->
+            <div data-field="date" class="border border-archive-line bg-white p-4">
+              <label class="grid gap-2 text-xs font-black uppercase tracking-[0.12em] text-archive-gold">
+                Date
+                <input name="date" type="date"
+                  class="border border-archive-line bg-archive-cream p-2 text-sm text-archive-ink focus:outline-none focus:border-archive-green"/>
+              </label>
+            </div>
+
+            <!-- Location (events) -->
+            <div data-field="location" class="border border-archive-line bg-white p-4">
+              <label class="grid gap-2 text-xs font-black uppercase tracking-[0.12em] text-archive-gold">
+                Location
+                <input name="location" placeholder="City, venue, or online platform"
+                  class="border border-archive-line bg-archive-cream p-2 text-sm text-archive-ink placeholder:text-archive-muted/50 focus:outline-none focus:border-archive-green"/>
+              </label>
+            </div>
+
+            <!-- Video URL (events) -->
+            <div data-field="videoUrl" class="border border-archive-line bg-white p-4">
+              <label class="grid gap-2 text-xs font-black uppercase tracking-[0.12em] text-archive-gold">
+                Video / stream URL
+                <input name="videoUrl" type="url"
+                  class="border border-archive-line bg-archive-cream p-2 text-sm text-archive-ink focus:outline-none focus:border-archive-green"/>
+              </label>
+            </div>
+
+            <!-- Registration URL (events) -->
+            <div data-field="registrationUrl" class="border border-archive-line bg-white p-4">
+              <label class="grid gap-2 text-xs font-black uppercase tracking-[0.12em] text-archive-gold">
+                Registration URL
+                <input name="registrationUrl" type="url"
+                  class="border border-archive-line bg-archive-cream p-2 text-sm text-archive-ink focus:outline-none focus:border-archive-green"/>
+              </label>
+            </div>
+
+            <!-- Document type (documents) -->
+            <div data-field="itemType" class="border border-archive-line bg-white p-4">
+              <label class="grid gap-2 text-xs font-black uppercase tracking-[0.12em] text-archive-gold">
+                Document type
+                <input name="itemType" placeholder="PDF, Drive link, Notice…"
+                  class="border border-archive-line bg-archive-cream p-2 text-sm text-archive-ink placeholder:text-archive-muted/50 focus:outline-none focus:border-archive-green"/>
+              </label>
+            </div>
+
+            <!-- URL (documents + videos) -->
+            <div data-field="url" class="border border-archive-line bg-white p-4">
+              <label class="grid gap-2 text-xs font-black uppercase tracking-[0.12em] text-archive-gold">
+                Drive or public URL
+                <input name="url" type="url"
+                  class="border border-archive-line bg-archive-cream p-2 text-sm text-archive-ink focus:outline-none focus:border-archive-green"/>
+              </label>
+            </div>
+
+            <!-- Category (events, documents, videos, people) -->
+            <div data-field="category" class="border border-archive-line bg-white p-4">
+              <label class="grid gap-2 text-xs font-black uppercase tracking-[0.12em] text-archive-gold">
+                Category
+                <input name="category" placeholder="e.g. Books, Meeting Notes, Heritage…"
+                  class="border border-archive-line bg-archive-cream p-2 text-sm text-archive-ink placeholder:text-archive-muted/50 focus:outline-none focus:border-archive-green"/>
+              </label>
+            </div>
+
+            <!-- Culture category (stories) -->
+            <div data-field="cultureCategory" class="border border-archive-line bg-white p-4">
+              <label class="grid gap-2 text-xs font-black uppercase tracking-[0.12em] text-archive-gold">
+                Category
+                <select name="cultureCategory"
+                  class="border border-archive-line bg-archive-cream p-2 text-sm text-archive-ink focus:outline-none focus:border-archive-green">
+                  <option value="">— Select category —</option>
+                  <option value="Food &amp; Cuisine">Food &amp; Cuisine</option>
+                  <option value="Marriages &amp; Celebrations">Marriages &amp; Celebrations</option>
+                  <option value="Rituals &amp; Customs">Rituals &amp; Customs</option>
+                  <option value="History &amp; Heritage">History &amp; Heritage</option>
+                  <option value="Community Life">Community Life</option>
+                  <option value="Ancestral Places">Ancestral Places</option>
+                  <option value="General">General</option>
+                </select>
+              </label>
+            </div>
+
+            <!-- Ribbon (events) -->
+            <div data-field="ribbon" class="border border-archive-goldSoft bg-archive-paper p-4">
+              <div class="flex items-start gap-3">
+                <input name="ribbon" id="ribbon-check" type="checkbox"
+                  class="mt-0.5 h-5 w-5 shrink-0 accent-archive-green"/>
+                <label for="ribbon-check" class="cursor-pointer">
+                  <p class="text-xs font-black uppercase tracking-[0.1em] text-archive-ink">Homepage ribbon</p>
+                  <p class="mt-1 text-xs text-archive-muted">Pins the event to the top banner on every page.</p>
+                </label>
+              </div>
+            </div>
+
+            <!-- Publishing (all) -->
+            <div class="border border-archive-line bg-white p-4">
+              <p class="mb-3 text-xs font-black uppercase tracking-[0.12em] text-archive-gold">Publishing</p>
+              <label class="flex cursor-pointer items-start gap-3">
+                <input name="published" type="checkbox" checked
+                  class="mt-0.5 h-5 w-5 shrink-0 accent-archive-green"/>
+                <div>
+                  <p class="text-sm font-bold text-archive-ink">Published</p>
+                  <p data-publish-help class="mt-0.5 text-xs text-archive-muted">Visible on the site.</p>
+                </div>
+              </label>
+            </div>
+
+            <!-- Display order (all) -->
+            <div class="border border-archive-line bg-white p-4">
+              <label class="grid gap-2 text-xs font-black uppercase tracking-[0.12em] text-archive-gold">
+                Display order
+                <input name="sortOrder" type="number" value="0"
+                  class="border border-archive-line bg-archive-cream p-2 text-sm text-archive-ink focus:outline-none focus:border-archive-green"/>
+                <span class="text-xs font-normal text-archive-muted">Higher numbers appear first. Drag cards to reorder.</span>
+              </label>
+            </div>
+
+          </div>
+        </form>
+      </div>
+      <!-- /editor view -->
+
+      <!-- Story submissions (culture tab) -->
+      <section data-submissions-section hidden class="mx-auto mt-6 w-[min(1120px,calc(100%-36px))] border border-archive-line bg-white p-6">
+        <p class="text-xs font-black uppercase tracking-[0.18em] text-archive-gold">Community Contributions</p>
+        <h2 class="mt-2 font-display text-3xl font-bold text-archive-green">Story submissions</h2>
+        <p class="mt-2 max-w-3xl text-sm leading-6 text-archive-muted">Stories submitted through the public form. Review each, save notes, and update status. Approved submissions can be manually turned into published stories via the editor above.</p>
+        <div data-submissions-list class="mt-6 grid gap-4"></div>
       </section>
-    </div>
+
+      <!-- Matrimony section -->
+      <section data-matrimony-section hidden class="mx-auto mt-6 w-[min(1120px,calc(100%-36px))] border border-archive-line bg-white p-6">
+        <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p class="text-xs font-black uppercase tracking-[0.18em] text-archive-gold">Private Review Desk</p>
+            <h2 class="mt-2 font-display text-3xl font-bold text-archive-green">Matrimony submissions</h2>
+            <p class="mt-2 max-w-3xl text-sm leading-6 text-archive-muted">These are never published publicly. Review consent, contact the family when appropriate, and update each submission's status.</p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button data-matrimony-type="matrimony_profiles" type="button" class="bg-archive-gold px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-archive-ink">Profiles</button>
+            <button data-matrimony-type="matrimony_requests" type="button" class="border border-archive-gold px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-archive-green">Seekers</button>
+          </div>
+        </div>
+        <div data-matrimony-list class="mt-6 grid gap-4"></div>
+      </section>
+
+    </section>
+    <!-- /admin panel -->
+
   </section>
 </main>
 
