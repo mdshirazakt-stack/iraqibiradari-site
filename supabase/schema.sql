@@ -155,6 +155,42 @@ create policy "Admin can manage matrimony requests" on public.matrimony_requests
 create index if not exists matrimony_profiles_status_created_idx on public.matrimony_profiles (status, created_at desc);
 create index if not exists matrimony_requests_status_created_idx on public.matrimony_requests (status, created_at desc);
 
+-- ── People & Stories RLS (tables were created outside the original schema) ──
+-- Run this block in the Supabase SQL Editor if saving People or Culture
+-- stories fails in the admin console (RLS was missing admin write policies).
+
+alter table public.people enable row level security;
+alter table public.stories enable row level security;
+alter table public.story_submissions enable row level security;
+
+drop policy if exists "Public can read published people"    on public.people;
+drop policy if exists "Public can read published stories"   on public.stories;
+drop policy if exists "Public can submit story"             on public.story_submissions;
+drop policy if exists "Admin can manage people"             on public.people;
+drop policy if exists "Admin can manage stories"            on public.stories;
+drop policy if exists "Admin can manage story submissions"  on public.story_submissions;
+
+create policy "Public can read published people" on public.people
+  for select using (published = true);
+
+create policy "Public can read published stories" on public.stories
+  for select using (published = true);
+
+create policy "Public can submit story" on public.story_submissions
+  for insert with check (true);
+
+create policy "Admin can manage people" on public.people for all
+  using  ((auth.jwt() ->> 'email') = 'mdshiraz.ib@outlook.com')
+  with check ((auth.jwt() ->> 'email') = 'mdshiraz.ib@outlook.com');
+
+create policy "Admin can manage stories" on public.stories for all
+  using  ((auth.jwt() ->> 'email') = 'mdshiraz.ib@outlook.com')
+  with check ((auth.jwt() ->> 'email') = 'mdshiraz.ib@outlook.com');
+
+create policy "Admin can manage story submissions" on public.story_submissions for all
+  using  ((auth.jwt() ->> 'email') = 'mdshiraz.ib@outlook.com')
+  with check ((auth.jwt() ->> 'email') = 'mdshiraz.ib@outlook.com');
+
 insert into public.announcements (id, title, body, date, published)
 values
   ('archive-organization-started', 'Archive organization has started', 'Books, meeting notes, videos, and community records are being categorized from the existing public Drive collection.', '2026-05-10', true)

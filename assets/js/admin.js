@@ -248,9 +248,19 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
     const { error } = await supabase.from(currentType).upsert(payload, { onConflict: 'id' });
     saveButton.disabled = false;
 
-    if (error) { setStatus(error.message); updateSaveButtonLabel(); return; }
+    if (error) {
+      setStatus(error.message);
+      // Show inline so it's visible without scrolling away from the editor
+      if (editingNote) {
+        editingNote.textContent = `Save failed: ${error.message}`;
+        editingNote.style.cssText = 'display:block;color:#743a32;font-weight:700';
+      }
+      updateSaveButtonLabel();
+      return;
+    }
 
-    // Flash save status before returning to list
+    // Clear any inline error + flash save status before returning to list
+    if (editingNote) editingNote.style.cssText = '';
     if (saveStatus) saveStatus.style.display = 'inline-flex';
 
     showList();
@@ -847,7 +857,7 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
     form.elements.published.checked = true;
     form.elements.sortOrder.value   = '0';
     if (quill)          quill.root.innerHTML = '';
-    if (editingNote)    editingNote.style.display = 'none';
+    if (editingNote)  { editingNote.style.cssText = 'display:none'; editingNote.textContent = 'Editing existing entry.'; }
     if (coverPreviewEl) coverPreviewEl.innerHTML = `<p class="px-4 text-center text-xs text-archive-muted/60">Landscape 1200×630 — drop or paste URL</p>`;
     if (saveStatus)     saveStatus.style.display  = '';
     if (previewLink)    previewLink.style.display = '';
