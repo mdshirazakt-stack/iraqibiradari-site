@@ -11,23 +11,26 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
   const matrimonySection   = document.querySelector('[data-matrimony-section]');
   const submissionsSection = document.querySelector('[data-submissions-section]');
 
-  const loginForm      = document.querySelector('[data-login-form]');
-  const signinButton   = document.querySelector('[data-signin-button]');
-  const logoutButton   = document.querySelector('[data-logout]');
+  const loginForm    = document.querySelector('[data-login-form]');
+  const signinButton = document.querySelector('[data-signin-button]');
+  const logoutButton = document.querySelector('[data-logout]');
 
   const statusWrap    = document.querySelector('[data-status-wrap]');
   const statusEl      = document.querySelector('[data-status]');
   const statusDismiss = document.querySelector('[data-status-dismiss]');
 
-  const form              = document.querySelector('[data-admin-form]');
-  const list              = document.querySelector('[data-admin-list]');
-  const formTitle         = document.querySelector('[data-form-title]');
-  const editorBreadcrumb  = document.querySelector('[data-editor-breadcrumb]');
-  const editingNote       = document.querySelector('[data-editing-note]');
-  const saveButton        = document.querySelector('[data-save-button]');
-  const cancelEditButton  = document.querySelector('[data-cancel-edit]');
-  const backToListButton  = document.querySelector('[data-back-to-list]');
-  const seedButton        = document.querySelector('[data-seed-json]');
+  const form             = document.querySelector('[data-admin-form]');
+  const list             = document.querySelector('[data-admin-list]');
+  const formTitle        = document.querySelector('[data-form-title]');
+  const contextLabel     = document.querySelector('[data-context-label]');
+  const editorBreadcrumb = document.querySelector('[data-editor-breadcrumb]');
+  const editingNote      = document.querySelector('[data-editing-note]');
+  const saveButton       = document.querySelector('[data-save-button]');
+  const saveStatus       = document.querySelector('[data-save-status]');
+  const previewLink      = document.querySelector('[data-preview-link]');
+  const cancelEditButton = document.querySelector('[data-cancel-edit]');
+  const backToListButton = document.querySelector('[data-back-to-list]');
+  const seedButton       = document.querySelector('[data-seed-json]');
 
   const sectionTabs          = Array.from(document.querySelectorAll('[data-section-tab]'));
   const matrimonyList        = document.querySelector('[data-matrimony-list]');
@@ -41,7 +44,6 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
   const sectionStats   = document.querySelector('[data-section-stats]');
   const publishHelp    = document.querySelector('[data-publish-help]');
 
-  // Cover image preview elements (inside the editor form)
   const coverPreviewEl = document.querySelector('[data-cover-preview]');
 
   const fieldRows = {
@@ -62,6 +64,7 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
     author:          document.querySelector('[data-field="author"]'),
     coverImageUrl:   document.querySelector('[data-field="coverImageUrl"]'),
     cultureCategory: document.querySelector('[data-field="cultureCategory"]'),
+    dateVideo:       document.querySelector('[data-field="dateVideo"]'),
   };
 
   if (!authPanel || !adminPanel || !form || !list) return;
@@ -102,6 +105,7 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
 
   updateSectionTabs('events');
   updateFieldVisibility();
+  updateTypePills('live');
   updateNewEntryButton('events');
 
   // ── Session ──────────────────────────────────────────────────────────
@@ -133,15 +137,18 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
 
   // ── Editor view open / close ─────────────────────────────────────────
   function showEditor() {
-    contentSection.style.display = 'none';
-    editorView.style.display     = 'block';
-    submissionsSection.style.display = 'none';
+    contentSection.style.display        = 'none';
+    editorView.style.display            = 'block';
+    submissionsSection.style.display    = 'none';
   }
 
   function showList() {
-    contentSection.style.display = 'grid';
-    editorView.style.display     = 'none';
+    contentSection.style.display     = 'grid';
+    editorView.style.display         = 'none';
     if (currentType === 'stories') submissionsSection.style.display = 'block';
+    // Reset editor transient elements
+    if (saveStatus)  saveStatus.style.display  = '';
+    if (previewLink) previewLink.style.display = '';
   }
 
   backToListButton?.addEventListener('click', () => {
@@ -197,6 +204,28 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
     saveButton.textContent = pub ? 'Publish' : 'Save draft';
   }
 
+  // ── Event type pill toggle ────────────────────────────────────────────
+  form.addEventListener('click', (e) => {
+    const pill = e.target.closest('[data-type-pill]');
+    if (!pill) return;
+    updateTypePills(pill.dataset.typePill);
+  });
+
+  function updateTypePills(type) {
+    form.querySelectorAll('[data-type-pill]').forEach(btn => {
+      const on = btn.dataset.typePill === type;
+      btn.className = on
+        ? 'px-4 py-2 text-xs font-black uppercase tracking-[0.08em] bg-archive-green text-archive-cream'
+        : 'px-4 py-2 text-xs font-black uppercase tracking-[0.08em] bg-white text-archive-muted hover:text-archive-green';
+    });
+    // Show/hide location vs videoUrl sub-fields
+    if (fieldRows.location) fieldRows.location.style.display = type === 'webinar' ? 'none' : '';
+    if (fieldRows.videoUrl) fieldRows.videoUrl.style.display = type === 'live'    ? 'none' : '';
+    // Sync hidden input
+    const hiddenInput = form.querySelector('input[name="eventType"][type="hidden"]');
+    if (hiddenInput) hiddenInput.value = type;
+  }
+
   // ── Form submit ──────────────────────────────────────────────────────
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -220,6 +249,9 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
     saveButton.disabled = false;
 
     if (error) { setStatus(error.message); updateSaveButtonLabel(); return; }
+
+    // Flash save status before returning to list
+    if (saveStatus) saveStatus.style.display = 'inline-flex';
 
     showList();
     resetFormState(savedType);
@@ -368,15 +400,23 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
     sectionTabs.forEach(tab => {
       const on = tab.dataset.sectionTab === active;
       tab.className = on
-        ? 'min-h-9 px-4 text-xs font-black uppercase tracking-[0.1em] bg-archive-green text-archive-cream'
-        : 'min-h-9 px-4 text-xs font-black uppercase tracking-[0.1em] border border-archive-line text-archive-muted hover:text-archive-green hover:border-archive-green';
+        ? 'inline-flex items-center gap-2 min-h-9 rounded-lg px-4 text-xs font-black uppercase tracking-[0.1em] bg-archive-green text-archive-cream'
+        : 'inline-flex items-center gap-2 min-h-9 rounded-lg px-4 text-xs font-black uppercase tracking-[0.1em] text-archive-muted hover:bg-archive-paper hover:text-archive-green';
+      // Update count badge style for active/inactive
+      const badge = tab.querySelector('[data-tab-count]');
+      if (badge) {
+        badge.className = on
+          ? 'inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-archive-goldSoft px-1.5 text-[11px] text-archive-ink'
+          : 'inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-archive-paper px-1.5 text-[11px] text-archive-muted';
+      }
     });
   }
 
   function updateNewEntryButton(type) {
     if (!newEntryButton) return;
-    const labels = { events:'+ New event', announcements:'+ New announcement', documents:'+ New document', videos:'+ New video', people:'+ New person', stories:'+ New story' };
-    newEntryButton.textContent = labels[type] || '+ New entry';
+    const iPlus = `<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 1v10M1 6h10"/></svg>`;
+    const singulars = { events:'event', announcements:'announcement', documents:'document', videos:'video', people:'person', stories:'story' };
+    newEntryButton.innerHTML = `${iPlus} New ${singulars[type] || 'entry'}`;
   }
 
   function switchSection(section) {
@@ -416,11 +456,33 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
     const allowed = email === ADMIN_EMAIL;
     authPanel.hidden  = Boolean(allowed);
     adminPanel.hidden = !allowed;
+
+    // Update signed-in chip
+    const sessionEmailEl = document.querySelector('[data-session-email]');
+    if (sessionEmailEl) sessionEmailEl.textContent = email || 'Signed in';
+
     if (email && !allowed) setStatus(`Signed in as ${email}, but access is restricted to ${ADMIN_EMAIL}.`);
     if (allowed) {
       setStatus(`Signed in as ${email}.`);
+      await loadTabCounts();
       switchSection('events');
     }
+  }
+
+  async function loadTabCounts() {
+    const tables = ['events', 'announcements', 'documents', 'videos', 'people', 'stories'];
+    await Promise.all(tables.map(async (table) => {
+      const { count } = await supabase.from(table).select('*', { count: 'exact', head: true });
+      const el = document.querySelector(`[data-tab-count="${table}"]`);
+      if (el && count !== null) el.textContent = count;
+    }));
+    // Matrimony: sum profiles + requests
+    const [{ count: pc }, { count: rc }] = await Promise.all([
+      supabase.from('matrimony_profiles').select('*', { count: 'exact', head: true }),
+      supabase.from('matrimony_requests').select('*', { count: 'exact', head: true }),
+    ]);
+    const mEl = document.querySelector('[data-tab-count="matrimony"]');
+    if (mEl) mEl.textContent = (pc || 0) + (rc || 0);
   }
 
   async function renderList() {
@@ -431,13 +493,16 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
       .order('created_at', { ascending: false });
 
     if (error) {
-      list.innerHTML = `<div class="col-span-2 border border-archive-line bg-white p-5 text-archive-muted">${escapeHtml(error.message)}</div>`;
+      list.innerHTML = `<div class="col-span-full border border-archive-line bg-white p-5 text-archive-muted">${escapeHtml(error.message)}</div>`;
       return;
     }
 
     allEntries = data || [];
     renderFilterChips();
     renderFilteredList();
+    // Keep tab count badge in sync with current section
+    const tabBadge = document.querySelector(`[data-tab-count="${currentType}"]`);
+    if (tabBadge) tabBadge.textContent = allEntries.length;
   }
 
   function renderFilteredList() {
@@ -463,7 +528,7 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
     updateSectionStats(allEntries, today);
 
     if (!filtered.length) {
-      list.innerHTML = `<div class="col-span-2 border border-archive-line bg-white p-8 text-center text-archive-muted">
+      list.innerHTML = `<div class="col-span-full border border-archive-line bg-white p-8 text-center text-archive-muted">
         No ${contentTypeLabel(currentType)}s${query ? ` matching "${escapeHtml(query)}"` : ''}.
         ${!query && currentFilter === 'all' ? `<button data-create-inline type="button" class="ml-1 font-bold text-archive-green underline underline-offset-2">Create one</button>` : ''}
       </div>`;
@@ -477,7 +542,7 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
       past.sort((a, b) => (b.event_date || '').localeCompare(a.event_date || ''));
       let html = '';
       if (upcoming.length) html += groupDivider('Upcoming', upcoming.length) + upcoming.map(entryCard).join('');
-      if (past.length)     html += groupDivider('Past', past.length)     + past.map(entryCard).join('');
+      if (past.length)     html += groupDivider('Past', past.length)         + past.map(entryCard).join('');
       list.innerHTML = html;
     } else {
       list.innerHTML = filtered.map(entryCard).join('');
@@ -485,7 +550,7 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
   }
 
   function groupDivider(label, count) {
-    return `<div class="col-span-2 flex items-center gap-3 pt-2 pb-1">
+    return `<div class="col-span-full flex items-center gap-3 pt-2 pb-1">
       <span class="text-xs font-black uppercase tracking-[0.16em] text-archive-muted">${escapeHtml(label)}</span>
       <span class="text-xs font-bold text-archive-muted/50">(${count})</span>
       <div class="flex-1 border-t border-archive-line"></div>
@@ -512,24 +577,24 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
     const today = new Date().toISOString().slice(0, 10);
     const chips  = currentType === 'events'
       ? [
-          { key: 'all',      label: 'All',       count: allEntries.length },
-          { key: 'live',     label: 'Published',  count: allEntries.filter(r => r.published).length },
-          { key: 'upcoming', label: 'Upcoming',   count: allEntries.filter(r => !r.event_date || r.event_date >= today).length },
-          { key: 'drafts',   label: 'Drafts',     count: allEntries.filter(r => !r.published).length },
-          { key: 'past',     label: 'Past',       count: allEntries.filter(r => r.event_date && r.event_date < today).length },
+          { key: 'all',      label: 'All',      count: allEntries.length },
+          { key: 'live',     label: 'Published', count: allEntries.filter(r => r.published).length },
+          { key: 'upcoming', label: 'Upcoming',  count: allEntries.filter(r => !r.event_date || r.event_date >= today).length },
+          { key: 'drafts',   label: 'Drafts',    count: allEntries.filter(r => !r.published).length },
+          { key: 'past',     label: 'Past',      count: allEntries.filter(r => r.event_date && r.event_date < today).length },
         ]
       : [
-          { key: 'all',       label: 'All',       count: allEntries.length },
-          { key: 'published', label: 'Published',  count: allEntries.filter(r => r.published).length },
-          { key: 'drafts',    label: 'Drafts',     count: allEntries.filter(r => !r.published).length },
+          { key: 'all',       label: 'All',      count: allEntries.length },
+          { key: 'published', label: 'Published', count: allEntries.filter(r => r.published).length },
+          { key: 'drafts',    label: 'Drafts',    count: allEntries.filter(r => !r.published).length },
         ];
 
     filterBar.innerHTML = chips.map(c => {
       const on = c.key === currentFilter;
       return `<button data-filter="${escapeHtml(c.key)}" type="button"
         class="${on
-          ? 'min-h-8 px-4 text-xs font-black uppercase tracking-[0.1em] bg-archive-green text-archive-cream'
-          : 'min-h-8 px-4 text-xs font-black uppercase tracking-[0.1em] border border-archive-line text-archive-muted hover:text-archive-green hover:border-archive-green'}">
+          ? 'min-h-8 rounded-full px-4 text-xs font-black uppercase tracking-[0.1em] bg-archive-green text-archive-cream'
+          : 'min-h-8 rounded-full px-4 text-xs font-black uppercase tracking-[0.1em] border border-archive-line text-archive-muted hover:text-archive-green hover:border-archive-green'}">
         ${escapeHtml(c.label)}<span class="${on ? 'ml-1.5 text-archive-goldSoft' : 'ml-1.5 text-archive-muted/60'}">${c.count}</span>
       </button>`;
     }).join('');
@@ -566,18 +631,18 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
     // Pills
     const pills = [];
     pills.push(row.published
-      ? `<span class="inline-block px-2 py-0.5 text-[10px] font-black uppercase tracking-wide bg-green-100 text-green-800">Live</span>`
-      : `<span class="inline-block px-2 py-0.5 text-[10px] font-black uppercase tracking-wide border border-archive-line bg-archive-paper text-archive-muted">Draft</span>`);
-    if (row.event_type) pills.push(`<span class="inline-block px-2 py-0.5 text-[10px] font-black uppercase tracking-wide ${row.event_type === 'webinar' ? 'bg-archive-goldSoft text-archive-ink' : 'bg-archive-green/10 text-archive-green'}">${escapeHtml(row.event_type)}</span>`);
-    if (row.ribbon)     pills.push(`<span class="inline-block px-2 py-0.5 text-[10px] font-black uppercase tracking-wide bg-archive-maroon text-white">Ribbon</span>`);
-    if (row.category && currentType !== 'events') pills.push(`<span class="inline-block px-2 py-0.5 text-[10px] font-black uppercase tracking-wide border border-archive-line text-archive-muted">${escapeHtml(row.category)}</span>`);
+      ? `<span class="inline-block rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wide bg-green-100 text-green-800">Live</span>`
+      : `<span class="inline-block rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wide border border-archive-line bg-archive-paper text-archive-muted">Draft</span>`);
+    if (row.event_type) pills.push(`<span class="inline-block rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wide ${row.event_type === 'webinar' ? 'bg-archive-goldSoft text-archive-ink' : 'bg-archive-green/10 text-archive-green'}">${escapeHtml(row.event_type)}</span>`);
+    if (row.ribbon)     pills.push(`<span class="inline-block rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wide bg-archive-maroon text-white">Ribbon</span>`);
+    if (row.category && currentType !== 'events') pills.push(`<span class="inline-block rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wide border border-archive-line text-archive-muted">${escapeHtml(row.category)}</span>`);
 
     const preview  = stripHtml(row.description || row.excerpt || row.body || '').slice(0, 120);
     const subLabel = row.designation ? escapeHtml(row.designation) : row.author ? `By ${escapeHtml(row.author)}` : row.location ? escapeHtml(row.location) : '';
 
     const iEdit  = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 1.5l3 3L4 13H1v-3L9.5 1.5z"/></svg>`;
     const iEyeOn = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><ellipse cx="7" cy="7" rx="5.5" ry="3.5"/><circle cx="7" cy="7" r="1.5" fill="currentColor" stroke="none"/></svg>`;
-    const iEyeOff=`<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M1 1l12 12M5.4 5.5A3.5 3.5 0 0 0 6.9 10.5M8.6 8.5A3.5 3.5 0 0 0 7.1 3.5"/><path d="M2.2 6.2C1.5 6.7 1 7 1 7s1.6 3.5 6 3.5a7 7 0 0 0 1.8-.3M11.8 7.8C12.5 7.3 13 7 13 7c-.4-.9-1.3-2.2-2.8-3"/></svg>`;
+    const iEyeOff= `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M1 1l12 12M5.4 5.5A3.5 3.5 0 0 0 6.9 10.5M8.6 8.5A3.5 3.5 0 0 0 7.1 3.5"/><path d="M2.2 6.2C1.5 6.7 1 7 1 7s1.6 3.5 6 3.5a7 7 0 0 0 1.8-.3M11.8 7.8C12.5 7.3 13 7 13 7c-.4-.9-1.3-2.2-2.8-3"/></svg>`;
     const iTrash = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3.5h10M5 3.5V2h4v1.5M5.5 6v4.5M8.5 6v4.5M3.5 3.5l.7 8h5.6l.7-8"/></svg>`;
     const iDrag  = `<svg width="12" height="14" viewBox="0 0 12 14" fill="currentColor" aria-hidden="true"><circle cx="4" cy="3" r="1.2"/><circle cx="8" cy="3" r="1.2"/><circle cx="4" cy="7" r="1.2"/><circle cx="8" cy="7" r="1.2"/><circle cx="4" cy="11" r="1.2"/><circle cx="8" cy="11" r="1.2"/></svg>`;
 
@@ -623,7 +688,7 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
     if (table === 'announcements') return { id: base.id, title: base.title, body: String(data.get('body') || '').trim() || null, date: null, published: base.published, sort_order: base.sort_order };
 
     if (table === 'events') return { ...base,
-      description: String(data.get('shortSummary') || '').trim() || null,
+      description:      String(data.get('shortSummary') || '').trim() || null,
       body:             String(data.get('body') || '').trim() || null,
       ribbon:           data.get('ribbon') === 'on',
       event_type:       String(data.get('eventType') || 'live'),
@@ -682,7 +747,7 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
       events:        ['eventType', 'date', 'location', 'videoUrl', 'registrationUrl', 'category', 'shortSummary', 'body', 'ribbon'],
       announcements: ['body'],
       documents:     ['category', 'itemType', 'url', 'descriptionText'],
-      videos:        ['category', 'url', 'date', 'descriptionText'],
+      videos:        ['category', 'url', 'dateVideo', 'descriptionText'],
       people:        ['designation', 'photoUrl', 'category', 'body'],
       stories:       ['author', 'cultureCategory', 'coverImageUrl', 'shortSummary', 'body'],
     };
@@ -707,6 +772,27 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
     if (!el) return;
     const ph = { people:'Name…', stories:'Story title…', events:'Event title…', announcements:'Announcement title…', documents:'Document title…', videos:'Video title…' };
     el.placeholder = ph[type] || 'Title…';
+  }
+
+  function updateContextLabel(type, isEditing) {
+    if (!contextLabel) return;
+    const newLabels  = { events:'Drafting a new event', announcements:'Drafting a new announcement', documents:'Adding a new document', videos:'Adding a new video', people:'Adding a new person', stories:'Writing a story' };
+    const editLabels = { events:'Editing event', announcements:'Editing announcement', documents:'Editing document', videos:'Editing video', people:'Editing person', stories:'Editing story' };
+    contextLabel.textContent = isEditing ? (editLabels[type] || 'Editing entry') : (newLabels[type] || 'New entry');
+  }
+
+  function setPreviewLink(type, id) {
+    if (!previewLink) return;
+    const urls = {
+      events:        '/events/',
+      announcements: '/announcements/',
+      documents:     '/documents/',
+      videos:        '/videos/',
+      people:        '/people/',
+      stories:       id ? `/culture/detail/?id=${encodeURIComponent(id)}` : '/culture/',
+    };
+    previewLink.href = urls[type] || '#';
+    previewLink.style.display = id ? 'inline' : '';
   }
 
   function loadEntryForEdit(table, row) {
@@ -737,19 +823,18 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
 
     if (quill) quill.root.innerHTML = row.body || '';
 
-    if (row.event_type) {
-      form.querySelectorAll('[name="eventType"]').forEach(r => { r.checked = r.value === row.event_type; });
-    }
-
     updateFieldVisibility();
+    if (table === 'events') updateTypePills(row.event_type || 'live');
     updateTitlePlaceholder(table);
     updateCoverPreview();
     updateSaveButtonLabel();
+    updateContextLabel(table, true);
+    setPreviewLink(table, row.id);
 
     const labels = { events:'Events', announcements:'Announcements', documents:'Documents', videos:'Videos', people:'People', stories:'Culture' };
     if (editorBreadcrumb) editorBreadcrumb.textContent = labels[table] || table;
-    if (formTitle) formTitle.textContent = `Edit ${contentTypeLabel(table)}`;
-    if (editingNote) editingNote.style.display = 'block';
+    if (formTitle)        formTitle.textContent = `Edit ${contentTypeLabel(table)}`;
+    if (editingNote)      editingNote.style.display = 'block';
 
     showEditor();
     setStatus(`Editing "${row.title || 'entry'}".`);
@@ -761,12 +846,16 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
     currentType = type;
     form.elements.published.checked = true;
     form.elements.sortOrder.value   = '0';
-    if (quill) quill.root.innerHTML = '';
-    if (editingNote) editingNote.style.display = 'none';
+    if (quill)          quill.root.innerHTML = '';
+    if (editingNote)    editingNote.style.display = 'none';
     if (coverPreviewEl) coverPreviewEl.innerHTML = `<p class="px-4 text-center text-xs text-archive-muted/60">Landscape 1200×630 — drop or paste URL</p>`;
+    if (saveStatus)     saveStatus.style.display  = '';
+    if (previewLink)    previewLink.style.display = '';
     updateFieldVisibility();
+    if (type === 'events') updateTypePills('live');
     updateTitlePlaceholder(type);
     updateSaveButtonLabel();
+    updateContextLabel(type, false);
     const labels = { events:'Events', announcements:'Announcements', documents:'Documents', videos:'Videos', people:'People', stories:'Culture' };
     if (editorBreadcrumb) editorBreadcrumb.textContent = labels[type] || type;
     if (formTitle)        formTitle.textContent = `New ${contentTypeLabel(type)}`;
@@ -829,7 +918,9 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
   function updateMatrimonyTypeButtons() {
     matrimonyTypeButtons.forEach(btn => {
       const on = btn.dataset.matrimonyType === currentMatrimonyType;
-      btn.className = on ? 'bg-archive-gold px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-archive-ink' : 'border border-archive-gold px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-archive-green';
+      btn.className = on
+        ? 'rounded-lg bg-archive-gold px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-archive-ink'
+        : 'rounded-lg border border-archive-gold px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-archive-green';
     });
   }
 
