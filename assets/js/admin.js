@@ -330,7 +330,6 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
     }
 
     const payload = formPayload(new FormData(form), currentType);
-    if (editingEntry && editingEntry.table === currentType) payload.id = editingEntry.id;
     if (!payload.title) return;
 
     const savedType = currentType;
@@ -340,8 +339,16 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
 
     let saveError = null;
     try {
-      const { error } = await supabase.from(currentType).upsert(payload, { onConflict: 'id' });
-      saveError = error;
+      if (editingEntry && editingEntry.table === currentType) {
+        // UPDATE existing — strip id from payload (primary key must not change)
+        const { id: _id, ...updatePayload } = payload;
+        const { error } = await supabase.from(currentType).update(updatePayload).eq('id', editingEntry.id);
+        saveError = error;
+      } else {
+        // INSERT new entry
+        const { error } = await supabase.from(currentType).insert(payload);
+        saveError = error;
+      }
     } catch (err) {
       saveError = err;
     }
