@@ -1,4 +1,4 @@
-import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabase-config.js';
+import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } from './supabase-config.js';
 
 (async function () {
   const supabase = await createSupabaseClient();
@@ -384,22 +384,29 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
 
     if (action === 'delete') {
       if (!confirm('Delete this entry? This cannot be undone.')) return;
-      const { error } = await supabase.from(table).delete().eq('id', id);
-      setStatus(error ? error.message : 'Entry deleted.');
+      try {
+        const { error } = await withTimeout(supabase.from(table).delete().eq('id', id));
+        setStatus(error ? error.message : 'Entry deleted.');
+      } catch (err) { setStatus(err.message); return; }
       await renderList();
       return;
     }
 
     if (action === 'toggle') {
       const published = button.dataset.published !== 'true';
-      const { error } = await supabase.from(table).update({ published }).eq('id', id);
-      setStatus(error ? error.message : published ? 'Published.' : 'Unpublished.');
+      try {
+        const { error } = await withTimeout(supabase.from(table).update({ published }).eq('id', id));
+        setStatus(error ? error.message : published ? 'Published.' : 'Unpublished.');
+      } catch (err) { setStatus(err.message); return; }
       await renderList();
       return;
     }
 
     if (action === 'edit') {
-      const { data, error } = await supabase.from(table).select('*').eq('id', id).single();
+      let data, error;
+      try {
+        ({ data, error } = await withTimeout(supabase.from(table).select('*').eq('id', id).single()));
+      } catch (err) { setStatus(err.message); return; }
       if (error) { setStatus(error.message); return; }
       await loadEntryForEdit(table, data);
     }
@@ -585,28 +592,44 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
 
   async function loadTabCounts() {
     const tables = ['events', 'announcements', 'documents', 'videos', 'people', 'stories', 'organizations'];
-    await Promise.all(tables.map(async (table) => {
-      const { count } = await supabase.from(table).select('*', { count: 'exact', head: true });
-      const el = document.querySelector(`[data-tab-count="${table}"]`);
-      if (el && count !== null) el.textContent = count;
-    }));
-    // Matrimony: sum profiles + requests
-    const [{ count: pc }, { count: rc }] = await Promise.all([
-      supabase.from('matrimony_profiles').select('*', { count: 'exact', head: true }),
-      supabase.from('matrimony_requests').select('*', { count: 'exact', head: true }),
-    ]);
-    const mEl = document.querySelector('[data-tab-count="matrimony"]');
-    if (mEl) mEl.textContent = (pc || 0) + (rc || 0);
+    try {
+      await withTimeout(Promise.all(tables.map(async (table) => {
+        const { count } = await supabase.from(table).select('*', { count: 'exact', head: true });
+        const el = document.querySelector(`[data-tab-count="${table}"]`);
+        if (el && count !== null) el.textContent = count;
+      })));
+      // Matrimony: sum profiles + requests
+      const [{ count: pc }, { count: rc }] = await withTimeout(Promise.all([
+        supabase.from('matrimony_profiles').select('*', { count: 'exact', head: true }),
+        supabase.from('matrimony_requests').select('*', { count: 'exact', head: true }),
+      ]));
+      const mEl = document.querySelector('[data-tab-count="matrimony"]');
+      if (mEl) mEl.textContent = (pc || 0) + (rc || 0);
+    } catch (err) {
+      // Tab counts are cosmetic — log the timeout but don't block the admin
+      console.warn('loadTabCounts timed out:', err.message);
+    }
     // Refresh org cache when counts load
     orgsList = [];
   }
 
   async function renderList() {
-    const { data, error } = await supabase
-      .from(currentType)
-      .select('*')
-      .order('sort_order', { ascending: false })
-      .order('created_at', { ascending: false });
+    let data, error;
+    try {
+      ({ data, error } = await withTimeout(
+        supabase
+          .from(currentType)
+          .select('*')
+          .order('sort_order', { ascending: false })
+          .order('created_at', { ascending: false })
+      ));
+    } catch (err) {
+      list.innerHTML = `<div class="col-span-full border border-archive-line bg-white p-5 text-archive-muted">
+        ⏱ ${escapeHtml(err.message)} —
+        <button type="button" onclick="location.reload()" class="font-bold text-archive-green underline underline-offset-2">Reload page</button>
+      </div>`;
+      return;
+    }
 
     if (error) {
       list.innerHTML = `<div class="col-span-full border border-archive-line bg-white p-5 text-archive-muted">${escapeHtml(error.message)}</div>`;
@@ -1034,7 +1057,15 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
 
   async function renderMatrimonyList() {
     if (!matrimonyList) return;
-    const { data, error } = await supabase.from(currentMatrimonyType).select('*').order('created_at', { ascending: false }).limit(100);
+    let data, error;
+    try {
+      ({ data, error } = await withTimeout(
+        supabase.from(currentMatrimonyType).select('*').order('created_at', { ascending: false }).limit(100)
+      ));
+    } catch (err) {
+      matrimonyList.innerHTML = `<div class="p-5 text-archive-muted">⏱ ${escapeHtml(err.message)} — <button type="button" onclick="location.reload()" class="font-bold text-archive-green underline">Reload</button></div>`;
+      return;
+    }
     if (error) { matrimonyList.innerHTML = `<div class="p-5 text-archive-muted">${escapeHtml(error.message)}</div>`; return; }
     updateMatrimonyTypeButtons();
     matrimonyList.innerHTML = (data || []).map(matrimonyCard).join('') || '<div class="border border-archive-line bg-archive-cream p-5 text-archive-muted">No matrimony submissions yet.</div>';
@@ -1093,7 +1124,15 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
 
   async function renderSubmissions() {
     if (!submissionsList) return;
-    const { data, error } = await supabase.from('story_submissions').select('*').order('created_at', { ascending: false }).limit(100);
+    let data, error;
+    try {
+      ({ data, error } = await withTimeout(
+        supabase.from('story_submissions').select('*').order('created_at', { ascending: false }).limit(100)
+      ));
+    } catch (err) {
+      submissionsList.innerHTML = `<div class="p-5 text-archive-muted">⏱ ${escapeHtml(err.message)} — <button type="button" onclick="location.reload()" class="font-bold text-archive-green underline">Reload</button></div>`;
+      return;
+    }
     if (error) { submissionsList.innerHTML = `<div class="p-5 text-archive-muted">${escapeHtml(error.message)}</div>`; return; }
     submissionsList.innerHTML = (data||[]).map(submissionCard).join('') || '<div class="border border-archive-line bg-archive-cream p-5 text-archive-muted">No community story submissions yet.</div>';
   }
