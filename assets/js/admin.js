@@ -387,7 +387,7 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
     if (action === 'edit') {
       const { data, error } = await supabase.from(table).select('*').eq('id', id).single();
       if (error) { setStatus(error.message); return; }
-      loadEntryForEdit(table, data);
+      await loadEntryForEdit(table, data);
     }
   });
 
@@ -920,7 +920,7 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
     previewLink.style.display = id ? 'inline' : '';
   }
 
-  function loadEntryForEdit(table, row) {
+  async function loadEntryForEdit(table, row) {
     editingEntry = { table, id: row.id };
     currentType  = table;
 
