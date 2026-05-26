@@ -338,15 +338,22 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
     saveButton.textContent = 'Saving…';
     setStatus('Saving…');
 
-    const { error } = await supabase.from(currentType).upsert(payload, { onConflict: 'id' });
+    let saveError = null;
+    try {
+      const { error } = await supabase.from(currentType).upsert(payload, { onConflict: 'id' });
+      saveError = error;
+    } catch (err) {
+      saveError = err;
+    }
+
     saveButton.disabled = false;
 
-    if (error) {
-      setStatus(error.message);
-      // Show inline so it's visible without scrolling away from the editor
+    if (saveError) {
+      const msg = saveError.message || String(saveError);
+      setStatus(`Save failed: ${msg}`);
       if (editingNote) {
-        editingNote.textContent = `Save failed: ${error.message}`;
-        editingNote.style.cssText = 'display:block;color:#743a32;font-weight:700';
+        editingNote.textContent = `Save failed: ${msg}`;
+        editingNote.style.cssText = 'display:block;color:#743a32;font-weight:700;font-size:0.85rem';
       }
       updateSaveButtonLabel();
       return;
@@ -838,6 +845,7 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
       how_to_apply:      String(data.get('orgApply') || '').trim() || null,
       published:         base.published,
       sort_order:        base.sort_order,
+      updated_at:        new Date().toISOString(),
     };
 
     // documents
