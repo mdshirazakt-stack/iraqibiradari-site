@@ -1,4 +1,4 @@
-import { createSupabaseClient } from './supabase-config.js';
+import { createSupabaseClient, withTimeout } from './supabase-config.js';
 
 (async function () {
   const id        = new URLSearchParams(location.search).get('id');
@@ -11,13 +11,23 @@ import { createSupabaseClient } from './supabase-config.js';
 
   if (!id) { showError('No profile specified.'); return; }
 
-  const supabase = await createSupabaseClient();
-  const { data: person, error } = await supabase
-    .from('people')
-    .select('*')
-    .eq('id', id)
-    .eq('published', true)
-    .single();
+  let supabase;
+  try {
+    supabase = await createSupabaseClient();
+  } catch (err) {
+    showError('Could not connect to database. Please try again.');
+    return;
+  }
+
+  let person, error;
+  try {
+    ({ data: person, error } = await withTimeout(
+      supabase.from('people').select('*').eq('id', id).eq('published', true).single()
+    ));
+  } catch (err) {
+    showError(`${err.message} — <button type="button" onclick="location.reload()" style="font-weight:700;text-decoration:underline">Try again</button>`);
+    return;
+  }
 
   if (error || !person) { showError('Profile not found or has been removed.'); return; }
 

@@ -1,10 +1,17 @@
-import { createSupabaseClient } from './supabase-config.js';
+import { createSupabaseClient, withTimeout } from './supabase-config.js';
 
 (async function () {
-  const supabase  = await createSupabaseClient();
   const listEl    = document.getElementById('culture-list');
   const filtersEl = document.getElementById('culture-filters');
   if (!listEl) return;
+
+  let supabase;
+  try {
+    supabase = await createSupabaseClient();
+  } catch (err) {
+    listEl.innerHTML = `<p class="py-8 text-sm text-archive-muted">Could not connect — ${escapeHtml(String(err))}</p>`;
+    return;
+  }
 
   const CATEGORIES = [
     'all',
@@ -20,12 +27,20 @@ import { createSupabaseClient } from './supabase-config.js';
   let allStories   = [];
   let activeFilter = 'all';
 
-  const { data, error } = await supabase
-    .from('stories')
-    .select('id, title, author, category, cover_image_url, excerpt, body, created_at')
-    .eq('published', true)
-    .order('sort_order', { ascending: false })
-    .order('created_at', { ascending: false });
+  let data, error;
+  try {
+    ({ data, error } = await withTimeout(
+      supabase
+        .from('stories')
+        .select('id, title, author, category, cover_image_url, excerpt, body, created_at')
+        .eq('published', true)
+        .order('sort_order', { ascending: false })
+        .order('created_at', { ascending: false })
+    ));
+  } catch (err) {
+    listEl.innerHTML = `<p class="py-8 text-sm text-archive-muted">⏱ ${escapeHtml(err.message)} — <button type="button" onclick="location.reload()" class="font-bold text-archive-green underline underline-offset-2 hover:text-archive-gold">Try again</button></p>`;
+    return;
+  }
 
   if (error) {
     listEl.innerHTML = `<p class="py-8 text-sm text-archive-muted">${escapeHtml(error.message)}</p>`;

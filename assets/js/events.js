@@ -1,9 +1,16 @@
-import { createSupabaseClient } from './supabase-config.js';
+import { createSupabaseClient, withTimeout } from './supabase-config.js';
 
 (async function () {
-  const supabase   = await createSupabaseClient();
   const container  = document.getElementById('events-container');
   if (!container) return;
+
+  let supabase;
+  try {
+    supabase = await createSupabaseClient();
+  } catch (err) {
+    container.innerHTML = `<p class="py-8 text-sm text-archive-muted">Could not connect — ${escapeHtml(String(err))}</p>`;
+    return;
+  }
 
   // ── State ────────────────────────────────────────────────────────────
   let allEvents  = [];
@@ -32,12 +39,20 @@ import { createSupabaseClient } from './supabase-config.js';
   updateFilterButtons();
 
   // ── Load data ─────────────────────────────────────────────────────────
-  const { data, error } = await supabase
-    .from('events')
-    .select('id, title, description, event_type, event_date, location, registration_url, video_url, category')
-    .eq('published', true)
-    .order('event_date', { ascending: true, nullsFirst: false })
-    .order('sort_order', { ascending: false });
+  let data, error;
+  try {
+    ({ data, error } = await withTimeout(
+      supabase
+        .from('events')
+        .select('id, title, description, event_type, event_date, location, registration_url, video_url, category')
+        .eq('published', true)
+        .order('event_date', { ascending: true, nullsFirst: false })
+        .order('sort_order', { ascending: false })
+    ));
+  } catch (err) {
+    container.innerHTML = `<p class="py-8 text-sm text-archive-muted">⏱ ${escapeHtml(err.message)} — <button type="button" onclick="location.reload()" class="font-bold text-archive-green underline underline-offset-2 hover:text-archive-gold">Try again</button></p>`;
+    return;
+  }
 
   if (error) {
     container.innerHTML = `<p class="py-8 text-sm text-archive-muted">${escapeHtml(error.message)}</p>`;

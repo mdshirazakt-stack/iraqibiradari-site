@@ -1,0 +1,26 @@
+name: Supabase keep-alive
+
+# Supabase free-tier projects pause after 7 days of inactivity.
+# This workflow makes a lightweight read request every day to keep the project active.
+
+on:
+  schedule:
+    # 08:00 UTC daily
+    - cron: '0 8 * * *'
+  workflow_dispatch: # allow manual trigger from GitHub Actions UI
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase REST API
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            "https://dcslkrgocuxcogvmvfkr.supabase.co/rest/v1/announcements?select=id&limit=1&published=eq.true" \
+            -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRjc2xrcmdvY3V4Y29ndm12ZmtyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyNTc3ODMsImV4cCI6MjA5MzgzMzc4M30.3-6mRI-CAZzGyFPRWxlTm8g3MYM5CP4PG3HHssKwqzM")
+          echo "Supabase ping status: $STATUS"
+          if [ "$STATUS" != "200" ]; then
+            echo "Warning: unexpected status $STATUS — project may be paused or misconfigured."
+            exit 1
+          fi
+          echo "Supabase project is active."

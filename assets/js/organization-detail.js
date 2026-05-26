@@ -1,20 +1,33 @@
-import { createSupabaseClient } from './supabase-config.js';
+import { createSupabaseClient, withTimeout } from './supabase-config.js';
 
 (async function () {
-  const supabase = await createSupabaseClient();
   const main     = document.getElementById('org-main');
   if (!main) return;
 
   const id = new URLSearchParams(location.search).get('id');
   if (!id) { renderError('No organization specified.'); return; }
 
+  let supabase;
+  try {
+    supabase = await createSupabaseClient();
+  } catch (err) {
+    renderError('Could not connect to database. Please try again.');
+    return;
+  }
+
   // Fetch org, members, linked events, and linked videos in parallel
-  const [orgRes, membersRes, eventsRes, videosRes] = await Promise.all([
-    supabase.from('organizations').select('*').eq('id', id).eq('published', true).single(),
-    supabase.from('org_members').select('*').eq('org_id', id).order('sort_order').order('created_at'),
-    supabase.from('events').select('id, title, category, event_date, event_type, description, registration_url, url').eq('org_id', id).eq('published', true).order('event_date', { ascending: false }),
-    supabase.from('videos').select('id, title, category, video_date, url, description').eq('org_id', id).eq('published', true).order('video_date', { ascending: false }),
-  ]);
+  let orgRes, membersRes, eventsRes, videosRes;
+  try {
+    ([orgRes, membersRes, eventsRes, videosRes] = await withTimeout(Promise.all([
+      supabase.from('organizations').select('*').eq('id', id).eq('published', true).single(),
+      supabase.from('org_members').select('*').eq('org_id', id).order('sort_order').order('created_at'),
+      supabase.from('events').select('id, title, category, event_date, event_type, description, registration_url, url').eq('org_id', id).eq('published', true).order('event_date', { ascending: false }),
+      supabase.from('videos').select('id, title, category, video_date, url, description').eq('org_id', id).eq('published', true).order('video_date', { ascending: false }),
+    ])));
+  } catch (err) {
+    renderError(`${err.message} — click <a href="" onclick="location.reload();return false;" style="text-decoration:underline">here to retry</a>.`);
+    return;
+  }
 
   if (orgRes.error || !orgRes.data) { renderError('Organization not found.'); return; }
 

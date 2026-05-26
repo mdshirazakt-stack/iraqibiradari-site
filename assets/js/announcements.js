@@ -1,16 +1,31 @@
-import { createSupabaseClient } from './supabase-config.js';
+import { createSupabaseClient, withTimeout } from './supabase-config.js';
 
 (async function () {
-  const supabase = await createSupabaseClient();
   const listEl   = document.getElementById('announcements-list');
   if (!listEl) return;
 
-  const { data, error } = await supabase
-    .from('announcements')
-    .select('id, title, body, created_at')
-    .eq('published', true)
-    .order('sort_order', { ascending: false })
-    .order('created_at', { ascending: false });
+  let supabase;
+  try {
+    supabase = await createSupabaseClient();
+  } catch (err) {
+    listEl.innerHTML = `<p class="py-8 text-sm text-archive-muted">Could not connect — ${escapeHtml(String(err))}</p>`;
+    return;
+  }
+
+  let data, error;
+  try {
+    ({ data, error } = await withTimeout(
+      supabase
+        .from('announcements')
+        .select('id, title, body, created_at')
+        .eq('published', true)
+        .order('sort_order', { ascending: false })
+        .order('created_at', { ascending: false })
+    ));
+  } catch (err) {
+    listEl.innerHTML = `<p class="py-8 text-sm text-archive-muted">⏱ ${escapeHtml(err.message)} — <button type="button" onclick="location.reload()" class="font-bold text-archive-green underline underline-offset-2 hover:text-archive-gold">Try again</button></p>`;
+    return;
+  }
 
   if (error) {
     listEl.innerHTML = `<p class="py-8 text-sm text-archive-muted">${escapeHtml(error.message)}</p>`;
