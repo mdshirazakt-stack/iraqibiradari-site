@@ -5,8 +5,9 @@ name: Supabase keep-alive
 
 on:
   schedule:
-    # 08:00 UTC daily
-    - cron: '0 8 * * *'
+    # Every 6 hours — free-tier projects can pause after a few hours of no traffic.
+    # UTC times: 02:00, 08:00, 14:00, 20:00
+    - cron: '0 2,8,14,20 * * *'
   workflow_dispatch: # allow manual trigger from GitHub Actions UI
 
 jobs:
