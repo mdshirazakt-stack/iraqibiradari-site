@@ -191,6 +191,65 @@ create policy "Admin can manage story submissions" on public.story_submissions f
   using  ((auth.jwt() ->> 'email') = 'mdshiraz.ib@outlook.com')
   with check ((auth.jwt() ->> 'email') = 'mdshiraz.ib@outlook.com');
 
+-- ── Organizations ─────────────────────────────────────────────────────────
+
+create table if not exists public.organizations (
+  id              text primary key,
+  title           text not null,
+  tagline         text,
+  body            text,               -- mission / about (rich text)
+  logo_url        text,
+  cover_image_url text,
+  contact_email   text,
+  contact_phone   text,
+  website_url     text,
+  address         text,
+  how_to_contribute text,             -- plain text / HTML
+  how_to_apply      text,             -- plain text / HTML (beneficiary)
+  published       boolean not null default true,
+  sort_order      integer not null default 0,
+  created_at      timestamptz not null default now(),
+  updated_at      timestamptz not null default now()
+);
+
+create table if not exists public.org_members (
+  id         uuid primary key default gen_random_uuid(),
+  org_id     text not null references public.organizations(id) on delete cascade,
+  name       text not null,
+  role       text,
+  photo_url  text,
+  sort_order integer not null default 0,
+  created_at timestamptz not null default now()
+);
+
+-- Tag events and videos to an organization (optional)
+alter table public.events add column if not exists org_id text references public.organizations(id) on delete set null;
+alter table public.videos add column if not exists org_id text references public.organizations(id) on delete set null;
+
+alter table public.organizations enable row level security;
+alter table public.org_members    enable row level security;
+
+drop policy if exists "Public can read published organizations" on public.organizations;
+drop policy if exists "Public can read org members"            on public.org_members;
+drop policy if exists "Admin can manage organizations"         on public.organizations;
+drop policy if exists "Admin can manage org members"           on public.org_members;
+
+create policy "Public can read published organizations" on public.organizations
+  for select using (published = true);
+
+create policy "Public can read org members" on public.org_members
+  for select using (
+    exists (select 1 from public.organizations o where o.id = org_id and o.published = true)
+  );
+
+create policy "Admin can manage organizations" on public.organizations for all
+  using  ((auth.jwt() ->> 'email') = 'mdshiraz.ib@outlook.com')
+  with check ((auth.jwt() ->> 'email') = 'mdshiraz.ib@outlook.com');
+
+create policy "Admin can manage org members" on public.org_members for all
+  using  ((auth.jwt() ->> 'email') = 'mdshiraz.ib@outlook.com')
+  with check ((auth.jwt() ->> 'email') = 'mdshiraz.ib@outlook.com');
+
 insert into public.announcements (id, title, body, date, published)
 values
   ('archive-organization-started', 'Archive organization has started', 'Books, meeting notes, videos, and community records are being categorized from the existing public Drive collection.', '2026-05-10', true)

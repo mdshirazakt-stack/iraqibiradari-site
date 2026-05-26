@@ -44,7 +44,11 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
   const sectionStats   = document.querySelector('[data-section-stats]');
   const publishHelp    = document.querySelector('[data-publish-help]');
 
-  const coverPreviewEl = document.querySelector('[data-cover-preview]');
+  const coverPreviewEl    = document.querySelector('[data-cover-preview]');
+  const logoPreviewEl     = document.querySelector('[data-logo-preview]');
+  const orgMembersSection = document.querySelector('[data-org-members-section]');
+  const membersList       = document.querySelector('[data-members-list]');
+  const addMemberButton   = document.querySelector('[data-add-member]');
 
   const fieldRows = {
     eventType:       document.querySelector('[data-field="eventType"]'),
@@ -65,7 +69,17 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
     coverImageUrl:   document.querySelector('[data-field="coverImageUrl"]'),
     cultureCategory: document.querySelector('[data-field="cultureCategory"]'),
     dateVideo:       document.querySelector('[data-field="dateVideo"]'),
+    // Organizations
+    orgTagline:      document.querySelector('[data-field="orgTagline"]'),
+    orgContribute:   document.querySelector('[data-field="orgContribute"]'),
+    orgApply:        document.querySelector('[data-field="orgApply"]'),
+    orgLogoUrl:      document.querySelector('[data-field="orgLogoUrl"]'),
+    orgContact:      document.querySelector('[data-field="orgContact"]'),
+    orgId:           document.querySelector('[data-field="orgId"]'),
   };
+
+  // Cache of published orgs for the orgId dropdown
+  let orgsList = [];
 
   if (!authPanel || !adminPanel || !form || !list) return;
 
@@ -140,12 +154,14 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
     contentSection.style.display        = 'none';
     editorView.style.display            = 'block';
     submissionsSection.style.display    = 'none';
+    if (orgMembersSection) orgMembersSection.style.display = 'none';
   }
 
   function showList() {
     contentSection.style.display     = 'grid';
     editorView.style.display         = 'none';
     if (currentType === 'stories') submissionsSection.style.display = 'block';
+    if (orgMembersSection) orgMembersSection.style.display = 'none';
     // Reset editor transient elements
     if (saveStatus)  saveStatus.style.display  = '';
     if (previewLink) previewLink.style.display = '';
@@ -161,6 +177,71 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
     resetFormState(currentType);
     setStatus('Edit cancelled.');
   });
+
+  // ── Org members ─────────────────────────────────────────────────────
+  addMemberButton?.addEventListener('click', async () => {
+    if (!editingEntry || editingEntry.table !== 'organizations') return;
+    const nameEl  = document.getElementById('member-name');
+    const roleEl  = document.getElementById('member-role');
+    const photoEl = document.getElementById('member-photo');
+    const name = nameEl?.value.trim();
+    if (!name) { nameEl?.focus(); return; }
+    const { error } = await supabase.from('org_members').insert({
+      org_id: editingEntry.id, name,
+      role:      roleEl?.value.trim()  || null,
+      photo_url: photoEl?.value.trim() || null,
+    });
+    if (error) { setStatus(error.message); return; }
+    if (nameEl)  nameEl.value  = '';
+    if (roleEl)  roleEl.value  = '';
+    if (photoEl) photoEl.value = '';
+    await renderOrgMembers(editingEntry.id);
+  });
+
+  membersList?.addEventListener('click', async (e) => {
+    const btn = e.target.closest('[data-remove-member]');
+    if (!btn) return;
+    const { error } = await supabase.from('org_members').delete().eq('id', btn.dataset.removeMember);
+    if (error) { setStatus(error.message); return; }
+    if (editingEntry) await renderOrgMembers(editingEntry.id);
+  });
+
+  async function renderOrgMembers(orgId) {
+    if (!membersList) return;
+    const { data, error } = await supabase.from('org_members').select('*')
+      .eq('org_id', orgId).order('sort_order').order('created_at');
+    if (error) { membersList.innerHTML = `<p class="text-xs text-archive-muted">${escapeHtml(error.message)}</p>`; return; }
+    if (!data?.length) {
+      membersList.innerHTML = `<p class="text-xs text-archive-muted italic col-span-full">No team members yet — add the first one below.</p>`;
+      return;
+    }
+    membersList.innerHTML = data.map(m => `
+      <div class="flex items-center gap-3 rounded-lg border border-archive-line bg-archive-paper p-3">
+        ${m.photo_url ? `<img src="${escapeHtml(m.photo_url)}" class="h-10 w-10 shrink-0 rounded object-cover border border-archive-line" onerror="this.style.display='none'"/>` : `<div class="h-10 w-10 shrink-0 rounded bg-archive-line flex items-center justify-center text-archive-muted text-xs font-black">${escapeHtml(m.name[0] || '?')}</div>`}
+        <div class="min-w-0 flex-1">
+          <p class="text-sm font-bold text-archive-ink truncate">${escapeHtml(m.name)}</p>
+          ${m.role ? `<p class="text-xs text-archive-muted truncate">${escapeHtml(m.role)}</p>` : ''}
+        </div>
+        <button data-remove-member="${escapeHtml(m.id)}" type="button"
+          class="shrink-0 p-1.5 text-archive-muted/40 hover:text-red-500" aria-label="Remove member">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 1l10 10M11 1L1 11"/></svg>
+        </button>
+      </div>`).join('');
+  }
+
+  // ── Org dropdown population ──────────────────────────────────────────
+  async function loadOrgsDropdown() {
+    const sel = form.querySelector('[name="orgId"]');
+    if (!sel) return;
+    if (orgsList.length === 0) {
+      const { data } = await supabase.from('organizations').select('id, title').eq('published', true)
+        .order('sort_order', { ascending: false }).order('title');
+      orgsList = data || [];
+    }
+    const current = sel.value;
+    sel.innerHTML = `<option value="">— Generic (no organization) —</option>` +
+      orgsList.map(o => `<option value="${escapeHtml(o.id)}"${o.id === current ? ' selected' : ''}>${escapeHtml(o.title)}</option>`).join('');
+  }
 
   // ── New entry button ─────────────────────────────────────────────────
   newEntryButton?.addEventListener('click', () => {
@@ -181,8 +262,9 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
     searchDebounce = setTimeout(renderFilteredList, 220);
   });
 
-  // ── Cover image preview ───────────────────────────────────────────────
+  // ── Cover + logo previews ─────────────────────────────────────────────
   form.querySelector('[name="coverImageUrl"]')?.addEventListener('input', updateCoverPreview);
+  form.querySelector('[name="orgLogoUrl"]')?.addEventListener('input', updateLogoPreview);
 
   function updateCoverPreview() {
     if (!coverPreviewEl) return;
@@ -192,6 +274,17 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
         onerror="this.parentElement.innerHTML='<p class=\\'text-xs text-archive-muted p-4 text-center\\'>Image failed to load</p>'"/>`;
     } else {
       coverPreviewEl.innerHTML = `<p class="px-4 text-center text-xs text-archive-muted/60">Landscape 1200×630 — drop or paste URL</p>`;
+    }
+  }
+
+  function updateLogoPreview() {
+    if (!logoPreviewEl) return;
+    const url = form.querySelector('[name="orgLogoUrl"]')?.value?.trim();
+    if (url) {
+      logoPreviewEl.innerHTML = `<img src="${escapeHtml(url)}" class="h-full w-full object-contain p-1"
+        onerror="this.parentElement.innerHTML='<p class=\\'text-[10px] text-archive-muted text-center px-1\\'>Failed</p>'"/>`;
+    } else {
+      logoPreviewEl.innerHTML = `<p class="text-center text-[10px] text-archive-muted/50 px-1">No logo</p>`;
     }
   }
 
@@ -425,7 +518,7 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
   function updateNewEntryButton(type) {
     if (!newEntryButton) return;
     const iPlus = `<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 1v10M1 6h10"/></svg>`;
-    const singulars = { events:'event', announcements:'announcement', documents:'document', videos:'video', people:'person', stories:'story' };
+    const singulars = { events:'event', announcements:'announcement', documents:'document', videos:'video', people:'person', stories:'story', organizations:'organization' };
     newEntryButton.innerHTML = `${iPlus} New ${singulars[type] || 'entry'}`;
   }
 
@@ -446,16 +539,13 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
       currentType = section;
       resetFormState(section);
       updateNewEntryButton(section);
-      if (sectionHeading) {
-        const labels = { events:'Events', announcements:'Announcements', documents:'Documents', videos:'Videos', people:'People', stories:'Culture' };
-        sectionHeading.textContent = labels[section] || section;
-      }
-      if (editorBreadcrumb) {
-        const labels = { events:'Events', announcements:'Announcements', documents:'Documents', videos:'Videos', people:'People', stories:'Culture' };
-        editorBreadcrumb.textContent = labels[section] || section;
-      }
+      const labels = { events:'Events', announcements:'Announcements', documents:'Documents', videos:'Videos', people:'People', stories:'Culture', organizations:'Organizations' };
+      if (sectionHeading)   sectionHeading.textContent   = labels[section] || section;
+      if (editorBreadcrumb) editorBreadcrumb.textContent = labels[section] || section;
       renderList();
       if (showSubmissions) renderSubmissions();
+      // Populate org dropdown when switching to events or videos
+      if (section === 'events' || section === 'videos') loadOrgsDropdown();
     } else {
       renderMatrimonyList();
     }
@@ -480,7 +570,7 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
   }
 
   async function loadTabCounts() {
-    const tables = ['events', 'announcements', 'documents', 'videos', 'people', 'stories'];
+    const tables = ['events', 'announcements', 'documents', 'videos', 'people', 'stories', 'organizations'];
     await Promise.all(tables.map(async (table) => {
       const { count } = await supabase.from(table).select('*', { count: 'exact', head: true });
       const el = document.querySelector(`[data-tab-count="${table}"]`);
@@ -493,6 +583,8 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
     ]);
     const mEl = document.querySelector('[data-tab-count="matrimony"]');
     if (mEl) mEl.textContent = (pc || 0) + (rc || 0);
+    // Refresh org cache when counts load
+    orgsList = [];
   }
 
   async function renderList() {
@@ -706,9 +798,13 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
       location:         String(data.get('location') || '').trim() || null,
       video_url:        String(data.get('videoUrl') || '').trim() || null,
       registration_url: String(data.get('registrationUrl') || '').trim() || null,
+      org_id:           String(data.get('orgId') || '').trim() || null,
     };
 
-    if (table === 'videos')  return { ...base, video_date: String(data.get('date') || '') || null };
+    if (table === 'videos')  return { ...base,
+      video_date: String(data.get('date') || '') || null,
+      org_id:     String(data.get('orgId') || '').trim() || null,
+    };
 
     if (table === 'people')  return { id: base.id, title: base.title,
       designation: String(data.get('designation') || '').trim() || null,
@@ -725,6 +821,23 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
       excerpt:         String(data.get('shortSummary') || '').trim() || null,
       body:            String(data.get('body') || '').trim() || null,
       published:       base.published, sort_order: base.sort_order,
+    };
+
+    if (table === 'organizations') return {
+      id:                slugify(data.get('title')),
+      title:             String(data.get('title') || '').trim(),
+      tagline:           String(data.get('orgTagline') || '').trim() || null,
+      body:              String(data.get('body') || '').trim() || null,
+      logo_url:          String(data.get('orgLogoUrl') || '').trim() || null,
+      cover_image_url:   String(data.get('coverImageUrl') || '').trim() || null,
+      contact_email:     String(data.get('orgContactEmail') || '').trim() || null,
+      contact_phone:     String(data.get('orgContactPhone') || '').trim() || null,
+      website_url:       String(data.get('orgWebsiteUrl') || '').trim() || null,
+      address:           String(data.get('orgAddress') || '').trim() || null,
+      how_to_contribute: String(data.get('orgContribute') || '').trim() || null,
+      how_to_apply:      String(data.get('orgApply') || '').trim() || null,
+      published:         base.published,
+      sort_order:        base.sort_order,
     };
 
     // documents
@@ -754,12 +867,13 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
 
   function updateFieldVisibility() {
     const show = {
-      events:        ['eventType', 'date', 'location', 'videoUrl', 'registrationUrl', 'category', 'shortSummary', 'body', 'ribbon'],
+      events:        ['eventType', 'date', 'location', 'videoUrl', 'registrationUrl', 'category', 'shortSummary', 'body', 'ribbon', 'orgId'],
       announcements: ['body'],
       documents:     ['category', 'itemType', 'url', 'descriptionText'],
-      videos:        ['category', 'url', 'dateVideo', 'descriptionText'],
+      videos:        ['category', 'url', 'dateVideo', 'descriptionText', 'orgId'],
       people:        ['designation', 'photoUrl', 'category', 'body'],
       stories:       ['author', 'cultureCategory', 'coverImageUrl', 'shortSummary', 'body'],
+      organizations: ['orgTagline', 'body', 'orgContribute', 'orgApply', 'orgLogoUrl', 'coverImageUrl', 'orgContact'],
     };
     const visible = new Set(show[currentType] || []);
     for (const [name, row] of Object.entries(fieldRows)) {
@@ -772,7 +886,7 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
 
     // Update publishing help text
     if (publishHelp) {
-      const labels = { events:'Visible on the events page.', announcements:'Visible on the announcements page.', documents:'Visible on the documents page.', videos:'Visible on the videos page.', people:'Visible on the Achievers page.', stories:'Visible in the Culture section.' };
+      const labels = { events:'Visible on the events page.', announcements:'Visible on the announcements page.', documents:'Visible on the documents page.', videos:'Visible on the videos page.', people:'Visible on the Achievers page.', stories:'Visible in the Culture section.', organizations:'Visible on the Organizations page.' };
       publishHelp.textContent = labels[currentType] || 'Visible on the site.';
     }
   }
@@ -780,14 +894,14 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
   function updateTitlePlaceholder(type) {
     const el = form.querySelector('[name="title"]');
     if (!el) return;
-    const ph = { people:'Name…', stories:'Story title…', events:'Event title…', announcements:'Announcement title…', documents:'Document title…', videos:'Video title…' };
+    const ph = { people:'Name…', stories:'Story title…', events:'Event title…', announcements:'Announcement title…', documents:'Document title…', videos:'Video title…', organizations:'Organization name…' };
     el.placeholder = ph[type] || 'Title…';
   }
 
   function updateContextLabel(type, isEditing) {
     if (!contextLabel) return;
-    const newLabels  = { events:'Drafting a new event', announcements:'Drafting a new announcement', documents:'Adding a new document', videos:'Adding a new video', people:'Adding a new person', stories:'Writing a story' };
-    const editLabels = { events:'Editing event', announcements:'Editing announcement', documents:'Editing document', videos:'Editing video', people:'Editing person', stories:'Editing story' };
+    const newLabels  = { events:'Drafting a new event', announcements:'Drafting a new announcement', documents:'Adding a new document', videos:'Adding a new video', people:'Adding a new person', stories:'Writing a story', organizations:'Adding a new organization' };
+    const editLabels = { events:'Editing event', announcements:'Editing announcement', documents:'Editing document', videos:'Editing video', people:'Editing person', stories:'Editing story', organizations:'Editing organization' };
     contextLabel.textContent = isEditing ? (editLabels[type] || 'Editing entry') : (newLabels[type] || 'New entry');
   }
 
@@ -800,6 +914,7 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
       videos:        '/videos/',
       people:        '/people/',
       stories:       id ? `/culture/detail/?id=${encodeURIComponent(id)}` : '/culture/',
+      organizations: id ? `/organizations/detail/?id=${encodeURIComponent(id)}` : '/organizations/',
     };
     previewLink.href = urls[type] || '#';
     previewLink.style.display = id ? 'inline' : '';
@@ -831,20 +946,43 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
     if (form.elements.coverImageUrl)   form.elements.coverImageUrl.value   = row.cover_image_url  || '';
     if (form.elements.cultureCategory) form.elements.cultureCategory.value = row.category         || '';
 
+    // Organizations-specific fields
+    if (form.elements.orgTagline)      form.elements.orgTagline.value      = row.tagline          || '';
+    if (form.elements.orgLogoUrl)      form.elements.orgLogoUrl.value      = row.logo_url         || '';
+    if (form.elements.orgContactEmail) form.elements.orgContactEmail.value = row.contact_email    || '';
+    if (form.elements.orgContactPhone) form.elements.orgContactPhone.value = row.contact_phone    || '';
+    if (form.elements.orgWebsiteUrl)   form.elements.orgWebsiteUrl.value   = row.website_url      || '';
+    if (form.elements.orgAddress)      form.elements.orgAddress.value      = row.address          || '';
+    if (form.elements.orgContribute)   form.elements.orgContribute.value   = row.how_to_contribute || '';
+    if (form.elements.orgApply)        form.elements.orgApply.value        = row.how_to_apply     || '';
+
     if (quill) quill.root.innerHTML = row.body || '';
 
     updateFieldVisibility();
     if (table === 'events') updateTypePills(row.event_type || 'live');
     updateTitlePlaceholder(table);
     updateCoverPreview();
+    updateLogoPreview();
     updateSaveButtonLabel();
     updateContextLabel(table, true);
     setPreviewLink(table, row.id);
 
-    const labels = { events:'Events', announcements:'Announcements', documents:'Documents', videos:'Videos', people:'People', stories:'Culture' };
+    const labels = { events:'Events', announcements:'Announcements', documents:'Documents', videos:'Videos', people:'People', stories:'Culture', organizations:'Organizations' };
     if (editorBreadcrumb) editorBreadcrumb.textContent = labels[table] || table;
     if (formTitle)        formTitle.textContent = `Edit ${contentTypeLabel(table)}`;
     if (editingNote)      editingNote.style.display = 'block';
+
+    // Populate org dropdown (events/videos) then set selected value
+    if (table === 'events' || table === 'videos') {
+      await loadOrgsDropdown();
+      if (form.elements.orgId && row.org_id) form.elements.orgId.value = row.org_id;
+    }
+
+    // Show team members panel for existing organizations
+    if (table === 'organizations' && orgMembersSection) {
+      orgMembersSection.style.display = 'block';
+      await renderOrgMembers(row.id);
+    }
 
     showEditor();
     setStatus(`Editing "${row.title || 'entry'}".`);
@@ -856,23 +994,25 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient } from './supabas
     currentType = type;
     form.elements.published.checked = true;
     form.elements.sortOrder.value   = '0';
-    if (quill)          quill.root.innerHTML = '';
-    if (editingNote)  { editingNote.style.cssText = 'display:none'; editingNote.textContent = 'Editing existing entry.'; }
-    if (coverPreviewEl) coverPreviewEl.innerHTML = `<p class="px-4 text-center text-xs text-archive-muted/60">Landscape 1200×630 — drop or paste URL</p>`;
-    if (saveStatus)     saveStatus.style.display  = '';
-    if (previewLink)    previewLink.style.display = '';
+    if (quill)            quill.root.innerHTML = '';
+    if (editingNote)    { editingNote.style.cssText = 'display:none'; editingNote.textContent = 'Editing existing entry.'; }
+    if (coverPreviewEl)   coverPreviewEl.innerHTML = `<p class="px-4 text-center text-xs text-archive-muted/60">Landscape 1200×630 — drop or paste URL</p>`;
+    if (logoPreviewEl)    logoPreviewEl.innerHTML  = `<p class="text-center text-[10px] text-archive-muted/50 px-1">No logo</p>`;
+    if (orgMembersSection) orgMembersSection.style.display = 'none';
+    if (saveStatus)       saveStatus.style.display  = '';
+    if (previewLink)      previewLink.style.display = '';
     updateFieldVisibility();
     if (type === 'events') updateTypePills('live');
     updateTitlePlaceholder(type);
     updateSaveButtonLabel();
     updateContextLabel(type, false);
-    const labels = { events:'Events', announcements:'Announcements', documents:'Documents', videos:'Videos', people:'People', stories:'Culture' };
+    const labels = { events:'Events', announcements:'Announcements', documents:'Documents', videos:'Videos', people:'People', stories:'Culture', organizations:'Organizations' };
     if (editorBreadcrumb) editorBreadcrumb.textContent = labels[type] || type;
     if (formTitle)        formTitle.textContent = `New ${contentTypeLabel(type)}`;
   }
 
   function contentTypeLabel(t) {
-    return { events:'event', announcements:'announcement', documents:'document', videos:'video', people:'person', stories:'story' }[t] || 'entry';
+    return { events:'event', announcements:'announcement', documents:'document', videos:'video', people:'person', stories:'story', organizations:'organization' }[t] || 'entry';
   }
 
   // ── Matrimony ────────────────────────────────────────────────────────
