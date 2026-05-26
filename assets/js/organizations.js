@@ -1,9 +1,19 @@
 import { createSupabaseClient } from './supabase-config.js';
 
 (async function () {
-  const supabase = await createSupabaseClient();
-  const listEl   = document.getElementById('orgs-list');
+  const listEl = document.getElementById('orgs-list');
   if (!listEl) return;
+
+  function stripHtml(html) { return String(html || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim(); }
+  function escapeHtml(v)   { return String(v || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;'); }
+
+  let supabase;
+  try {
+    supabase = await createSupabaseClient();
+  } catch (err) {
+    listEl.innerHTML = `<p class="col-span-full py-8 text-sm text-archive-muted">Could not connect: ${escapeHtml(String(err))}</p>`;
+    return;
+  }
 
   const { data, error } = await supabase
     .from('organizations')
@@ -13,7 +23,7 @@ import { createSupabaseClient } from './supabase-config.js';
     .order('created_at', { ascending: false });
 
   if (error) {
-    listEl.innerHTML = `<p class="col-span-full py-8 text-sm text-archive-muted">${escapeHtml(error.message)}</p>`;
+    listEl.innerHTML = `<p class="col-span-full py-8 text-sm text-archive-muted">Error: ${escapeHtml(error.message)}</p>`;
     return;
   }
 
@@ -65,7 +75,4 @@ import { createSupabaseClient } from './supabase-config.js';
         </div>
       </a>`;
   }).join('');
-
-  function stripHtml(html) { return String(html || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim(); }
-  function escapeHtml(v)   { return String(v || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;'); }
 })();
