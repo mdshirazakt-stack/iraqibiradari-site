@@ -342,11 +342,17 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
       if (editingEntry && editingEntry.table === currentType) {
         // UPDATE existing — strip id from payload (primary key must not change)
         const { id: _id, ...updatePayload } = payload;
-        const { error } = await supabase.from(currentType).update(updatePayload).eq('id', editingEntry.id);
+        const { error } = await withTimeout(
+          supabase.from(currentType).update(updatePayload).eq('id', editingEntry.id),
+          20000  // 20s — larger doc saves can be slow on free tier
+        );
         saveError = error;
       } else {
         // INSERT new entry
-        const { error } = await supabase.from(currentType).insert(payload);
+        const { error } = await withTimeout(
+          supabase.from(currentType).insert(payload),
+          20000
+        );
         saveError = error;
       }
     } catch (err) {
@@ -356,7 +362,10 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
     saveButton.disabled = false;
 
     if (saveError) {
-      const msg = saveError.message || String(saveError);
+      const isTimeout = saveError.message?.includes('timed out');
+      const msg = isTimeout
+        ? 'Database was waking up — your content is safe, click Publish again.'
+        : (saveError.message || String(saveError));
       setStatus(`Save failed: ${msg}`);
       if (editingNote) {
         editingNote.textContent = `Save failed: ${msg}`;
