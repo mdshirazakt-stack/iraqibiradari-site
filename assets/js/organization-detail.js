@@ -301,8 +301,8 @@ import { createSupabaseClient, withTimeout } from './supabase-config.js';
     const regLink = ev.registration_url || ev.url;
     return `
       <div class="relative flex overflow-hidden border border-archive-line bg-white group hover:shadow-md hover:border-archive-green/40 transition-all cursor-pointer">
-        <!-- stretched link — covers the whole card -->
-        <a href="${detailHref}" class="absolute inset-0 z-0" aria-label="${escapeHtml(ev.title)}"></a>
+        <!-- stretched link — z-[1] so it sits above non-positioned flow children -->
+        <a href="${detailHref}" class="absolute inset-0 z-[1]" aria-label="${escapeHtml(ev.title)}"></a>
         ${dateBlock}
         <div class="flex flex-1 flex-col p-4 min-w-0">
           <div class="flex flex-wrap gap-1.5">
@@ -321,7 +321,7 @@ import { createSupabaseClient, withTimeout } from './supabase-config.js';
             </span>
             ${regLink && !isPast
               ? `<a href="${escapeHtml(regLink)}" target="_blank" rel="noopener"
-                  class="relative z-10 inline-flex items-center gap-1 text-xs font-black uppercase tracking-[0.08em] text-archive-gold hover:underline">Register →</a>`
+                  class="relative z-[2] inline-flex items-center gap-1 text-xs font-black uppercase tracking-[0.08em] text-archive-gold hover:underline">Register →</a>`
               : ''}
           </div>
         </div>
