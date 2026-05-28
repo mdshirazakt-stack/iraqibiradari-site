@@ -86,9 +86,11 @@ document.addEventListener('click', e => {
 supabase.auth.onAuthStateChange((event, session) => {
   if (event === 'TOKEN_REFRESHED') return;
   if (session?.user) {
+    const wasSignedIn = !!currentUser;
     currentUser = session.user;
     showAuthBar(session.user);
-    afterSignIn();
+    // Only navigate on a genuine new sign-in — not on tab-refocus re-fires
+    if (!wasSignedIn) afterSignIn();
   } else {
     currentUser = null;
     hideAuthBar();
