@@ -322,6 +322,17 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
     if (hiddenInput) hiddenInput.value = type;
   }
 
+  // ── Block accidental form-submit on Enter in single-line inputs ──────
+  // Without this, pressing Enter in the title, location, URL, sort-order,
+  // or any other text/url/email/tel input instantly saves & closes the editor.
+  form.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter') return;
+    const t = e.target;
+    if (t.tagName !== 'INPUT') return;                    // textareas: Enter is fine
+    if (t.type === 'submit' || t.type === 'checkbox' || t.type === 'radio') return;
+    e.preventDefault();                                   // swallow Enter everywhere else
+  });
+
   // ── Form submit ──────────────────────────────────────────────────────
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -856,7 +867,7 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
     };
 
     if (table === 'videos')  return { ...base,
-      video_date: String(data.get('date') || '') || null,
+      video_date: String(data.get('videoDate') || '') || null,
       org_id:     String(data.get('orgId') || '').trim() || null,
     };
 
@@ -902,7 +913,7 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
   function formPayloadFromJson(item, table) {
     const map = new Map([
       ['title', item.title], ['category', item.category], ['description', item.description || item.body],
-      ['url', item.url], ['registrationUrl', item.registrationUrl], ['date', item.date],
+      ['url', item.url], ['registrationUrl', item.registrationUrl], ['date', item.date], ['videoDate', item.video_date || item.date || ''],
       ['itemType', item.type], ['sortOrder', item.sortOrder || item.sort_order || 0],
       ['published', item.published === false ? '' : 'on'], ['eventType', item.event_type || 'live'],
       ['location', item.location || ''], ['videoUrl', item.video_url || ''],
@@ -989,7 +1000,8 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
     if (form.elements.itemType)        form.elements.itemType.value        = row.content_type     || '';
     if (form.elements.url)             form.elements.url.value             = row.url              || '';
     if (form.elements.registrationUrl) form.elements.registrationUrl.value = row.registration_url || '';
-    if (form.elements.date)            form.elements.date.value            = row.event_date || row.video_date || row.date || '';
+    if (form.elements.date)            form.elements.date.value            = row.event_date || row.date || '';
+    if (form.elements.videoDate)       form.elements.videoDate.value       = row.video_date || '';
     if (form.elements.location)        form.elements.location.value        = row.location         || '';
     if (form.elements.videoUrl)        form.elements.videoUrl.value        = row.video_url        || '';
     if (form.elements.shortSummary)    form.elements.shortSummary.value    = row.description || row.excerpt || '';
