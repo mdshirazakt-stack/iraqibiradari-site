@@ -638,15 +638,22 @@ requirementForm?.addEventListener('submit', async e => {
     status:                   'new',
   };
 
-  // Insert if no existing row, update if one already exists
+  // Always check DB for an existing row — don't rely on in-memory state
+  const { data: existing } = await supabase
+    .from('matrimony_requirements')
+    .select('id')
+    .eq('user_id', currentUser.id)
+    .maybeSingle();
+
   let saveError;
-  if (subs.requirement?.id && subs.requirement.id !== 'new') {
+  if (existing?.id) {
     const { error } = await supabase
       .from('matrimony_requirements')
       .update({ ...payload, updated_at: new Date().toISOString() })
-      .eq('id', subs.requirement.id)
+      .eq('id', existing.id)
       .eq('user_id', currentUser.id);
     saveError = error;
+    if (!error) subs.requirement = { ...(subs.requirement || {}), id: existing.id, seeker_name: payload.seeker_name };
   } else {
     const { data: inserted, error } = await supabase
       .from('matrimony_requirements')
