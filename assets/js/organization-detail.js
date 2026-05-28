@@ -291,7 +291,7 @@ import { createSupabaseClient, withTimeout } from './supabase-config.js';
       const d = new Date(dateStr + 'T00:00:00');
       if (!isNaN(d)) {
         dateBlock = `
-          <div class="shrink-0 flex flex-col items-center justify-center bg-archive-green px-4 py-3 text-center min-w-[56px] group-hover:bg-archive-green/80 transition-colors">
+          <div class="shrink-0 flex flex-col items-center justify-center bg-archive-green px-4 py-3 text-center min-w-[56px]">
             <span class="text-xl font-black text-white leading-none">${d.getDate()}</span>
             <span class="text-[10px] font-bold uppercase text-archive-goldSoft">${d.toLocaleString('en-GB',{month:'short'}).toUpperCase()}</span>
             <span class="text-[10px] text-archive-paper/70">${d.getFullYear()}</span>
@@ -299,10 +299,12 @@ import { createSupabaseClient, withTimeout } from './supabase-config.js';
       }
     }
     const regLink = ev.registration_url || ev.url;
+    // onclick on the outer div makes the whole card clickable without z-index games.
+    // The Register button uses onclick stopPropagation so it opens its own URL independently.
     return `
-      <div class="relative flex overflow-hidden border border-archive-line bg-white group hover:shadow-md hover:border-archive-green/40 transition-all cursor-pointer">
-        <!-- stretched link — z-[1] so it sits above non-positioned flow children -->
-        <a href="${detailHref}" class="absolute inset-0 z-[1]" aria-label="${escapeHtml(ev.title)}"></a>
+      <div onclick="location.href='${detailHref}'"
+           style="cursor:pointer"
+           class="flex overflow-hidden border border-archive-line bg-white hover:shadow-md hover:border-archive-green transition-all">
         ${dateBlock}
         <div class="flex flex-1 flex-col p-4 min-w-0">
           <div class="flex flex-wrap gap-1.5">
@@ -312,16 +314,17 @@ import { createSupabaseClient, withTimeout } from './supabase-config.js';
             ${ev.event_type === 'webinar' ? `<span class="inline-block rounded-full px-2 py-0.5 text-[10px] font-black uppercase bg-archive-goldSoft text-archive-ink">Online</span>` : ''}
             ${ev.category ? `<span class="inline-block rounded-full px-2 py-0.5 text-[10px] font-black uppercase border border-archive-line text-archive-muted">${escapeHtml(ev.category)}</span>` : ''}
           </div>
-          <p class="mt-2 font-display text-base font-bold text-archive-green group-hover:text-archive-gold transition-colors leading-snug">${escapeHtml(ev.title)}</p>
+          <p class="mt-2 font-display text-base font-bold text-archive-green leading-snug">${escapeHtml(ev.title)}</p>
           ${ev.description ? `<p class="mt-1 line-clamp-2 text-xs leading-5 text-archive-muted">${escapeHtml(ev.description)}</p>` : ''}
           <div class="mt-2 flex flex-wrap items-center gap-3">
-            <span class="inline-flex items-center gap-1 text-xs font-black uppercase tracking-[0.08em] text-archive-green group-hover:text-archive-gold transition-colors">
+            <span class="inline-flex items-center gap-1 text-xs font-black uppercase tracking-[0.08em] text-archive-green">
               View details
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6h8M7 3l3 3-3 3"/></svg>
             </span>
             ${regLink && !isPast
               ? `<a href="${escapeHtml(regLink)}" target="_blank" rel="noopener"
-                  class="relative z-[2] inline-flex items-center gap-1 text-xs font-black uppercase tracking-[0.08em] text-archive-gold hover:underline">Register →</a>`
+                  onclick="event.stopPropagation()"
+                  class="inline-flex items-center gap-1 text-xs font-black uppercase tracking-[0.08em] text-archive-gold hover:underline">Register →</a>`
               : ''}
           </div>
         </div>

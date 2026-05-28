@@ -46,6 +46,7 @@ import { createSupabaseClient, withTimeout } from './supabase-config.js';
         .from('events')
         .select('id, title, description, event_type, event_date, location, registration_url, video_url, category')
         .eq('published', true)
+        .is('org_id', null)          // org-linked events belong on the org page, not here
         .order('event_date', { ascending: true, nullsFirst: false })
         .order('sort_order', { ascending: false })
     ));
