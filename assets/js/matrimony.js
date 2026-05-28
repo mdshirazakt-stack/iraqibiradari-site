@@ -11,16 +11,8 @@ const authEmailDisp  = document.getElementById('auth-email-display');
 const btnSignout     = document.getElementById('btn-signout');
 
 // auth
-const emailStep      = document.getElementById('auth-email-step');
-const otpStep        = document.getElementById('auth-otp-step');
-const formEmail      = document.getElementById('form-email');
-const formOtp        = document.getElementById('form-otp');
-const inputEmail     = document.getElementById('input-email');
-const inputOtp       = document.getElementById('input-otp');
-const otpEmailLabel  = document.getElementById('otp-email-label');
-const btnResend      = document.getElementById('btn-resend');
-const errEmail       = document.getElementById('err-email');
-const errOtp         = document.getElementById('err-otp');
+const btnGoogleSignin = document.getElementById('btn-google-signin');
+const authGoogleErr   = document.getElementById('auth-google-err');
 
 // consent
 const consentForm    = document.getElementById('consent-form');
@@ -61,9 +53,8 @@ const detailSidebar  = document.getElementById('detail-sidebar');
 
 // ── App state ──────────────────────────────────────────────────────────────────
 let supabase, currentUser, memberRecord;
-let subs = { candidate: null, requirement: null };
+let subs = { candidates: [], requirement: null };
 let browseData = [], browseFilter = 'all';
-let pendingEmail = '';
 
 // ── Bootstrap ──────────────────────────────────────────────────────────────────
 supabase = await createSupabaseClient();
@@ -73,10 +64,12 @@ document.addEventListener('click', e => {
   const btn = e.target.closest('[data-go]');
   if (!btn) return;
   const dest = btn.dataset.go;
-  if (dest === 'landing') { showStage('landing'); return; }
-  if (dest === 'auth')    { prepAuth(); showStage('auth'); return; }
-  if (dest === 'gate')    { renderGate(); return; }
-  if (dest === 'browse')  { openBrowse(); return; }
+  if (dest === 'landing')     { showStage('landing'); return; }
+  if (dest === 'auth')        { showStage('auth'); return; }
+  if (dest === 'gate')        { renderGate(); return; }
+  if (dest === 'browse')      { openBrowse(); return; }
+  if (dest === 'candidate')   { showStage('candidate'); return; }
+  if (dest === 'requirement') { showStage('requirement'); return; }
 });
 
 supabase.auth.onAuthStateChange((event, session) => {
@@ -119,55 +112,24 @@ function hideAuthBar() {
 }
 btnSignout?.addEventListener('click', async () => { await supabase.auth.signOut(); });
 
-// ── Auth — email OTP ───────────────────────────────────────────────────────────
-function prepAuth() {
-  emailStep?.classList.remove('hidden');
-  otpStep?.classList.add('hidden');
-  if (inputEmail) inputEmail.value = '';
-  if (inputOtp)   inputOtp.value   = '';
-  errEmail?.classList.add('hidden');
-  errOtp?.classList.add('hidden');
-}
+// ── Auth — Google OAuth ────────────────────────────────────────────────────────
+btnGoogleSignin?.addEventListener('click', async () => {
+  btnGoogleSignin.disabled    = true;
+  btnGoogleSignin.textContent = 'Redirecting to Google…';
+  if (authGoogleErr) authGoogleErr.classList.add('hidden');
 
-formEmail?.addEventListener('submit', async e => {
-  e.preventDefault();
-  const email  = (inputEmail?.value || '').trim();
-  const btn    = formEmail.querySelector('button[type="submit"]');
-  btn.disabled = true; btn.textContent = 'Sending…';
-  errEmail?.classList.add('hidden');
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: 'https://iraqibiradari.com/matrimony/' },
+  });
 
-  const { error } = await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: true } });
-
-  btn.disabled = false; btn.textContent = 'Send sign-in code →';
-  if (error) { if (errEmail) { errEmail.textContent = error.message; errEmail.classList.remove('hidden'); } return; }
-
-  pendingEmail = email;
-  if (otpEmailLabel) otpEmailLabel.textContent = email;
-  emailStep?.classList.add('hidden');
-  otpStep?.classList.remove('hidden');
-  inputOtp?.focus();
-});
-
-formOtp?.addEventListener('submit', async e => {
-  e.preventDefault();
-  const token  = (inputOtp?.value || '').trim();
-  const btn    = formOtp.querySelector('button[type="submit"]');
-  btn.disabled = true; btn.textContent = 'Verifying…';
-  errOtp?.classList.add('hidden');
-
-  const { error } = await supabase.auth.verifyOtp({ email: pendingEmail, token, type: 'email' });
-
-  btn.disabled = false; btn.textContent = 'Verify code →';
-  if (error) { if (errOtp) { errOtp.textContent = error.message; errOtp.classList.remove('hidden'); } }
-  // onAuthStateChange fires on success → calls afterSignIn
-});
-
-btnResend?.addEventListener('click', async () => {
-  if (!pendingEmail) return;
-  btnResend.textContent = 'Sending…';
-  await supabase.auth.signInWithOtp({ email: pendingEmail });
-  btnResend.textContent = 'Code resent ✓';
-  setTimeout(() => { if (btnResend) btnResend.textContent = 'Resend code'; }, 3000);
+  // Only reached if OAuth fails to redirect (e.g. provider not enabled)
+  btnGoogleSignin.disabled    = false;
+  btnGoogleSignin.textContent = 'Sign in with Google';
+  if (error && authGoogleErr) {
+    authGoogleErr.textContent = error.message;
+    authGoogleErr.classList.remove('hidden');
+  }
 });
 
 // ── After sign-in routing ──────────────────────────────────────────────────────
@@ -197,10 +159,16 @@ async function afterSignIn() {
 // ── Submissions check ──────────────────────────────────────────────────────────
 async function loadSubs() {
   const [pRes, rRes] = await Promise.all([
-    supabase.from('matrimony_profiles').select('id,candidate_name').eq('user_id', currentUser.id).maybeSingle(),
-    supabase.from('matrimony_requirements').select('id,seeker_name').eq('user_id', currentUser.id).maybeSingle(),
+    supabase.from('matrimony_profiles')
+      .select('id,candidate_name,candidate_gender,marital_status')
+      .eq('user_id', currentUser.id)
+      .order('created_at', { ascending: true }),
+    supabase.from('matrimony_requirements')
+      .select('id,seeker_name')
+      .eq('user_id', currentUser.id)
+      .maybeSingle(),
   ]);
-  subs.candidate   = pRes.data  || null;
+  subs.candidates  = pRes.data  || [];
   subs.requirement = rRes.data  || null;
 }
 
@@ -211,42 +179,81 @@ async function renderGate() {
   const first = memberRecord?.full_name?.split(' ')[0] || '';
   if (gateFirstname) gateFirstname.textContent = first ? `, ${first}` : '';
 
-  const candDone = Boolean(subs.candidate);
-  const reqDone  = Boolean(subs.requirement);
-  const both     = candDone && reqDone;
+  const candCount = subs.candidates.length;
+  const candDone  = candCount > 0;
+  const reqDone   = Boolean(subs.requirement);
+  const both      = candDone && reqDone;
 
-  // Card states
+  const doneClass    = 'text-xs font-bold text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full';
+  const pendingClass = 'text-xs font-bold text-archive-muted border border-archive-line px-2 py-0.5 rounded-full';
+
+  // ── Candidate card ──
   gateCardCand?.classList.toggle('done', candDone);
+
+  if (gateStatusCand) {
+    gateStatusCand.textContent = candDone ? `✓ ${candCount} submitted` : 'Pending';
+    gateStatusCand.className   = candDone ? doneClass : pendingClass;
+  }
+
+  // Name pills
+  const pillsEl = document.getElementById('gate-cand-pills');
+  if (pillsEl) {
+    if (candDone) {
+      const shown = subs.candidates.slice(0, 3);
+      const extra = subs.candidates.length - 3;
+      pillsEl.innerHTML =
+        shown.map(c => `<span style="font-size:12px;font-weight:700;padding:3px 10px;background:rgba(31,58,42,.1);border:1px solid rgba(31,58,42,.2);border-radius:999px;color:#1f3a2a;white-space:nowrap">${esc(c.candidate_name || '—')}</span>`).join('') +
+        (extra > 0 ? `<span style="font-size:12px;color:#746b5f;padding:3px 6px">+${extra} more</span>` : '');
+      pillsEl.style.display = 'flex';
+    } else {
+      pillsEl.style.display = 'none';
+    }
+  }
+
+  // Actions inside card
+  const actionsEl = document.getElementById('gate-cand-actions');
+  if (actionsEl) {
+    if (candDone) {
+      actionsEl.innerHTML = `
+        <div style="display:flex;flex-direction:column;gap:8px;padding-top:12px;border-top:1px solid #e6d9b0;margin-top:4px">
+          <button data-go="candidate"
+            style="padding:9px 16px;font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;background:transparent;border:1.5px solid #1f3a2a;border-radius:3px;cursor:pointer;color:#1f3a2a;text-align:left">
+            Manage submissions →
+          </button>
+          <button data-go="candidate"
+            style="padding:8px 14px;font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;background:transparent;border:1px dashed #b08840;border-radius:3px;cursor:pointer;color:#b08840;text-align:left">
+            ＋ Add another candidate
+          </button>
+        </div>`;
+      if (gateCardCand) { gateCardCand.onclick = null; gateCardCand.style.cursor = 'default'; }
+    } else {
+      actionsEl.innerHTML = `<span class="text-xs font-black uppercase tracking-[.1em] text-archive-gold" style="margin-top:8px;display:block">Begin →</span>`;
+      if (gateCardCand) { gateCardCand.onclick = () => showStage('candidate'); gateCardCand.style.cursor = 'pointer'; }
+    }
+  }
+
+  // ── Requirement card ──
   gateCardReq?.classList.toggle('done', reqDone);
+  if (gateStatusReq)  { gateStatusReq.textContent = reqDone ? '✓ Submitted' : 'Pending'; gateStatusReq.className = reqDone ? doneClass : pendingClass; }
+  if (gateCtaReq)     gateCtaReq.textContent = reqDone ? 'Edit submission →' : 'Begin →';
+  if (gateCardReq)    gateCardReq.onclick = () => showStage('requirement');
 
-  const doneClass   = 'text-xs font-bold text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full';
-  const pendingClass= 'text-xs font-bold text-archive-muted border border-archive-line px-2 py-0.5 rounded-full';
-
-  if (gateStatusCand) { gateStatusCand.textContent = candDone ? '✓ Submitted' : 'Pending'; gateStatusCand.className = candDone ? doneClass : pendingClass; }
-  if (gateStatusReq)  { gateStatusReq.textContent  = reqDone  ? '✓ Submitted' : 'Pending'; gateStatusReq.className  = reqDone  ? doneClass : pendingClass; }
-  if (gateCtaCand) gateCtaCand.textContent = candDone ? 'Edit submission →' : 'Begin →';
-  if (gateCtaReq)  gateCtaReq.textContent  = reqDone  ? 'Edit submission →' : 'Begin →';
-
-  // Unlock bar
+  // ── Unlock bar ──
   gateUnlock?.classList.toggle('ready', both);
   if (gateUnlockIcon) gateUnlockIcon.innerHTML = both
     ? `<svg width="26" height="26" viewBox="0 0 26 26" fill="none" stroke="#1f3a2a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l5 5L21 7"/></svg>`
     : `<svg width="26" height="26" viewBox="0 0 26 26" fill="none" stroke="#6b5a3f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="12" width="14" height="10" rx="2"/><path d="M9 12V9a4 4 0 1 1 8 0v3"/></svg>`;
-  if (gateUnlockH)   gateUnlockH.textContent   = both ? 'Listings unlocked'  : 'Listings are locked';
+  if (gateUnlockH)   gateUnlockH.textContent   = both ? 'Listings unlocked' : 'Listings are locked';
   if (gateUnlockSub) gateUnlockSub.textContent  = both
     ? 'You can now browse matches, filter by marital status, and request introductions.'
     : 'Complete both submissions above to unlock the matrimony directory.';
   if (btnBrowse) {
-    btnBrowse.disabled   = !both;
-    btnBrowse.textContent= both ? 'Browse matches →' : 'Locked';
+    btnBrowse.disabled    = !both;
+    btnBrowse.textContent = both ? 'Browse matches →' : 'Locked';
     btnBrowse.style.opacity = both ? '1' : '0.4';
     btnBrowse.style.cursor  = both ? 'pointer' : 'not-allowed';
     btnBrowse.onclick = both ? () => openBrowse() : null;
   }
-
-  // Wire gate card clicks
-  if (gateCardCand) gateCardCand.onclick = () => showStage('candidate');
-  if (gateCardReq)  gateCardReq.onclick  = () => showStage('requirement');
 
   showStage('gate');
 }
@@ -310,13 +317,13 @@ candidateForm?.addEventListener('submit', async e => {
     published:                 false,
   };
 
-  const { error } = await supabase.from('matrimony_profiles').upsert(payload, { onConflict: 'user_id' });
+  const { data: inserted, error } = await supabase.from('matrimony_profiles').insert(payload).select('id,candidate_name,candidate_gender,marital_status').single();
 
   btn.disabled = false; btn.textContent = 'Submit candidate details →';
   if (error) { if (candErr) { candErr.textContent = error.message; candErr.classList.remove('hidden'); } return; }
 
   if (candOk) { candOk.textContent = 'Candidate profile submitted — returning to dashboard…'; candOk.classList.remove('hidden'); }
-  subs.candidate = { id: 'new', candidate_name: payload.candidate_name };
+  subs.candidates.push(inserted || { id: 'new', candidate_name: payload.candidate_name });
   setTimeout(() => renderGate(), 1200);
 });
 
