@@ -370,7 +370,7 @@ function renderMySubsList() {
     items = subs.candidates.map(c => ({
       id: c.id, kind: 'candidate',
       title: c.candidate_name,
-      subtitle: [c.candidate_gender, cap(c.marital_status)].filter(Boolean).join(' · '),
+      subtitle: [c.candidate_gender, cap(normMs(c.marital_status))].filter(Boolean).join(' · '),
       status: c.status || 'new',
       submittedOn: c.created_at, updatedOn: c.updated_at,
       closedOn: c.closed_on, adminFeedback: c.admin_feedback, meta: c.meta,
@@ -697,6 +697,7 @@ async function openBrowse() {
 
     browseData = (data || []).map(p => ({
       ...p,
+      marital_status: normMs(p.marital_status),
       age: p.dob ? Math.floor((Date.now() - new Date(p.dob).getTime()) / (365.25 * 86400000)) : null,
     }));
   }
@@ -780,8 +781,9 @@ async function loadDetail(profileId) {
 
   const age      = c.dob ? Math.floor((Date.now() - new Date(c.dob).getTime()) / (365.25 * 86400000)) : null;
   const initials = c.initials || (c.candidate_gender === 'Male' ? 'M' : 'F');
-  const badgeCls = `mbadge mbadge-${c.marital_status || 'fresh'}`;
-  const badgeTxt = cap(c.marital_status || 'fresh');
+  const ms       = normMs(c.marital_status);
+  const badgeCls = `mbadge mbadge-${ms}`;
+  const badgeTxt = cap(ms);
   const dobLabel = c.dob ? new Date(c.dob + 'T00:00:00').toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric' }) : '';
 
   if (detailHeroBody) detailHeroBody.innerHTML = `
@@ -851,6 +853,15 @@ function cap(s)  { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; }
 function maskPhone(p) {
   const s = String(p);
   return s.length <= 5 ? s : s.slice(0, 3) + '•'.repeat(Math.max(s.length - 6, 2)) + s.slice(-3);
+}
+// Normalise legacy marital_status values → canonical set used by CSS + filters
+function normMs(v) {
+  const s = (v || '').toLowerCase().trim();
+  if (!s || s === 'never married' || s === 'unmarried' || s === 'single') return 'fresh';
+  if (s === 'divorced') return 'divorced';
+  if (s === 'widowed')  return 'widowed';
+  if (s === 'separated') return 'separated';
+  return s || 'fresh';
 }
 
 })();
