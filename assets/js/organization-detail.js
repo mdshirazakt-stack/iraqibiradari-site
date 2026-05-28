@@ -283,22 +283,23 @@ import { createSupabaseClient, withTimeout } from './supabase-config.js';
   }
 
   function eventCard(ev, today) {
-    const dateStr = ev.event_date || '';
-    const isPast  = dateStr && dateStr < today;
-    let dateHtml  = '';
+    const dateStr  = ev.event_date || '';
+    const isPast   = dateStr && dateStr < today;
+    const detailHref = `/events/detail/?id=${encodeURIComponent(ev.id)}`;
+    let dateHtml   = '';
     if (dateStr) {
       const d = new Date(dateStr + 'T00:00:00');
       if (!isNaN(d)) {
-        dateHtml = `<div class="shrink-0 flex flex-col items-center justify-center bg-archive-green px-4 py-3 text-center min-w-[56px]">
+        dateHtml = `<a href="${detailHref}" class="shrink-0 flex flex-col items-center justify-center bg-archive-green px-4 py-3 text-center min-w-[56px] hover:bg-archive-green/90 transition-colors">
           <span class="text-xl font-black text-white leading-none">${d.getDate()}</span>
           <span class="text-[10px] font-bold uppercase text-archive-goldSoft">${d.toLocaleString('en-GB',{month:'short'}).toUpperCase()}</span>
           <span class="text-[10px] text-archive-paper/70">${d.getFullYear()}</span>
-        </div>`;
+        </a>`;
       }
     }
     const regLink = ev.registration_url || ev.url;
     return `
-      <div class="flex overflow-hidden border border-archive-line bg-white${isPast ? ' opacity-70' : ''}">
+      <div class="flex overflow-hidden border border-archive-line bg-white${isPast ? ' opacity-70' : ''} hover:shadow-soft transition-shadow">
         ${dateHtml}
         <div class="flex flex-1 flex-col p-4 min-w-0">
           <div class="flex flex-wrap gap-1.5">
@@ -308,30 +309,69 @@ import { createSupabaseClient, withTimeout } from './supabase-config.js';
             ${ev.event_type === 'webinar' ? `<span class="inline-block rounded-full px-2 py-0.5 text-[10px] font-black uppercase bg-archive-goldSoft text-archive-ink">Online</span>` : ''}
             ${ev.category ? `<span class="inline-block rounded-full px-2 py-0.5 text-[10px] font-black uppercase border border-archive-line text-archive-muted">${escapeHtml(ev.category)}</span>` : ''}
           </div>
-          <h3 class="mt-2 font-display text-base font-bold text-archive-green">${escapeHtml(ev.title)}</h3>
+          <a href="${detailHref}" class="mt-2 font-display text-base font-bold text-archive-green hover:text-archive-gold transition-colors leading-snug">${escapeHtml(ev.title)}</a>
           ${ev.description ? `<p class="mt-1 line-clamp-2 text-xs leading-5 text-archive-muted">${escapeHtml(ev.description)}</p>` : ''}
-          ${regLink && !isPast ? `<a href="${escapeHtml(regLink)}" target="_blank" rel="noopener" class="mt-2 inline-flex items-center gap-1 text-xs font-black uppercase tracking-[0.08em] text-archive-gold hover:underline">Register →</a>` : ''}
+          <div class="mt-2 flex flex-wrap items-center gap-3">
+            <a href="${detailHref}" class="inline-flex items-center gap-1 text-xs font-black uppercase tracking-[0.08em] text-archive-green hover:text-archive-gold transition-colors">
+              View details
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6h8M7 3l3 3-3 3"/></svg>
+            </a>
+            ${regLink && !isPast ? `<a href="${escapeHtml(regLink)}" target="_blank" rel="noopener" class="inline-flex items-center gap-1 text-xs font-black uppercase tracking-[0.08em] text-archive-gold hover:underline">Register →</a>` : ''}
+          </div>
         </div>
       </div>`;
   }
 
+  function getYouTubeId(url) {
+    if (!url) return null;
+    try {
+      const u = new URL(url);
+      if (u.hostname === 'youtu.be') return u.pathname.slice(1).split('?')[0] || null;
+      if (u.hostname.includes('youtube.com')) {
+        if (u.pathname.startsWith('/embed/')) return u.pathname.replace('/embed/', '').split('/')[0] || null;
+        return u.searchParams.get('v') || null;
+      }
+    } catch (_) {}
+    return null;
+  }
+
   function videoCard(v) {
-    const dateStr = v.video_date || '';
-    let dateLabel = '';
+    const dateStr  = v.video_date || '';
+    let dateLabel  = '';
     if (dateStr) {
       const d = new Date(dateStr + 'T00:00:00');
       if (!isNaN(d)) dateLabel = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
     }
+    const ytId     = getYouTubeId(v.url);
+    const thumbUrl = ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : null;
+    const href     = escapeHtml(v.url || '#');
+
+    const thumbnailHtml = thumbUrl
+      ? `<a href="${href}" target="_blank" rel="noopener" class="block relative aspect-video overflow-hidden bg-archive-paper border-b border-archive-line group" tabindex="-1" aria-hidden="true">
+           <img src="${escapeHtml(thumbUrl)}" alt=""
+             class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+             onerror="this.parentElement.style.display='none'"/>
+           <div class="absolute inset-0 flex items-center justify-center">
+             <div class="flex h-12 w-12 items-center justify-center rounded-full bg-black/60 backdrop-blur-sm transition-transform duration-200 group-hover:scale-110">
+               <svg width="20" height="20" viewBox="0 0 20 20" fill="white" aria-hidden="true"><path d="M7 5l10 5-10 5V5z"/></svg>
+             </div>
+           </div>
+         </a>`
+      : `<a href="${href}" target="_blank" rel="noopener" class="flex h-24 items-center justify-center border-b border-archive-line bg-archive-paper" tabindex="-1" aria-hidden="true">
+           <div class="flex h-12 w-12 items-center justify-center rounded-full bg-archive-green text-archive-cream">
+             <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M7 5l10 5-10 5V5z"/></svg>
+           </div>
+         </a>`;
+
     return `
-      <a href="${escapeHtml(v.url || '#')}" target="_blank" rel="noopener"
-        class="flex flex-col border border-archive-line bg-white p-4 hover:shadow-soft transition-shadow">
-        <div class="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-archive-green text-archive-cream">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M6 4l7 4-7 4V4z"/></svg>
+      <div class="flex flex-col border border-archive-line bg-white hover:shadow-soft transition-shadow overflow-hidden">
+        ${thumbnailHtml}
+        <div class="flex flex-1 flex-col p-4">
+          ${v.category ? `<p class="mb-1 text-[10px] font-black uppercase tracking-[0.1em] text-archive-gold">${escapeHtml(v.category)}</p>` : ''}
+          <a href="${href}" target="_blank" rel="noopener" class="font-bold text-archive-green line-clamp-2 leading-snug hover:text-archive-gold transition-colors">${escapeHtml(v.title)}</a>
+          ${dateLabel ? `<p class="mt-auto pt-2 text-xs text-archive-muted">${dateLabel}</p>` : ''}
         </div>
-        <p class="font-bold text-archive-green line-clamp-2 leading-snug">${escapeHtml(v.title)}</p>
-        ${v.category  ? `<p class="mt-1 text-[10px] font-black uppercase tracking-[0.1em] text-archive-gold">${escapeHtml(v.category)}</p>` : ''}
-        ${dateLabel   ? `<p class="mt-auto pt-2 text-xs text-archive-muted">${dateLabel}</p>` : ''}
-      </a>`;
+      </div>`;
   }
 
   function announcementCard(a) {
