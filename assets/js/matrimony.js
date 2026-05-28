@@ -839,7 +839,7 @@ async function loadDetail(profileId) {
       <p class="text-xs font-black uppercase tracking-[.14em] text-archive-gold">Candidate contact</p>
       ${c.contact_person_name ? `<div class="text-sm"><span class="block text-xs text-archive-muted mb-0.5">Contact person</span><strong>${esc(c.contact_person_name)}</strong></div>` : ''}
       ${c.relationship_to_candidate ? `<div class="text-sm"><span class="block text-xs text-archive-muted mb-0.5">Relationship</span>${esc(c.relationship_to_candidate)}</div>` : ''}
-      ${c.phone_whatsapp ? `<div class="text-sm"><span class="block text-xs text-archive-muted mb-0.5">Mobile / WhatsApp</span><span style="font-family:monospace;font-size:15px;font-weight:700;color:#1f3a2a">${esc(c.phone_whatsapp)}</span></div>` : ''}
+      ${c.phone_whatsapp ? `<div class="text-sm"><span class="block text-xs text-archive-muted mb-0.5">Mobile / WhatsApp</span><span style="font-family:monospace">${maskPhone(c.phone_whatsapp)}</span></div>` : ''}
       ${c.akt_profile_url ? `<div class="text-sm"><span class="block text-xs text-archive-muted mb-0.5">AKT profile</span><a href="${esc(c.akt_profile_url)}" target="_blank" class="text-archive-gold underline underline-offset-2 text-xs break-all">${esc(c.akt_profile_url)}</a></div>` : ''}
       ${waHref ? `<a href="${waHref}" target="_blank" rel="noopener" class="m-btn m-btn-primary" style="justify-content:center;text-decoration:none">Contact on WhatsApp →</a>` : ''}
     </div>`;
