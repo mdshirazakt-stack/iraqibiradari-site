@@ -57,16 +57,93 @@ body{background:#f6efd9}
 .how-step__h{font-size:15px;font-weight:700;color:#1f3a2a;margin-bottom:8px}
 @media(max-width:900px){.how-steps,.cand-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:600px){.how-steps,.cand-grid{grid-template-columns:1fr}.detail-row{grid-template-columns:1fr;gap:2px}.m-pill{padding:8px 12px}}
+
+/* ── auth chip ── */
+.auth-chip{display:flex;align-items:center;gap:10px;padding:5px 12px 5px 5px;background:#fff;border:1.5px solid #1f3a2a;border-radius:999px;cursor:pointer;transition:box-shadow .15s;line-height:1}
+.auth-chip:hover{box-shadow:0 2px 14px rgba(31,58,42,.2)}
+.auth-chip__av{width:30px;height:30px;border-radius:50%;background:#1f3a2a;color:#f0e6c2;display:flex;align-items:center;justify-content:center;font-family:'Amiri',serif;font-size:12px;font-weight:700;flex-shrink:0}
+.auth-chip__name{font-size:13px;font-weight:700;color:#1f3a2a;line-height:1.2}
+.auth-chip__email{font-size:11px;color:#746b5f;line-height:1.2}
+.auth-chip-drop{position:absolute;right:0;top:calc(100% + 8px);background:#fff;border:1px solid #e6d9b0;border-radius:8px;box-shadow:0 8px 32px rgba(32,28,23,.2);min-width:220px;z-index:200;padding:5px 0;animation:dropIn .12s ease}
+@keyframes dropIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.auth-drop-item{display:flex;align-items:center;justify-content:space-between;width:100%;padding:11px 18px;background:none;border:none;cursor:pointer;font-size:14px;font-weight:600;color:#201c17;text-align:left;transition:background .1s;gap:10px}
+.auth-drop-item:hover{background:#f6efd9}
+.auth-drop-item--danger{color:#743a32}
+.auth-drop-div{height:1px;background:#e6d9b0;margin:4px 0}
+.auth-drop-badge{background:#1f3a2a;color:#f0e6c2;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;min-width:22px;text-align:center;flex-shrink:0}
+
+/* ── my submissions ── */
+.mysubs-tabs{display:flex;border-bottom:2px solid #e6d9b0;margin-bottom:24px}
+.mysubs-tab{padding:10px 18px;font-size:13px;font-weight:700;color:#746b5f;background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-2px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:color .12s}
+.mysubs-tab:hover{color:#1f3a2a}
+.mysubs-tab--on{color:#1f3a2a;border-bottom-color:#1f3a2a}
+.mysubs-tab__ct{font-size:11px;font-weight:700;padding:2px 7px;border-radius:999px;background:#e6d9b0;color:#746b5f}
+.mysubs-tab--on .mysubs-tab__ct{background:#1f3a2a;color:#f0e6c2}
+.sub-row{background:#fff;border:1px solid #e6d9b0;padding:20px 22px;display:flex;flex-direction:column;gap:7px}
+.sub-row--closed{opacity:.72;background:#faf7f1}
+.sub-row__top{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.sub-row__dates{font-size:12px;color:#746b5f;margin-left:auto;white-space:nowrap}
+.sub-row__name{font-size:17px;font-weight:700;color:#1f3a2a;font-family:'Amiri',serif}
+.sub-row__sub{font-size:13px;color:#746b5f}
+.sub-row__fb{background:#fdf3d0;border-left:3px solid #b08840;padding:10px 14px;font-size:13px;line-height:1.6;color:#201c17;margin-top:2px}
+.sub-row__acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+.sbadge{display:inline-block;padding:3px 10px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;border-radius:999px}
+.sbadge--new,.sbadge--review{background:#fdf3d0;color:#7a5010}
+.sbadge--approved{background:#dcf5e0;color:#1a5c2a}
+.sbadge--changes{background:#fde8e0;color:#743a32}
+.sbadge--engaged,.sbadge--married{background:#f0e0ef;color:#5a1f58}
+.sbadge--closed,.sbadge--withdrawn,.sbadge--archived{background:#ede9e0;color:#746b5f}
+.abt{padding:7px 14px;font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;border-radius:3px;cursor:pointer;border:none;transition:background .12s,border-color .12s}
+.abt-primary{background:#1f3a2a;color:#f0e6c2}.abt-primary:hover{background:#0d2418}
+.abt-ghost{background:transparent;color:#1f3a2a;border:1.5px solid #c8bea8}.abt-ghost:hover{background:rgba(31,58,42,.06)}
+.abt-warn{background:transparent;color:#743a32;border:1.5px solid #e0b0a8}.abt-warn:hover{background:#fde8e0;border-color:#c07060}
+.abt-changes{background:#743a32;color:#fff;border:none}.abt-changes:hover{background:#5c2c24}
+
+/* ── close modal ── */
+.cl-backdrop{position:fixed;inset:0;background:rgba(32,28,23,.55);z-index:300;display:flex;align-items:center;justify-content:center;padding:24px}
+.cl-modal{background:#fff;border-radius:8px;width:100%;max-width:450px;padding:30px 26px;box-shadow:0 20px 60px rgba(32,28,23,.35)}
+.cl-modal__h{font-family:'Amiri',serif;font-size:22px;font-weight:700;color:#1f3a2a;margin-bottom:6px}
+.cl-modal__body{font-size:13px;line-height:1.65;color:#746b5f;margin-bottom:20px}
+.cl-reason{display:flex;align-items:flex-start;gap:12px;padding:11px 14px;border:1.5px solid #e6d9b0;border-radius:4px;cursor:pointer;transition:border-color .12s,background .12s;text-align:left;background:none;width:100%;margin-bottom:8px}
+.cl-reason:hover{border-color:#1f3a2a;background:#f6efd9}
+.cl-reason--on{border-color:#1f3a2a;background:#f0f7f1}
+.cl-reason--plum:hover,.cl-reason--plum.cl-reason--on{border-color:#6d2e44;background:#fdf4f7}
+.cl-reason__dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;margin-top:5px;background:#b0a090}
+.cl-reason__dot--plum{background:#6d2e44}
+.cl-reason__label{font-size:14px;font-weight:700;color:#1f3a2a;line-height:1.3}
+.cl-reason__sub{font-size:12px;color:#746b5f;margin-top:1px}
+.cl-modal__acts{display:flex;gap:10px;justify-content:flex-end;margin-top:16px}
+@media(max-width:600px){.sub-row__acts{flex-direction:column;align-items:flex-start}.sub-row__dates{margin-left:0}}
 </style>
 </head>
 <body class="font-body text-archive-ink antialiased">
 
-<!-- auth bar -->
+<!-- auth bar / nav chip -->
 <div id="auth-bar">
-  <div class="wrap flex items-center justify-between">
-    <p class="text-xs text-archive-muted">Signed in as <strong id="auth-email-display" class="text-archive-ink"></strong></p>
-    <button id="btn-signout" class="text-xs font-black uppercase tracking-[.1em] text-archive-muted hover:text-archive-green transition-colors">Sign out</button>
+  <div class="wrap" style="display:flex;align-items:center;justify-content:space-between;gap:16px">
+    <p class="text-xs text-archive-muted">Iraqi Biradari · <strong class="text-archive-ink">Matrimony</strong></p>
+    <div id="auth-chip-wrap" style="position:relative">
+      <button id="auth-chip-btn" class="auth-chip">
+        <div id="auth-chip-av" class="auth-chip__av">—</div>
+        <div>
+          <div id="auth-chip-name" class="auth-chip__name"></div>
+          <div id="auth-chip-email" class="auth-chip__email"></div>
+        </div>
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style="flex-shrink:0;color:#746b5f" aria-hidden="true"><path d="M2 4l3 3 3-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div id="auth-chip-drop" class="auth-chip-drop" style="display:none">
+        <button data-go="gate" class="auth-drop-item">Dashboard</button>
+        <button data-go="my-submissions" class="auth-drop-item">
+          My submissions
+          <span id="auth-subs-badge" class="auth-drop-badge" style="display:none">0</span>
+        </button>
+        <div class="auth-drop-div"></div>
+        <button id="btn-signout" class="auth-drop-item auth-drop-item--danger">Sign out</button>
+      </div>
+    </div>
   </div>
+  <!-- legacy ref kept for JS compat -->
+  <span id="auth-email-display" style="display:none"></span>
 </div>
 
 
@@ -346,6 +423,64 @@ body{background:#f6efd9}
     <div class="grid gap-10 lg:grid-cols-[1fr_280px]">
       <div id="detail-main"></div>
       <aside id="detail-sidebar"></aside>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ STAGE: my-submissions ══════════════════════════════════════════════ -->
+<div data-stage="my-submissions">
+  <div class="wrap py-10">
+    <button data-go="gate" class="mb-6 text-xs font-black uppercase tracking-[.1em] text-archive-muted hover:text-archive-green transition-colors">← Back to dashboard</button>
+    <p class="text-xs font-black uppercase tracking-[.14em] text-archive-gold">Your account · My submissions</p>
+    <h1 class="mt-2 font-display text-3xl font-bold text-archive-green">My submissions</h1>
+    <p class="mt-2 text-sm leading-6 text-archive-muted max-w-2xl">Everything you've submitted to the coordination team. When a match works out, mark it <strong>Engaged</strong> or <strong>Married</strong> to close the listing.</p>
+    <div class="mysubs-tabs mt-8" id="mysubs-tabs">
+      <button class="mysubs-tab mysubs-tab--on" data-subtab="candidates">My candidates <span class="mysubs-tab__ct" id="mysubs-cand-ct">0</span></button>
+      <button class="mysubs-tab" data-subtab="requirements">My requirements <span class="mysubs-tab__ct" id="mysubs-req-ct">0</span></button>
+    </div>
+    <div id="mysubs-list" class="flex flex-col gap-3"></div>
+    <div id="mysubs-footer" class="mt-8 flex items-center justify-between flex-wrap gap-3" style="display:none!important">
+      <button class="m-btn m-btn-ghost" data-go="browse" style="padding:10px 20px">Browse matches →</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ Close modal ════════════════════════════════════════════════════════ -->
+<div id="cl-backdrop" class="cl-backdrop" style="display:none" aria-modal="true" role="dialog">
+  <div class="cl-modal">
+    <div class="cl-modal__h" id="cl-h">Close this listing</div>
+    <p class="cl-modal__body" id="cl-body">Choose how to close this submission.</p>
+
+    <div id="cl-reasons">
+      <button class="cl-reason cl-reason--plum" data-reason="engaged">
+        <span class="cl-reason__dot cl-reason__dot--plum"></span>
+        <div><div class="cl-reason__label">Mark engaged</div><div class="cl-reason__sub">Engagement confirmed</div></div>
+      </button>
+      <button class="cl-reason cl-reason--plum" data-reason="married">
+        <span class="cl-reason__dot cl-reason__dot--plum"></span>
+        <div><div class="cl-reason__label">Mark married</div><div class="cl-reason__sub">Alhamdulillah — nikah complete</div></div>
+      </button>
+      <button class="cl-reason" data-reason="closed">
+        <span class="cl-reason__dot"></span>
+        <div><div class="cl-reason__label">Closed (other reason)</div><div class="cl-reason__sub">Match found elsewhere, not pursuing, etc.</div></div>
+      </button>
+      <button class="cl-reason" data-reason="withdrawn">
+        <span class="cl-reason__dot"></span>
+        <div><div class="cl-reason__label">Withdraw listing</div><div class="cl-reason__sub">Take down without specifying a reason</div></div>
+      </button>
+    </div>
+
+    <div id="cl-confirm-section" style="display:none">
+      <div class="cl-modal__h" id="cl-confirm-h" style="font-size:19px"></div>
+      <p class="cl-modal__body" id="cl-confirm-body"></p>
+      <textarea id="cl-note" class="m-input" rows="3" placeholder="Optional note for the coordination team…" style="margin-bottom:4px"></textarea>
+    </div>
+
+    <div class="cl-modal__acts">
+      <button id="cl-cancel" class="m-btn m-btn-ghost" style="padding:9px 20px">Cancel</button>
+      <button id="cl-next" class="m-btn m-btn-primary" style="padding:9px 20px" disabled>Select a reason</button>
     </div>
   </div>
 </div>

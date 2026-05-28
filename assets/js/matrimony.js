@@ -14,6 +14,15 @@ const btnSignout     = document.getElementById('btn-signout');
 const btnGoogleSignin = document.getElementById('btn-google-signin');
 const authGoogleErr   = document.getElementById('auth-google-err');
 
+// auth chip
+const authChipWrap  = document.getElementById('auth-chip-wrap');
+const authChipBtn   = document.getElementById('auth-chip-btn');
+const authChipDrop  = document.getElementById('auth-chip-drop');
+const authChipAv    = document.getElementById('auth-chip-av');
+const authChipName  = document.getElementById('auth-chip-name');
+const authChipEmail = document.getElementById('auth-chip-email');
+const authSubsBadge = document.getElementById('auth-subs-badge');
+
 // consent
 const consentForm    = document.getElementById('consent-form');
 const consentSignedAs= document.getElementById('consent-signed-as');
@@ -63,13 +72,15 @@ supabase = await createSupabaseClient();
 document.addEventListener('click', e => {
   const btn = e.target.closest('[data-go]');
   if (!btn) return;
+  if (authChipDrop) authChipDrop.style.display = 'none';
   const dest = btn.dataset.go;
-  if (dest === 'landing')     { showStage('landing'); return; }
-  if (dest === 'auth')        { showStage('auth'); return; }
-  if (dest === 'gate')        { renderGate(); return; }
-  if (dest === 'browse')      { openBrowse(); return; }
-  if (dest === 'candidate')   { showStage('candidate'); return; }
-  if (dest === 'requirement') { showStage('requirement'); return; }
+  if (dest === 'landing')        { showStage('landing'); return; }
+  if (dest === 'auth')           { showStage('auth'); return; }
+  if (dest === 'gate')           { renderGate(); return; }
+  if (dest === 'browse')         { openBrowse(); return; }
+  if (dest === 'candidate')      { showStage('candidate'); return; }
+  if (dest === 'requirement')    { showStage('requirement'); return; }
+  if (dest === 'my-submissions') { renderMySubmissions(); return; }
 });
 
 supabase.auth.onAuthStateChange((event, session) => {
@@ -101,15 +112,39 @@ function showStage(name) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// ── Auth bar ───────────────────────────────────────────────────────────────────
+// ── Auth bar / chip ────────────────────────────────────────────────────────────
 function showAuthBar(user) {
-  if (authBar)       authBar.classList.add('visible');
-  if (authEmailDisp) authEmailDisp.textContent = user.email;
+  if (authBar) authBar.classList.add('visible');
+  const fullName = user.user_metadata?.full_name || user.user_metadata?.name || user.email.split('@')[0];
+  const initials = fullName.split(' ').filter(Boolean).map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  if (authChipAv)    authChipAv.textContent    = initials;
+  if (authChipName)  authChipName.textContent  = fullName;
+  if (authChipEmail) authChipEmail.textContent = user.email;
 }
 function hideAuthBar() {
-  if (authBar)       authBar.classList.remove('visible');
-  if (authEmailDisp) authEmailDisp.textContent = '';
+  if (authBar) authBar.classList.remove('visible');
+  if (authChipDrop) authChipDrop.style.display = 'none';
 }
+function updateSubsBadge() {
+  if (!authSubsBadge) return;
+  const total = subs.candidates.length + (subs.requirement ? 1 : 0);
+  authSubsBadge.textContent  = total;
+  authSubsBadge.style.display = total > 0 ? '' : 'none';
+}
+
+// Chip dropdown toggle
+authChipBtn?.addEventListener('click', e => {
+  e.stopPropagation();
+  if (!authChipDrop) return;
+  const open = authChipDrop.style.display !== 'none';
+  authChipDrop.style.display = open ? 'none' : 'block';
+});
+document.addEventListener('click', e => {
+  if (authChipWrap && !authChipWrap.contains(e.target)) {
+    if (authChipDrop) authChipDrop.style.display = 'none';
+  }
+});
+
 btnSignout?.addEventListener('click', async () => { await supabase.auth.signOut(); });
 
 // ── Auth — Google OAuth ────────────────────────────────────────────────────────
@@ -160,16 +195,17 @@ async function afterSignIn() {
 async function loadSubs() {
   const [pRes, rRes] = await Promise.all([
     supabase.from('matrimony_profiles')
-      .select('id,candidate_name,candidate_gender,marital_status')
+      .select('id,candidate_name,candidate_gender,marital_status,status,created_at,updated_at,closed_on,admin_feedback,meta')
       .eq('user_id', currentUser.id)
       .order('created_at', { ascending: true }),
     supabase.from('matrimony_requirements')
-      .select('id,seeker_name')
+      .select('id,seeker_name,seeking_for,status,created_at,updated_at,closed_on,admin_feedback,meta')
       .eq('user_id', currentUser.id)
       .maybeSingle(),
   ]);
   subs.candidates  = pRes.data  || [];
   subs.requirement = rRes.data  || null;
+  updateSubsBadge();
 }
 
 // ── Gate render ────────────────────────────────────────────────────────────────
@@ -256,6 +292,229 @@ async function renderGate() {
   }
 
   showStage('gate');
+}
+
+// ── My submissions ─────────────────────────────────────────────────────────────
+const STATUS_META = {
+  new:       { label: 'Under review',      cls: 'sbadge--new',       kind: 'open'   },
+  review:    { label: 'Under review',      cls: 'sbadge--review',    kind: 'open'   },
+  approved:  { label: 'Approved & listed', cls: 'sbadge--approved',  kind: 'open'   },
+  changes:   { label: 'Needs changes',     cls: 'sbadge--changes',   kind: 'open'   },
+  engaged:   { label: 'Engaged',           cls: 'sbadge--engaged',   kind: 'closed' },
+  married:   { label: 'Married',           cls: 'sbadge--married',   kind: 'closed' },
+  closed:    { label: 'Closed',            cls: 'sbadge--closed',    kind: 'closed' },
+  withdrawn: { label: 'Withdrawn',         cls: 'sbadge--withdrawn', kind: 'closed' },
+  archived:  { label: 'Archived',          cls: 'sbadge--archived',  kind: 'closed' },
+};
+
+let mySubsTab = 'candidates';
+let pendingClose = null; // { kind, id }
+let pendingCloseReason = null;
+
+async function renderMySubmissions() {
+  await loadSubs();
+  showStage('my-submissions');
+
+  const candCt = document.getElementById('mysubs-cand-ct');
+  const reqCt  = document.getElementById('mysubs-req-ct');
+  if (candCt) candCt.textContent = subs.candidates.length;
+  if (reqCt)  reqCt.textContent  = subs.requirement ? 1 : 0;
+
+  // Tab wiring
+  document.querySelectorAll('.mysubs-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      mySubsTab = tab.dataset.subtab;
+      document.querySelectorAll('.mysubs-tab').forEach(t => t.classList.toggle('mysubs-tab--on', t.dataset.subtab === mySubsTab));
+      renderMySubsList();
+    });
+  });
+
+  renderMySubsList();
+}
+
+function renderMySubsList() {
+  const listEl = document.getElementById('mysubs-list');
+  if (!listEl) return;
+
+  let items = [];
+  if (mySubsTab === 'candidates') {
+    items = subs.candidates.map(c => ({
+      id: c.id, kind: 'candidate',
+      title: c.candidate_name,
+      subtitle: [c.candidate_gender, cap(c.marital_status)].filter(Boolean).join(' · '),
+      status: c.status || 'new',
+      submittedOn: c.created_at, updatedOn: c.updated_at,
+      closedOn: c.closed_on, adminFeedback: c.admin_feedback, meta: c.meta,
+    }));
+  } else if (subs.requirement) {
+    const r = subs.requirement;
+    items = [{
+      id: r.id, kind: 'requirement',
+      title: r.seeker_name,
+      subtitle: r.seeking_for ? `Seeking for ${r.seeking_for}` : 'Match requirement',
+      status: r.status || 'new',
+      submittedOn: r.created_at, updatedOn: r.updated_at,
+      closedOn: r.closed_on, adminFeedback: r.admin_feedback, meta: r.meta,
+    }];
+  }
+
+  if (!items.length) {
+    listEl.innerHTML = `<div style="padding:32px 0;color:#746b5f;font-size:15px">No ${mySubsTab} submitted yet.</div>`;
+    return;
+  }
+
+  const open   = items.filter(i => (STATUS_META[i.status]||{}).kind !== 'closed');
+  const closed = items.filter(i => (STATUS_META[i.status]||{}).kind === 'closed');
+
+  let html = '';
+  if (open.length)   html += `<div class="text-xs font-black uppercase tracking-[.12em] text-archive-muted mb-3 mt-1">Active · ${open.length}</div>` + open.map(subRowHtml).join('');
+  if (closed.length) html += `<div class="text-xs font-black uppercase tracking-[.12em] text-archive-muted mb-3 mt-6">Closed · ${closed.length}</div>` + closed.map(subRowHtml).join('');
+
+  listEl.innerHTML = html;
+
+  // Wire action buttons
+  listEl.querySelectorAll('[data-act]').forEach(btn => {
+    const { act, id, kind } = btn.dataset;
+    if (act === 'edit')   btn.addEventListener('click', () => showStage(kind === 'candidate' ? 'candidate' : 'requirement'));
+    if (act === 'close')  btn.addEventListener('click', () => openCloseModal(kind, id));
+    if (act === 'reopen') btn.addEventListener('click', () => doReopen(kind, id));
+  });
+}
+
+function subRowHtml(item) {
+  const st       = STATUS_META[item.status] || STATUS_META.new;
+  const isClosed = st.kind === 'closed';
+  const isChanges= item.status === 'changes';
+  const dateStr  = item.submittedOn ? new Date(item.submittedOn).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' }) : '';
+
+  return `
+  <div class="sub-row${isClosed ? ' sub-row--closed' : ''}">
+    <div class="sub-row__top">
+      <span class="sbadge ${st.cls}">${st.label}</span>
+      <span class="sub-row__dates">Submitted ${esc(dateStr)}</span>
+    </div>
+    <div class="sub-row__name">${esc(item.title)}</div>
+    <div class="sub-row__sub">${esc(item.subtitle)}</div>
+    ${item.adminFeedback ? `<div class="sub-row__fb"><strong>Admin feedback:</strong> ${esc(item.adminFeedback)}</div>` : ''}
+    ${item.meta && !item.adminFeedback ? `<div style="font-size:13px;color:#746b5f;margin-top:2px">${esc(item.meta)}</div>` : ''}
+    <div class="sub-row__acts">
+      ${!isClosed ? `
+        <button class="abt abt-${isChanges?'changes':'ghost'}" data-act="edit" data-id="${esc(item.id)}" data-kind="${esc(item.kind)}">${isChanges?'Edit &amp; resubmit':'Edit'}</button>
+        <button class="abt abt-warn" data-act="close" data-id="${esc(item.id)}" data-kind="${esc(item.kind)}">Close listing… ▾</button>
+      ` : `
+        <button class="abt abt-ghost" data-act="reopen" data-id="${esc(item.id)}" data-kind="${esc(item.kind)}">Re-open</button>
+      `}
+    </div>
+  </div>`;
+}
+
+// ── Close modal ────────────────────────────────────────────────────────────────
+function openCloseModal(kind, id) {
+  pendingClose = { kind, id };
+  pendingCloseReason = null;
+
+  const backdrop = document.getElementById('cl-backdrop');
+  const reasons  = document.getElementById('cl-reasons');
+  const confirmSec = document.getElementById('cl-confirm-section');
+  const nextBtn  = document.getElementById('cl-next');
+  const noteEl   = document.getElementById('cl-note');
+
+  document.getElementById('cl-h').textContent    = 'Close this listing';
+  document.getElementById('cl-body').textContent = 'Choose how you want to close this submission.';
+  if (reasons)     reasons.style.display     = '';
+  if (confirmSec)  confirmSec.style.display  = 'none';
+  if (noteEl)      noteEl.value = '';
+  if (nextBtn) { nextBtn.textContent = 'Select a reason'; nextBtn.disabled = true; }
+
+  // Reason buttons
+  document.querySelectorAll('.cl-reason').forEach(btn => {
+    btn.classList.remove('cl-reason--on');
+    btn.onclick = () => {
+      document.querySelectorAll('.cl-reason').forEach(b => b.classList.remove('cl-reason--on'));
+      btn.classList.add('cl-reason--on');
+      pendingCloseReason = btn.dataset.reason;
+      if (nextBtn) { nextBtn.textContent = 'Continue →'; nextBtn.disabled = false; }
+    };
+  });
+
+  // Next / confirm
+  if (nextBtn) {
+    nextBtn.onclick = async () => {
+      if (!pendingCloseReason) return;
+      if (reasons && reasons.style.display !== 'none') {
+        // Step 1 → Step 2: show confirm section
+        const COPY = {
+          engaged:   { h: 'MashaAllah — Mark as engaged?',   body: 'This marks the listing as engaged and removes it from the active directory.' },
+          married:   { h: 'Alhamdulillah — Mark as married?', body: 'Alhamdulillah. This closes the listing as a successful match.' },
+          closed:    { h: 'Close this listing?',              body: 'This closes the listing without specifying an outcome.' },
+          withdrawn: { h: 'Withdraw this listing?',           body: 'This takes the listing down immediately. You can re-submit at any time.' },
+        };
+        const c = COPY[pendingCloseReason] || COPY.closed;
+        document.getElementById('cl-confirm-h').textContent    = c.h;
+        document.getElementById('cl-confirm-body').textContent = c.body;
+        if (reasons)    reasons.style.display    = 'none';
+        if (confirmSec) confirmSec.style.display = '';
+        nextBtn.textContent = 'Confirm';
+        const isPositive = pendingCloseReason === 'engaged' || pendingCloseReason === 'married';
+        nextBtn.style.background   = isPositive ? '#1f3a2a' : '#743a32';
+        nextBtn.style.borderColor  = isPositive ? '#1f3a2a' : '#743a32';
+        return;
+      }
+      // Step 2 → submit
+      await doClose(pendingClose.kind, pendingClose.id, pendingCloseReason, noteEl?.value || '');
+    };
+  }
+
+  document.getElementById('cl-cancel').onclick = () => { backdrop.style.display = 'none'; };
+  backdrop.onclick = e => { if (e.target === backdrop) backdrop.style.display = 'none'; };
+  backdrop.style.display = 'flex';
+}
+
+async function doClose(kind, id, statusId, note) {
+  const table   = kind === 'candidate' ? 'matrimony_profiles' : 'matrimony_requirements';
+  const today   = new Date().toISOString().slice(0, 10);
+  const ST_META = STATUS_META[statusId] || {};
+  const metaStr = note || `Marked ${(ST_META.label || statusId).toLowerCase()} on ${new Date().toLocaleDateString('en-IN', {day:'numeric',month:'long',year:'numeric'})}.`;
+
+  const { error } = await supabase.from(table).update({
+    status: statusId, closed_on: today, meta: metaStr,
+  }).eq('id', id).eq('user_id', currentUser.id);
+
+  document.getElementById('cl-backdrop').style.display = 'none';
+
+  if (error) { alert('Could not update: ' + error.message); return; }
+
+  // Update local cache
+  if (kind === 'candidate') {
+    const c = subs.candidates.find(x => x.id === id);
+    if (c) { c.status = statusId; c.closed_on = today; c.meta = metaStr; }
+  } else if (subs.requirement?.id === id) {
+    subs.requirement.status    = statusId;
+    subs.requirement.closed_on = today;
+    subs.requirement.meta      = metaStr;
+  }
+  updateSubsBadge();
+  renderMySubsList();
+}
+
+async function doReopen(kind, id) {
+  const table = kind === 'candidate' ? 'matrimony_profiles' : 'matrimony_requirements';
+  const { error } = await supabase.from(table).update({
+    status: 'review', closed_on: null, meta: 'Re-opened and submitted for review.',
+  }).eq('id', id).eq('user_id', currentUser.id);
+
+  if (error) { alert('Could not reopen: ' + error.message); return; }
+
+  if (kind === 'candidate') {
+    const c = subs.candidates.find(x => x.id === id);
+    if (c) { c.status = 'review'; c.closed_on = null; c.meta = 'Re-opened and submitted for review.'; }
+  } else if (subs.requirement?.id === id) {
+    subs.requirement.status    = 'review';
+    subs.requirement.closed_on = null;
+    subs.requirement.meta      = 'Re-opened and submitted for review.';
+  }
+  updateSubsBadge();
+  renderMySubsList();
 }
 
 // ── Consent form ───────────────────────────────────────────────────────────────
