@@ -73,8 +73,10 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
     orgTagline:      document.querySelector('[data-field="orgTagline"]'),
     orgContribute:   document.querySelector('[data-field="orgContribute"]'),
     orgApply:        document.querySelector('[data-field="orgApply"]'),
+    orgImpact:       document.querySelector('[data-field="orgImpact"]'),
     orgLogoUrl:      document.querySelector('[data-field="orgLogoUrl"]'),
     orgContact:      document.querySelector('[data-field="orgContact"]'),
+    orgMeta:         document.querySelector('[data-field="orgMeta"]'),
     orgId:           document.querySelector('[data-field="orgId"]'),
   };
 
@@ -588,8 +590,8 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
       if (editorBreadcrumb) editorBreadcrumb.textContent = labels[section] || section;
       renderList();
       if (showSubmissions) renderSubmissions();
-      // Populate org dropdown when switching to events or videos
-      if (section === 'events' || section === 'videos') loadOrgsDropdown();
+      // Populate org dropdown when switching to a section that supports org linking
+      if (['events', 'videos', 'announcements', 'documents'].includes(section)) loadOrgsDropdown();
     } else {
       renderMatrimonyList();
     }
@@ -855,7 +857,7 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
       sort_order:  Number(data.get('sortOrder') || 0),
     };
 
-    if (table === 'announcements') return { id: base.id, title: base.title, body: String(data.get('body') || '').trim() || null, date: null, published: base.published, sort_order: base.sort_order };
+    if (table === 'announcements') return { id: base.id, title: base.title, body: String(data.get('body') || '').trim() || null, date: null, published: base.published, sort_order: base.sort_order, org_id: String(data.get('orgId') || '').trim() || null };
 
     if (table === 'events') return { ...base,
       description:      String(data.get('shortSummary') || '').trim() || null,
@@ -904,13 +906,16 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
       address:           String(data.get('orgAddress') || '').trim() || null,
       how_to_contribute: String(data.get('orgContribute') || '').trim() || null,
       how_to_apply:      String(data.get('orgApply') || '').trim() || null,
+      impact:            String(data.get('orgImpact') || '').trim() || null,
+      founded_date:      String(data.get('orgFoundedDate') || '').trim() || null,
+      founders:          String(data.get('orgFounders') || '').trim() || null,
       published:         base.published,
       sort_order:        base.sort_order,
       updated_at:        new Date().toISOString(),
     };
 
     // documents
-    return { ...base, content_type: String(data.get('itemType') || '').trim() || null };
+    return { ...base, content_type: String(data.get('itemType') || '').trim() || null, org_id: String(data.get('orgId') || '').trim() || null };
   }
 
   function formPayloadFromJson(item, table) {
@@ -937,12 +942,12 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
   function updateFieldVisibility() {
     const show = {
       events:        ['eventType', 'date', 'location', 'videoUrl', 'registrationUrl', 'category', 'shortSummary', 'body', 'ribbon', 'orgId'],
-      announcements: ['body'],
-      documents:     ['category', 'itemType', 'url', 'descriptionText'],
+      announcements: ['body', 'orgId'],
+      documents:     ['category', 'itemType', 'url', 'descriptionText', 'orgId'],
       videos:        ['category', 'url', 'dateVideo', 'descriptionText', 'orgId'],
       people:        ['designation', 'photoUrl', 'category', 'body'],
       stories:       ['author', 'cultureCategory', 'coverImageUrl', 'shortSummary', 'body'],
-      organizations: ['orgTagline', 'body', 'orgContribute', 'orgApply', 'orgLogoUrl', 'coverImageUrl', 'orgContact'],
+      organizations: ['orgTagline', 'body', 'orgContribute', 'orgApply', 'orgImpact', 'orgLogoUrl', 'coverImageUrl', 'orgContact', 'orgMeta'],
     };
     const visible = new Set(show[currentType] || []);
     for (const [name, row] of Object.entries(fieldRows)) {
@@ -1017,14 +1022,17 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
     if (form.elements.cultureCategory) form.elements.cultureCategory.value = row.category         || '';
 
     // Organizations-specific fields
-    if (form.elements.orgTagline)      form.elements.orgTagline.value      = row.tagline          || '';
-    if (form.elements.orgLogoUrl)      form.elements.orgLogoUrl.value      = row.logo_url         || '';
-    if (form.elements.orgContactEmail) form.elements.orgContactEmail.value = row.contact_email    || '';
-    if (form.elements.orgContactPhone) form.elements.orgContactPhone.value = row.contact_phone    || '';
-    if (form.elements.orgWebsiteUrl)   form.elements.orgWebsiteUrl.value   = row.website_url      || '';
-    if (form.elements.orgAddress)      form.elements.orgAddress.value      = row.address          || '';
+    if (form.elements.orgTagline)      form.elements.orgTagline.value      = row.tagline           || '';
+    if (form.elements.orgLogoUrl)      form.elements.orgLogoUrl.value      = row.logo_url          || '';
+    if (form.elements.orgContactEmail) form.elements.orgContactEmail.value = row.contact_email     || '';
+    if (form.elements.orgContactPhone) form.elements.orgContactPhone.value = row.contact_phone     || '';
+    if (form.elements.orgWebsiteUrl)   form.elements.orgWebsiteUrl.value   = row.website_url       || '';
+    if (form.elements.orgAddress)      form.elements.orgAddress.value      = row.address           || '';
     if (form.elements.orgContribute)   form.elements.orgContribute.value   = row.how_to_contribute || '';
-    if (form.elements.orgApply)        form.elements.orgApply.value        = row.how_to_apply     || '';
+    if (form.elements.orgApply)        form.elements.orgApply.value        = row.how_to_apply      || '';
+    if (form.elements.orgImpact)       form.elements.orgImpact.value       = row.impact            || '';
+    if (form.elements.orgFoundedDate)  form.elements.orgFoundedDate.value  = row.founded_date      || '';
+    if (form.elements.orgFounders)     form.elements.orgFounders.value     = row.founders          || '';
 
     if (quill) quill.root.innerHTML = row.body || '';
 
@@ -1042,8 +1050,8 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
     if (formTitle)        formTitle.textContent = `Edit ${contentTypeLabel(table)}`;
     if (editingNote)      editingNote.style.display = 'block';
 
-    // Populate org dropdown (events/videos) then set selected value
-    if (table === 'events' || table === 'videos') {
+    // Populate org dropdown (events/videos/announcements/documents) then set selected value
+    if (['events', 'videos', 'announcements', 'documents'].includes(table)) {
       await loadOrgsDropdown();
       if (form.elements.orgId && row.org_id) form.elements.orgId.value = row.org_id;
     }

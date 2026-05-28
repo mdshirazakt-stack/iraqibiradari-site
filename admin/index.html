@@ -284,6 +284,14 @@
                 class="w-full resize-none rounded-lg border border-archive-line bg-archive-paper px-4 py-3 text-sm text-archive-ink placeholder:text-archive-muted/50 focus:outline-none focus:border-archive-gold"></textarea>
             </div>
 
+            <!-- Impact (organizations) -->
+            <div data-field="orgImpact" class="mt-6">
+              <p class="mb-2 text-[11px] font-black uppercase tracking-[0.16em] text-archive-gold">Impact</p>
+              <textarea name="orgImpact" rows="6"
+                placeholder="Describe the impact this organization has made — statistics, stories, lives changed…"
+                class="w-full resize-none rounded-lg border border-archive-line bg-archive-paper px-4 py-3 text-sm text-archive-ink placeholder:text-archive-muted/50 focus:outline-none focus:border-archive-gold"></textarea>
+            </div>
+
             <!-- Plain description (documents, videos) -->
             <div data-field="descriptionText" class="mt-6">
               <p class="mb-2 text-[11px] font-black uppercase tracking-[0.16em] text-archive-gold">Description</p>
@@ -465,7 +473,27 @@
               </div>
             </div>
 
-            <!-- ORGANIZATION TAG (events, videos) -->
+            <!-- BACKGROUND / FOUNDING (organizations) -->
+            <div data-field="orgMeta" class="rounded-xl bg-white p-5 shadow-card">
+              <p class="mb-3 flex items-center gap-1.5 text-[11px] font-black uppercase tracking-[0.16em] text-archive-gold">
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="1.5" y="2.5" width="10" height="9" rx="1.5"/><path d="M1.5 5.5h10M4.5 1v3M8.5 1v3" stroke-linecap="round"/></svg>
+                Background
+              </p>
+              <div class="grid gap-3">
+                <div>
+                  <p class="mb-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-archive-muted">Founded</p>
+                  <input name="orgFoundedDate" placeholder="e.g. 1998 or March 2001"
+                    class="w-full rounded-lg border border-archive-line bg-archive-paper px-3 py-2 text-sm text-archive-ink placeholder:text-archive-muted/50 focus:outline-none focus:border-archive-green"/>
+                </div>
+                <div>
+                  <p class="mb-1.5 text-[10px] font-black uppercase tracking-[0.12em] text-archive-muted">Founders</p>
+                  <input name="orgFounders" placeholder="Comma-separated founder names"
+                    class="w-full rounded-lg border border-archive-line bg-archive-paper px-3 py-2 text-sm text-archive-ink placeholder:text-archive-muted/50 focus:outline-none focus:border-archive-green"/>
+                </div>
+              </div>
+            </div>
+
+            <!-- ORGANIZATION TAG (events, videos, announcements, documents) -->
             <div data-field="orgId" class="rounded-xl bg-white p-5 shadow-card">
               <p class="mb-3 flex items-center gap-1.5 text-[11px] font-black uppercase tracking-[0.16em] text-archive-gold">
                 <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M1.5 10V5.5l5-4 5 4V10a1 1 0 0 1-1 1H9.5V7.5h-3V11H2.5a1 1 0 0 1-1-1z" stroke-linejoin="round"/></svg>
