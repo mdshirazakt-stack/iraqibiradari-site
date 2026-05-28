@@ -64,6 +64,7 @@ const detailSidebar  = document.getElementById('detail-sidebar');
 let supabase, currentUser, memberRecord;
 let subs = { candidates: [], requirement: null };
 let browseData = [], browseFilter = 'all';
+let shortlistedIds = new Set();
 
 // ── Bootstrap ──────────────────────────────────────────────────────────────────
 supabase = await createSupabaseClient();
@@ -685,12 +686,17 @@ async function openBrowse() {
   if (!browseData.length) {
     if (browseGrid) browseGrid.innerHTML = `<div class="bg-archive-paper p-12 text-center text-sm text-archive-muted" style="grid-column:1/-1">Loading listings…</div>`;
 
-    const { data, error } = await withTimeout(
-      supabase.from('matrimony_profiles')
-        .select('id,initials,candidate_gender,marital_status,education,profession,native_location,current_location,dob,contact_person_name,relationship_to_candidate,akt_profile_url')
-        .eq('status', 'approved')
-        .order('created_at', { ascending: false })
-    );
+    const [profileRes, slRes] = await Promise.all([
+      withTimeout(
+        supabase.from('matrimony_profiles')
+          .select('id,initials,candidate_gender,marital_status,education,profession,native_location,current_location,dob,contact_person_name,relationship_to_candidate,akt_profile_url')
+          .eq('status', 'approved')
+          .order('created_at', { ascending: false })
+      ),
+      supabase.from('matrimony_shortlists').select('profile_id').eq('user_id', currentUser.id),
+    ]);
+    const { data, error } = profileRes;
+    shortlistedIds = new Set((slRes.data || []).map(r => r.profile_id));
 
     if (error) {
       if (browseGrid) browseGrid.innerHTML = `<div class="bg-archive-paper p-12 text-center text-sm text-red-700" style="grid-column:1/-1">${esc(error.message)}</div>`;
@@ -742,8 +748,10 @@ function renderBrowseGrid() {
       edu ? `<div class="cand-inforow"><dt>Education</dt><dd>${esc(edu)}</dd></div>` : '',
       rel ? `<div class="cand-inforow"><dt>Submitted by</dt><dd>${esc(rel)} · Verified</dd></div>` : '',
     ].filter(Boolean).join('');
+    const slOn = shortlistedIds.has(c.id);
+    const heartSvg = (on) => `<svg width="15" height="15" viewBox="0 0 24 24" fill="${on?'#c07060':'none'}" stroke="${on?'#c07060':'#a09080'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`;
     return `
-    <button class="cand-card" onclick="window.__openDetail('${esc(c.id)}')">
+    <article class="cand-card" onclick="window.__openDetail('${esc(c.id)}')" style="cursor:pointer">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
         <div class="cand-av">${esc(initials)}</div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
@@ -758,8 +766,13 @@ function renderBrowseGrid() {
         ${c.native_location  ? `<div style="font-size:12px;color:#746b5f">Native: ${esc(c.native_location)}</div>` : ''}
       </div>
       ${infoRows ? `<dl class="cand-infobox">${infoRows}</dl>` : ''}
-      <div style="margin-top:auto;padding-top:14px;font-size:11px;font-weight:900;letter-spacing:.09em;text-transform:uppercase;color:#b08840">View full profile →</div>
-    </button>`;
+      <div style="margin-top:auto;padding-top:28px;font-size:11px;font-weight:900;letter-spacing:.09em;text-transform:uppercase;color:#b08840">View full profile →</div>
+      <button class="heart-btn${slOn ? ' heart-btn--on' : ''}" data-sl="${esc(c.id)}"
+        onclick="event.stopPropagation();window.__toggleShortlist('${esc(c.id)}')"
+        title="${slOn ? 'Remove from shortlist' : 'Save to shortlist'}" type="button">
+        ${heartSvg(slOn)}
+      </button>
+    </article>`;
   }).join('');
 }
 
@@ -773,6 +786,24 @@ browseFilters?.addEventListener('click', e => {
 });
 
 window.__openDetail = (id) => loadDetail(id);
+
+window.__toggleShortlist = async (profileId) => {
+  const btn = browseGrid?.querySelector(`[data-sl="${profileId}"]`);
+  const wasOn = shortlistedIds.has(profileId);
+  // Optimistic UI
+  if (wasOn) { shortlistedIds.delete(profileId); } else { shortlistedIds.add(profileId); }
+  const nowOn = !wasOn;
+  if (btn) {
+    btn.classList.toggle('heart-btn--on', nowOn);
+    btn.title = nowOn ? 'Remove from shortlist' : 'Save to shortlist';
+    btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="${nowOn?'#c07060':'none'}" stroke="${nowOn?'#c07060':'#a09080'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`;
+  }
+  if (wasOn) {
+    await supabase.from('matrimony_shortlists').delete().eq('user_id', currentUser.id).eq('profile_id', profileId);
+  } else {
+    await supabase.from('matrimony_shortlists').insert({ user_id: currentUser.id, profile_id: profileId });
+  }
+};
 
 // ── Detail ─────────────────────────────────────────────────────────────────────
 async function loadDetail(profileId) {
