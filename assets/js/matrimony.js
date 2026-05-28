@@ -203,6 +203,8 @@ async function loadSubs() {
       .eq('user_id', currentUser.id)
       .maybeSingle(),
   ]);
+  if (pRes.error) console.error('[loadSubs] profiles error:', pRes.error);
+  if (rRes.error) console.error('[loadSubs] requirements error:', rRes.error);
   subs.candidates  = pRes.data  || [];
   subs.requirement = rRes.data  || null;
   updateSubsBadge();
@@ -609,13 +611,34 @@ requirementForm?.addEventListener('submit', async e => {
     status:                   'new',
   };
 
-  const { error } = await supabase.from('matrimony_requirements').upsert(payload, { onConflict: 'user_id' });
+  // Insert if no existing row, update if one already exists
+  let saveError;
+  if (subs.requirement?.id && subs.requirement.id !== 'new') {
+    const { error } = await supabase
+      .from('matrimony_requirements')
+      .update({ ...payload, updated_at: new Date().toISOString() })
+      .eq('id', subs.requirement.id)
+      .eq('user_id', currentUser.id);
+    saveError = error;
+  } else {
+    const { data: inserted, error } = await supabase
+      .from('matrimony_requirements')
+      .insert(payload)
+      .select('id,seeker_name,seeking_for,status')
+      .single();
+    saveError = error;
+    if (!error && inserted) subs.requirement = inserted;
+  }
 
   btn.disabled = false; btn.textContent = 'Submit match requirement →';
-  if (error) { if (reqErr) { reqErr.textContent = error.message; reqErr.classList.remove('hidden'); } return; }
+  if (saveError) {
+    console.error('[req submit]', saveError);
+    if (reqErr) { reqErr.textContent = saveError.message; reqErr.classList.remove('hidden'); }
+    return;
+  }
 
   if (reqOk) { reqOk.textContent = 'Match requirement submitted — returning to dashboard…'; reqOk.classList.remove('hidden'); }
-  subs.requirement = { id: 'new', seeker_name: payload.seeker_name };
+  if (!subs.requirement) subs.requirement = { id: 'new', seeker_name: payload.seeker_name };
   setTimeout(() => renderGate(), 1200);
 });
 
