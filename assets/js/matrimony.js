@@ -728,23 +728,30 @@ function renderBrowseGrid() {
   }
 
   if (browseGrid) browseGrid.innerHTML = list.map(c => {
-    const initials  = c.initials || (c.candidate_gender === 'Male' ? 'M' : 'F');
-    const badgeCls  = `mbadge mbadge-${c.marital_status || 'fresh'}`;
-    const badgeTxt  = cap(c.marital_status || 'fresh');
-    const edu       = (c.education || '').split(',')[0].split('(')[0].trim();
-    const ageStr    = c.age ? `, ${c.age}` : '';
+    const initials = c.initials || (c.candidate_gender === 'Male' ? 'M' : 'F');
+    const ms       = c.marital_status || 'fresh';
+    const badgeTxt = cap(ms);
+    const edu      = (c.education || '').split(',')[0].split('(')[0].trim();
+    const ageStr   = c.age ? `, ${c.age}` : '';
+    const rel      = c.relationship_to_candidate || c.contact_person_name ? (c.relationship_to_candidate || 'Contact') : '';
+    const infoRows = [
+      edu ? `<div class="cand-inforow"><dt>Education</dt><dd>${esc(edu)}</dd></div>` : '',
+      rel ? `<div class="cand-inforow"><dt>Submitted by</dt><dd>${esc(rel)} · Verified</dd></div>` : '',
+    ].filter(Boolean).join('');
     return `
     <button class="cand-card" onclick="window.__openDetail('${esc(c.id)}')">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
-        <div class="m-avatar">${esc(initials)}</div>
-        <span class="${badgeCls}">${badgeTxt}</span>
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
+        <div class="cand-av">${esc(initials)}</div>
+        <span class="cand-badge cand-badge-${esc(ms)}">${badgeTxt}</span>
       </div>
-      <div class="mt-2 font-display text-lg font-bold text-archive-green">${esc(initials)} · ${esc(c.candidate_gender || '')}${ageStr}</div>
-      ${edu        ? `<div class="text-sm text-archive-ink">${esc(edu)}</div>` : ''}
-      ${c.profession ? `<div class="text-xs text-archive-muted">${esc(c.profession)}</div>` : ''}
-      ${c.current_location ? `<div class="text-xs text-archive-muted">${esc(c.current_location)}</div>` : ''}
-      ${c.native_location  ? `<div class="text-xs text-archive-muted">Native: ${esc(c.native_location)}</div>` : ''}
-      <div class="mt-auto pt-3 text-xs font-black uppercase tracking-[.08em] text-archive-gold">View full profile →</div>
+      <div style="margin-top:12px">
+        <div style="font-family:'Amiri',serif;font-size:19px;font-weight:700;color:#1f3a2a;line-height:1.2">${esc(initials)} · ${esc(c.candidate_gender || '')}${ageStr}</div>
+        ${c.profession ? `<div style="font-size:13px;color:#201c17;margin-top:3px">${esc(c.profession)}</div>` : ''}
+        ${c.current_location ? `<div style="font-size:12px;color:#746b5f;margin-top:2px">${esc(c.current_location)}</div>` : ''}
+        ${c.native_location  ? `<div style="font-size:12px;color:#746b5f">Native: ${esc(c.native_location)}</div>` : ''}
+      </div>
+      ${infoRows ? `<dl class="cand-infobox">${infoRows}</dl>` : ''}
+      <div style="margin-top:auto;padding-top:14px;font-size:11px;font-weight:900;letter-spacing:.09em;text-transform:uppercase;color:#b08840">View full profile →</div>
     </button>`;
   }).join('');
 }
