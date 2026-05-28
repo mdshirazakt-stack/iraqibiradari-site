@@ -192,14 +192,16 @@ async function afterSignIn() {
 }
 
 // ── Submissions check ──────────────────────────────────────────────────────────
+// Minimal query — only what the gate needs. No extended columns that require
+// matrimony_submissions_migration.sql to have been run.
 async function loadSubs() {
   const [pRes, rRes] = await Promise.all([
     supabase.from('matrimony_profiles')
-      .select('id,candidate_name,candidate_gender,marital_status,status,created_at,updated_at,closed_on,admin_feedback,meta')
+      .select('id,candidate_name,candidate_gender,marital_status,status')
       .eq('user_id', currentUser.id)
       .order('created_at', { ascending: true }),
     supabase.from('matrimony_requirements')
-      .select('id,seeker_name,seeking_for,status,created_at,updated_at,closed_on,admin_feedback,meta')
+      .select('id,seeker_name,seeking_for,status')
       .eq('user_id', currentUser.id)
       .maybeSingle(),
   ]);
