@@ -4,200 +4,374 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Matrimony — Iraqi Biradari</title>
-<meta name="description" content="Private, moderated Iraqi Biradari matrimony assistance for community families and verified seekers."/>
+<meta name="description" content="Private, moderated matrimony assistance for verified members of the Iraqi Biradari community."/>
 <link rel="icon" href="/iraqi_biradari_favicon.ico" sizes="any"/>
 <link rel="icon" type="image/png" sizes="32x32" href="/iraqi_biradari_favicon_32x32.png"/>
 <link rel="icon" type="image/png" sizes="16x16" href="/iraqi_biradari_favicon_16x16.png"/>
 <script src="https://cdn.tailwindcss.com"></script>
-<script>tailwind.config={theme:{extend:{colors:{archive:{cream:'#fbf7ed',paper:'#f3ead8',green:'#173f31',moss:'#496b4a',gold:'#b99045',goldSoft:'#ead7a2',ink:'#201c17',muted:'#746b5f',line:'#ded2bc',maroon:'#743a32'}},fontFamily:{body:['Lato','Arial','sans-serif'],display:['Amiri','serif']},boxShadow:{soft:'0 18px 45px rgba(32,28,23,.12)'}}}};</script>
+<script>tailwind.config={theme:{extend:{colors:{archive:{cream:'#fbf7ed',paper:'#f3ead8',green:'#173f31',gold:'#b99045',goldSoft:'#ead7a2',ink:'#201c17',muted:'#746b5f',line:'#ded2bc',maroon:'#743a32'}},fontFamily:{body:['Lato','Arial','sans-serif'],display:['Amiri','serif']},boxShadow:{soft:'0 18px 45px rgba(32,28,23,.12)'}}}};</script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet"/>
-<style>
-  body { background: #fbf7ed; }
-</style>
 <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/+esm" crossorigin/>
+<style>
+body{background:#f6efd9}
+[data-stage]{display:none}
+[data-stage].active{display:block}
+#auth-bar{background:#fffaea;border-bottom:1px solid #e6d9b0;padding:9px 0;display:none}
+#auth-bar.visible{display:block}
+.wrap{max-width:1160px;margin:0 auto;padding:0 24px}
+.m-input{width:100%;border:1px solid #ddd2b4;background:#fffaea;padding:11px 14px;font-family:Lato,Arial,sans-serif;font-size:15px;color:#1a2f1e;border-radius:3px;outline:none;transition:border-color .15s}
+.m-input:focus{border-color:#1f3a2a}
+.m-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 26px;font-family:Lato,Arial,sans-serif;font-size:12px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;border:none;border-radius:3px;cursor:pointer;transition:background .15s,opacity .15s}
+.m-btn-primary{background:#1f3a2a;color:#f0e6c2}.m-btn-primary:hover{background:#0d2418}.m-btn-primary:disabled{opacity:.35;cursor:not-allowed}
+.m-btn-gold{background:#b08840;color:#fff}.m-btn-gold:hover{background:#8c6a2e}
+.m-btn-ghost{background:transparent;color:#1f3a2a;border:1.5px solid #1f3a2a}.m-btn-ghost:hover{background:rgba(31,58,42,.06)}
+.m-avatar{width:56px;height:56px;border-radius:50%;background:#1f3a2a;color:#f0e6c2;display:flex;align-items:center;justify-content:center;font-family:'Amiri',serif;font-size:20px;font-weight:700;flex-shrink:0}
+.m-avatar--lg{width:80px;height:80px;font-size:28px}
+.mbadge{display:inline-block;padding:2px 10px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;border-radius:999px}
+.mbadge-fresh{background:#dcf5e0;color:#1a5c2a}.mbadge-divorced{background:#fdf0d0;color:#7a5820}.mbadge-widowed{background:#f2e0e8;color:#6d2e44}.mbadge-separated{background:#fdf0d0;color:#7a5820}
+.gate-card{padding:28px;background:#fffaea;border:2px solid #e6d9b0;text-align:left;cursor:pointer;width:100%;transition:border-color .15s,background .15s;display:flex;flex-direction:column;gap:10px}
+.gate-card:hover{border-color:#1f3a2a}.gate-card.done{border-color:#1f3a2a;background:#f0f7f1}
+.m-pill{display:flex;flex-direction:column;padding:10px 18px;gap:2px;background:transparent;border:1px solid #e6d9b0;border-radius:4px;cursor:pointer;transition:all .15s;text-align:left}
+.m-pill:hover{border-color:#1f3a2a}.m-pill.on{background:#1f3a2a;border-color:#1f3a2a;color:#f0e6c2}
+.m-pill__label{font-size:13px;font-weight:700}.m-pill__sub{font-size:11px;opacity:.7}.m-pill__count{font-size:22px;font-weight:700;font-family:'Amiri',serif;margin-top:2px}
+.cand-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1px;background:#e6d9b0;border:1px solid #e6d9b0}
+.cand-card{background:#fffaea;padding:24px;text-align:left;border:none;cursor:pointer;transition:background .15s;display:flex;flex-direction:column;gap:6px}
+.cand-card:hover{background:#f6efd9}
+.m-unlock{display:flex;align-items:center;gap:20px;padding:22px 26px;border:2px solid #e6d9b0;border-radius:4px;background:#f6efd9;transition:border-color .2s,background .2s}
+.m-unlock.ready{border-color:#1f3a2a;background:#f0f7f1}
+.m-dots{display:flex;align-items:center;margin-bottom:20px}
+.m-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;background:#e6d9b0;color:#6b5a3f;flex-shrink:0}
+.m-dot.done{background:#1f3a2a;color:#f0e6c2}.m-dot.active{background:#b08840;color:#fff}
+.m-dotline{flex:1;height:2px;background:#e6d9b0}.m-dotline.done{background:#1f3a2a}
+.m-fsec{border-top:1px solid #e6d9b0;padding-top:22px;margin-top:4px}.m-fsec:first-child{border-top:none;padding-top:0;margin-top:0}
+.m-fsec__h{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:#b08840;margin-bottom:14px}
+.detail-row{display:grid;grid-template-columns:160px 1fr;gap:16px;padding:10px 0;border-bottom:1px solid #f0ead0;font-size:14px}
+.detail-row:last-child{border-bottom:none}.detail-row dt{color:#6b5a3f;font-weight:700}
+.m-privlist{list-style:none;padding:0;margin:14px 0 0;display:flex;flex-direction:column;gap:12px}
+.m-privlist li{position:relative;padding-left:20px;color:rgba(246,239,217,.82);line-height:1.55;font-size:14px}
+.m-privlist li::before{content:'';position:absolute;left:0;top:7px;width:7px;height:7px;border-radius:50%;background:#b08840}
+.how-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:#e6d9b0;border:1px solid #e6d9b0;border-radius:4px;overflow:hidden}
+.how-step{background:#fffaea;padding:28px 24px}.how-step__n{font-family:'Amiri',serif;font-size:32px;color:#b08840;font-weight:700;margin-bottom:10px}
+.how-step__h{font-size:15px;font-weight:700;color:#1f3a2a;margin-bottom:8px}
+@media(max-width:900px){.how-steps,.cand-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.how-steps,.cand-grid{grid-template-columns:1fr}.detail-row{grid-template-columns:1fr;gap:2px}.m-pill{padding:8px 12px}}
+</style>
 </head>
 <body class="font-body text-archive-ink antialiased">
 
-  <main>
-    <section class="bg-archive-green py-10 text-archive-cream md:py-12">
-      <div class="mx-auto grid w-[min(1120px,calc(100%-36px))] gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-end">
-        <div>
-          <p class="text-xs font-black uppercase tracking-[0.18em] text-archive-goldSoft">Matrimony Assistance</p>
-          <h1 class="mt-3 max-w-4xl font-display text-4xl font-bold leading-tight text-white md:text-5xl">Private community support for marriage introductions.</h1>
-          <p class="mt-4 max-w-3xl text-base leading-7 text-archive-paper">Submit candidate details or share match requirements with the Iraqi Biradari coordination team. Information is kept private and reviewed before any next step.</p>
-        </div>
-        <div class="border border-archive-gold/50 bg-[#102d24] p-5">
-          <h2 class="text-sm font-black uppercase tracking-[0.14em] text-archive-goldSoft">How privacy is handled</h2>
-          <ul class="mt-4 space-y-3 text-sm leading-6 text-archive-paper">
-            <li>No public profile browsing or searchable matrimony directory.</li>
-            <li>Submissions are reviewed by admins before any introduction.</li>
-            <li>Submit details only with the candidate or family’s consent.</li>
-            <li>Misuse, spam, or incomplete entries can be rejected or archived.</li>
-          </ul>
-        </div>
-      </div>
-    </section>
+<!-- auth bar -->
+<div id="auth-bar">
+  <div class="wrap flex items-center justify-between">
+    <p class="text-xs text-archive-muted">Signed in as <strong id="auth-email-display" class="text-archive-ink"></strong></p>
+    <button id="btn-signout" class="text-xs font-black uppercase tracking-[.1em] text-archive-muted hover:text-archive-green transition-colors">Sign out</button>
+  </div>
+</div>
 
-    <section class="border-b border-archive-line py-14">
-      <div class="mx-auto w-[min(1120px,calc(100%-36px))]">
-        <p data-matrimony-status class="mb-6 hidden border-l-4 border-archive-gold bg-white p-4 text-sm font-bold text-archive-muted"></p>
-        <div class="grid gap-8 lg:grid-cols-2">
-          <form data-matrimony-profile-form class="grid gap-4 border border-archive-line bg-white p-6 shadow-soft">
-            <div>
-              <p class="text-xs font-black uppercase tracking-[0.18em] text-archive-gold">Part 1</p>
-              <h2 class="mt-2 font-display text-3xl font-bold text-archive-green">Submit candidate details</h2>
-              <p class="mt-2 text-sm leading-6 text-archive-muted">For families or candidates who want their profile considered by the community coordination team.</p>
-            </div>
 
-            <input name="website" tabindex="-1" autocomplete="off" class="hidden" aria-hidden="true"/>
-
-            <label class="grid gap-2 text-sm font-bold text-archive-muted">Candidate full name
-              <input name="candidate_name" required class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
-            </label>
-            <label class="grid gap-2 text-sm font-bold text-archive-muted">Photograph link
-              <input name="photo_url" type="url" placeholder="Private Google Drive, OneDrive, or iCloud photo link" class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
-              <span class="text-xs font-normal leading-5 text-archive-muted">Share a view-only link. The photograph is not shown publicly and is visible only in admin review.</span>
-            </label>
-            <div class="grid gap-4 md:grid-cols-2">
-              <label class="grid gap-2 text-sm font-bold text-archive-muted">Gender
-                <select name="candidate_gender" required class="border border-archive-line bg-archive-cream p-3 text-archive-ink">
-                  <option value="">Select</option>
-                  <option>Female</option>
-                  <option>Male</option>
-                </select>
-              </label>
-              <label class="grid gap-2 text-sm font-bold text-archive-muted">Age
-                <input name="age" type="number" min="18" max="80" class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
-              </label>
-            </div>
-            <div class="grid gap-4 md:grid-cols-2">
-              <label class="grid gap-2 text-sm font-bold text-archive-muted">Marital status
-                <input name="marital_status" placeholder="Never married, divorced, widowed..." class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
-              </label>
-              <label class="grid gap-2 text-sm font-bold text-archive-muted">City / town
-                <input name="city" class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
-              </label>
-            </div>
-            <div class="grid gap-4 md:grid-cols-2">
-              <label class="grid gap-2 text-sm font-bold text-archive-muted">Education
-                <input name="education" class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
-              </label>
-              <label class="grid gap-2 text-sm font-bold text-archive-muted">Profession
-                <input name="profession" class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
-              </label>
-            </div>
-            <label class="grid gap-2 text-sm font-bold text-archive-muted">Family background
-              <textarea name="family_background" rows="4" class="border border-archive-line bg-archive-cream p-3 text-archive-ink"></textarea>
-            </label>
-            <label class="grid gap-2 text-sm font-bold text-archive-muted">Expectations
-              <textarea name="expectations" rows="4" class="border border-archive-line bg-archive-cream p-3 text-archive-ink"></textarea>
-            </label>
-            <div class="grid gap-4 md:grid-cols-2">
-              <label class="grid gap-2 text-sm font-bold text-archive-muted">Contact person
-                <input name="contact_person_name" required class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
-              </label>
-              <label class="grid gap-2 text-sm font-bold text-archive-muted">Relationship to candidate
-                <input name="relationship_to_candidate" placeholder="Self, father, mother, brother..." class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
-              </label>
-            </div>
-            <div class="grid gap-4 md:grid-cols-2">
-              <label class="grid gap-2 text-sm font-bold text-archive-muted">WhatsApp / phone
-                <input name="phone_whatsapp" required class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
-              </label>
-              <label class="grid gap-2 text-sm font-bold text-archive-muted">Email
-                <input name="email" type="email" class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
-              </label>
-            </div>
-            <label class="flex gap-3 text-sm font-bold leading-6 text-archive-muted">
-              <input name="consent" type="checkbox" required class="mt-1 h-5 w-5 shrink-0"/>
-              I confirm that these details are shared with consent and may be reviewed by Iraqi Biradari matrimony coordinators.
-            </label>
-            <button class="min-h-12 bg-archive-gold px-5 text-sm font-black uppercase tracking-[0.12em] text-archive-ink" type="submit">Submit profile</button>
-          </form>
-
-          <form data-matrimony-request-form class="grid gap-4 border border-archive-line bg-white p-6 shadow-soft">
-            <div>
-              <p class="text-xs font-black uppercase tracking-[0.18em] text-archive-gold">Part 2</p>
-              <h2 class="mt-2 font-display text-3xl font-bold text-archive-green">Share match requirement</h2>
-              <p class="mt-2 text-sm leading-6 text-archive-muted">For seekers or families who want to share what kind of proposal they are looking for.</p>
-            </div>
-
-            <input name="website" tabindex="-1" autocomplete="off" class="hidden" aria-hidden="true"/>
-
-            <label class="grid gap-2 text-sm font-bold text-archive-muted">Seeker / family name
-              <input name="seeker_name" required class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
-            </label>
-            <div class="grid gap-4 md:grid-cols-2">
-              <label class="grid gap-2 text-sm font-bold text-archive-muted">Seeking for
-                <select name="seeking_for" class="border border-archive-line bg-archive-cream p-3 text-archive-ink">
-                  <option>Self</option>
-                  <option>Daughter</option>
-                  <option>Son</option>
-                  <option>Sister</option>
-                  <option>Brother</option>
-                  <option>Relative</option>
-                </select>
-              </label>
-              <label class="grid gap-2 text-sm font-bold text-archive-muted">Preferred gender
-                <select name="preferred_gender" class="border border-archive-line bg-archive-cream p-3 text-archive-ink">
-                  <option value="">Select</option>
-                  <option>Female</option>
-                  <option>Male</option>
-                </select>
-              </label>
-            </div>
-            <div class="grid gap-4 md:grid-cols-2">
-              <label class="grid gap-2 text-sm font-bold text-archive-muted">Preferred age range
-                <input name="preferred_age_range" placeholder="Example: 24-30" class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
-              </label>
-              <label class="grid gap-2 text-sm font-bold text-archive-muted">Preferred location
-                <input name="preferred_location" placeholder="City, state, country" class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
-              </label>
-            </div>
-            <label class="grid gap-2 text-sm font-bold text-archive-muted">Requirement details
-              <textarea name="expectations" rows="7" class="border border-archive-line bg-archive-cream p-3 text-archive-ink"></textarea>
-            </label>
-            <div class="grid gap-4 md:grid-cols-2">
-              <label class="grid gap-2 text-sm font-bold text-archive-muted">Contact person
-                <input name="contact_person_name" required class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
-              </label>
-              <label class="grid gap-2 text-sm font-bold text-archive-muted">WhatsApp / phone
-                <input name="phone_whatsapp" required class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
-              </label>
-            </div>
-            <label class="grid gap-2 text-sm font-bold text-archive-muted">Email
-              <input name="email" type="email" class="border border-archive-line bg-archive-cream p-3 text-archive-ink"/>
-            </label>
-            <label class="flex gap-3 text-sm font-bold leading-6 text-archive-muted">
-              <input name="consent" type="checkbox" required class="mt-1 h-5 w-5 shrink-0"/>
-              I confirm that this request is genuine and may be reviewed by Iraqi Biradari matrimony coordinators.
-            </label>
-            <button class="min-h-12 bg-archive-gold px-5 text-sm font-black uppercase tracking-[0.12em] text-archive-ink" type="submit">Submit requirement</button>
-          </form>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <footer class="bg-[#17130f] py-9 text-archive-paper">
-    <div class="mx-auto flex w-[min(1120px,calc(100%-36px))] flex-col gap-5 md:flex-row md:items-center md:justify-between">
+<!-- ══ STAGE: landing ══════════════════════════════════════════════════════ -->
+<div data-stage="landing">
+  <section class="bg-archive-green py-16 md:py-20">
+    <div class="wrap grid gap-10 lg:grid-cols-[1.4fr_1fr] lg:items-start">
       <div>
-        <p class="font-display text-3xl font-bold text-archive-goldSoft">Iraqi Biradari</p>
-        <p class="mt-1 text-sm text-[#bdb2a3]">Copyright © 2026 iraqibiradari. All Rights Reserved.</p>
+        <p class="text-xs font-black uppercase tracking-[.18em] text-archive-goldSoft">Matrimony Assistance</p>
+        <h1 class="mt-3 font-display text-4xl font-bold leading-tight text-white md:text-[3.2rem]">Private community support for marriage introductions.</h1>
+        <p class="mt-4 max-w-xl text-base leading-7 text-archive-paper/80">Submit candidate details or share match requirements with the Iraqi Biradari coordination team. Information is kept private, gated, and reviewed before any introduction.</p>
+        <div class="mt-8 flex flex-col items-start gap-3">
+          <button data-go="auth" class="m-btn m-btn-gold">Sign in to continue →</button>
+          <p class="text-xs text-archive-paper/50">Sign-in is required. Open only to verified members of the Iraqi Biradari.</p>
+        </div>
       </div>
-      <div class="flex flex-wrap gap-4 text-xs font-black uppercase tracking-[0.12em] text-[#d8cfbf]">
-        <a class="hover:text-archive-goldSoft" href="/announcements/">Announcements</a>
-        <a class="hover:text-archive-goldSoft" href="/documents/">Documents</a>
-        <a class="hover:text-archive-goldSoft" href="/events/">Events</a>
-        <a class="hover:text-archive-goldSoft" href="/matrimony/">Matrimony</a>
-        <a class="hover:text-archive-goldSoft" href="/contact/">Support</a>
+      <aside class="border border-archive-gold/30 bg-white/5 p-6 lg:mt-14">
+        <p class="text-xs font-black uppercase tracking-[.14em] text-archive-goldSoft">How privacy is handled</p>
+        <ul class="m-privlist">
+          <li>No public profile browsing or searchable matrimony directory.</li>
+          <li>Submissions are reviewed by admins before any introduction.</li>
+          <li>Submit details only with the candidate or family's consent.</li>
+          <li>Misuse, spam, or incomplete entries can be rejected or archived.</li>
+        </ul>
+      </aside>
+    </div>
+  </section>
+  <section class="py-16 md:py-20">
+    <div class="wrap">
+      <p class="text-xs font-black uppercase tracking-[.14em] text-archive-gold">How it works</p>
+      <h2 class="mt-2 font-display text-3xl font-bold text-archive-green md:text-4xl">Four steps from sign-in to introductions</h2>
+      <div class="mt-8 how-steps">
+        <div class="how-step"><div class="how-step__n">01</div><div class="how-step__h">Sign in</div><p class="text-sm text-archive-muted leading-6">One identity per family. Your email becomes your community identity on the platform.</p></div>
+        <div class="how-step"><div class="how-step__n">02</div><div class="how-step__h">Verify biradari membership</div><p class="text-sm text-archive-muted leading-6">Five short fields and a community confirmation. Your apnonkitalash.com profile is the anchor.</p></div>
+        <div class="how-step"><div class="how-step__n">03</div><div class="how-step__h">Submit candidate &amp; requirement</div><p class="text-sm text-archive-muted leading-6">Both submissions are required to keep the directory reciprocal and authentic.</p></div>
+        <div class="how-step"><div class="how-step__n">04</div><div class="how-step__h">Browse &amp; request introductions</div><p class="text-sm text-archive-muted leading-6">Filter by marital status. Request introductions through the coordination team.</p></div>
       </div>
     </div>
-  </footer>
+  </section>
+</div>
 
-  <script type="module" src="/assets/js/nav.js"></script>
-  <script type="module" src="/assets/js/matrimony.js"></script>
+
+<!-- ══ STAGE: auth ════════════════════════════════════════════════════════ -->
+<div data-stage="auth">
+  <div class="wrap py-16" style="max-width:480px">
+    <button data-go="landing" class="mb-8 text-xs font-black uppercase tracking-[.1em] text-archive-muted hover:text-archive-green transition-colors">← Back</button>
+    <div id="auth-email-step">
+      <p class="text-xs font-black uppercase tracking-[.14em] text-archive-gold">Sign in</p>
+      <h1 class="mt-2 font-display text-3xl font-bold text-archive-green">Enter your email</h1>
+      <p class="mt-3 text-sm leading-6 text-archive-muted">We'll send a one-time code to your inbox. No password needed.</p>
+      <form id="form-email" class="mt-8 flex flex-col gap-4">
+        <label class="flex flex-col gap-2 text-sm font-bold text-archive-muted">Email address
+          <input class="m-input" id="input-email" type="email" required placeholder="your@email.com" autocomplete="email"/>
+        </label>
+        <p id="err-email" class="hidden text-xs font-bold text-red-700"></p>
+        <button type="submit" class="m-btn m-btn-gold" id="btn-send-otp">Send sign-in code →</button>
+      </form>
+      <p class="mt-6 text-xs text-archive-muted leading-5 border-l-2 border-archive-gold/40 pl-3"><strong class="text-archive-gold">Coming soon:</strong> Google sign-in will replace this step.</p>
+    </div>
+    <div id="auth-otp-step" class="hidden">
+      <p class="text-xs font-black uppercase tracking-[.14em] text-archive-gold">Sign in</p>
+      <h1 class="mt-2 font-display text-3xl font-bold text-archive-green">Check your inbox</h1>
+      <p class="mt-3 text-sm leading-6 text-archive-muted">A 6-digit code was sent to <strong id="otp-email-label" class="text-archive-ink"></strong>.</p>
+      <form id="form-otp" class="mt-8 flex flex-col gap-4">
+        <label class="flex flex-col gap-2 text-sm font-bold text-archive-muted">One-time code
+          <input class="m-input text-center text-xl" style="letter-spacing:.3em" id="input-otp" type="text" required placeholder="123456" maxlength="6" inputmode="numeric" autocomplete="one-time-code"/>
+        </label>
+        <p id="err-otp" class="hidden text-xs font-bold text-red-700"></p>
+        <button type="submit" class="m-btn m-btn-primary">Verify code →</button>
+        <button type="button" id="btn-resend" class="text-xs font-bold text-archive-muted hover:text-archive-green underline underline-offset-2 text-left">Resend code</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ STAGE: consent ══════════════════════════════════════════════════════ -->
+<div data-stage="consent">
+  <div class="wrap py-12">
+    <div class="m-dots max-w-xs mb-2"><div class="m-dot active">1</div><div class="m-dotline"></div><div class="m-dot">2</div><div class="m-dotline"></div><div class="m-dot">3</div></div>
+    <p class="text-xs font-black uppercase tracking-[.14em] text-archive-gold">Step 1 of 3 · Membership verification</p>
+    <h1 class="mt-2 font-display text-3xl font-bold text-archive-green md:text-4xl">Verify your community membership</h1>
+    <p class="mt-3 max-w-2xl text-sm leading-7 text-archive-muted">Matrimony assistance is available <strong>only to verified members of the Iraqi Biradari</strong>. These five fields establish the authenticity of every submission on this platform.</p>
+    <div class="mt-10 grid gap-8 lg:grid-cols-[1fr_300px]">
+      <form id="consent-form" class="flex flex-col gap-5 border border-archive-line bg-white p-8 shadow-soft">
+        <div class="flex flex-col gap-2"><label class="text-sm font-bold text-archive-muted">Full name <span class="text-archive-gold">*</span></label><input class="m-input" id="consent-name" name="full_name" required placeholder="As on Aadhaar / passport"/></div>
+        <div class="flex flex-col gap-2"><label class="text-sm font-bold text-archive-muted">Mobile number <span class="text-archive-gold">*</span></label><input class="m-input" name="mobile" required placeholder="+91 9876543210" type="tel"/><span class="text-xs text-archive-muted">May be used by the coordination team for follow-up.</span></div>
+        <div class="grid gap-5 md:grid-cols-2">
+          <div class="flex flex-col gap-2"><label class="text-sm font-bold text-archive-muted">Native location <span class="text-archive-gold">*</span></label><input class="m-input" name="native_location" required placeholder="e.g. Lucknow, U.P."/></div>
+          <div class="flex flex-col gap-2"><label class="text-sm font-bold text-archive-muted">Current location <span class="text-archive-gold">*</span></label><input class="m-input" name="current_location" required placeholder="e.g. Bengaluru, Karnataka"/></div>
+        </div>
+        <div class="flex flex-col gap-2"><label class="text-sm font-bold text-archive-muted">Your apnonkitalash.com profile link <span class="text-archive-gold">*</span></label><input class="m-input" name="akt_profile_url" required type="url" placeholder="https://apnonkitalash.com/profile/your-id"/><span class="text-xs text-archive-muted">Don't have one? <a href="https://apnonkitalash.com" target="_blank" class="text-archive-gold underline underline-offset-2">Register on apnonkitalash.com first →</a></span></div>
+        <hr class="border-archive-line my-1"/>
+        <label class="flex items-start gap-3 text-sm leading-6 text-archive-muted"><input type="checkbox" name="confirmed" required class="mt-1 h-5 w-5 shrink-0 accent-archive-green"/> I confirm I belong to the <strong class="text-archive-ink mx-1">Iraqi Biradari</strong> and not to any other community, and that any information I submit is truthful and shared with the consent of the candidate and family.</label>
+        <p id="consent-err" class="hidden text-xs font-bold text-red-700"></p>
+        <button type="submit" class="m-btn m-btn-primary self-start">Continue to next step →</button>
+      </form>
+      <aside class="flex flex-col gap-5">
+        <div class="border border-archive-line bg-archive-paper p-5">
+          <p class="text-xs font-black uppercase tracking-[.14em] text-archive-gold mb-3">Why these five fields?</p>
+          <ul class="flex flex-col gap-3 text-xs leading-5 text-archive-muted">
+            <li><strong class="text-archive-ink">Name &amp; mobile</strong> — identifies the submitter for admin follow-up.</li>
+            <li><strong class="text-archive-ink">Native &amp; current location</strong> — used to match against the Shajra archive.</li>
+            <li><strong class="text-archive-ink">Apnon Ki Talash link</strong> — the only formal community membership record.</li>
+            <li><strong class="text-archive-ink">Confirmation</strong> — your signed consent this is a community submission.</li>
+          </ul>
+        </div>
+        <div class="border border-archive-line bg-white p-5"><p class="text-xs font-black uppercase tracking-[.14em] text-archive-gold mb-2">Signed in as</p><p id="consent-signed-as" class="text-sm font-bold text-archive-ink break-all"></p></div>
+      </aside>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ STAGE: gate ═════════════════════════════════════════════════════════ -->
+<div data-stage="gate">
+  <div class="wrap py-12">
+    <div class="m-dots max-w-xs mb-2"><div class="m-dot done">✓</div><div class="m-dotline done"></div><div class="m-dot active">2</div><div class="m-dotline"></div><div class="m-dot">3</div></div>
+    <p class="text-xs font-black uppercase tracking-[.14em] text-archive-gold">Step 2 of 3 · Reciprocity gate</p>
+    <h1 class="mt-2 font-display text-3xl font-bold text-archive-green md:text-4xl">Welcome<span id="gate-firstname"></span>. One more step.</h1>
+    <p class="mt-3 max-w-2xl text-sm leading-7 text-archive-muted">To access matrimony listings, every member must submit both a <strong>candidate profile</strong> and a <strong>match requirement</strong>. This keeps the platform reciprocal — every browser is also a contributor.</p>
+    <div class="mt-10 grid gap-4 md:grid-cols-2">
+      <button id="gate-card-cand" class="gate-card">
+        <div class="flex items-center justify-between gap-3"><span class="text-xs font-black uppercase tracking-[.14em] text-archive-gold">Part 1</span><span id="gate-status-cand" class="text-xs font-bold text-archive-muted border border-archive-line px-2 py-0.5 rounded-full">Pending</span></div>
+        <h3 class="font-display text-xl font-bold text-archive-green">Submit candidate details</h3>
+        <p class="text-sm text-archive-muted leading-6">A profile of the candidate — you, a family member, or someone you are submitting with consent.</p>
+        <span id="gate-cta-cand" class="mt-2 text-xs font-black uppercase tracking-[.1em] text-archive-gold">Begin →</span>
+      </button>
+      <button id="gate-card-req" class="gate-card">
+        <div class="flex items-center justify-between gap-3"><span class="text-xs font-black uppercase tracking-[.14em] text-archive-gold">Part 2</span><span id="gate-status-req" class="text-xs font-bold text-archive-muted border border-archive-line px-2 py-0.5 rounded-full">Pending</span></div>
+        <h3 class="font-display text-xl font-bold text-archive-green">Share match requirement</h3>
+        <p class="text-sm text-archive-muted leading-6">What kind of match are you or the family looking for? Helps admins suggest reciprocally.</p>
+        <span id="gate-cta-req" class="mt-2 text-xs font-black uppercase tracking-[.1em] text-archive-gold">Begin →</span>
+      </button>
+    </div>
+    <div id="gate-unlock" class="m-unlock mt-6">
+      <div id="gate-unlock-icon" class="shrink-0"></div>
+      <div class="flex-1 min-w-0">
+        <p id="gate-unlock-h" class="font-bold text-archive-ink">Listings are locked</p>
+        <p id="gate-unlock-sub" class="mt-0.5 text-xs text-archive-muted">Complete both submissions above to unlock the matrimony directory.</p>
+      </div>
+      <button id="btn-browse" class="m-btn m-btn-primary shrink-0" disabled>Locked</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ STAGE: candidate form ═══════════════════════════════════════════════ -->
+<div data-stage="candidate">
+  <div class="wrap py-12" style="max-width:800px">
+    <button data-go="gate" class="mb-6 text-xs font-black uppercase tracking-[.1em] text-archive-muted hover:text-archive-green transition-colors">← Back to dashboard</button>
+    <p class="text-xs font-black uppercase tracking-[.14em] text-archive-gold">Part 1 · Candidate details</p>
+    <h1 class="mt-2 font-display text-3xl font-bold text-archive-green">Candidate profile</h1>
+    <p class="mt-3 text-sm leading-7 text-archive-muted">All starred fields are required. Photographs are optional and visible only to admins.</p>
+    <form id="candidate-form" class="mt-8 flex flex-col gap-6 border border-archive-line bg-white p-8 shadow-soft">
+      <div class="m-fsec"><p class="m-fsec__h">Identity</p>
+        <div class="grid gap-5 md:grid-cols-2">
+          <div class="flex flex-col gap-2"><label class="text-sm font-bold text-archive-muted">Candidate full name <span class="text-archive-gold">*</span></label><input class="m-input" name="candidate_name" required placeholder="Full legal name"/></div>
+          <div class="flex flex-col gap-2"><label class="text-sm font-bold text-archive-muted">Date of birth <span class="text-archive-gold">*</span></label><input class="m-input" name="dob" required type="date"/></div>
+          <div class="flex flex-col gap-2"><label class="text-sm font-bold text-archive-muted">Gender <span class="text-archive-gold">*</span></label><select class="m-input" name="candidate_gender" required><option value="">Select</option><option>Male</option><option>Female</option></select></div>
+          <div class="flex flex-col gap-2"><label class="text-sm font-bold text-archive-muted">Marital status <span class="text-archive-gold">*</span></label><select class="m-input" name="marital_status" required><option value="">Select</option><option value="fresh">Fresh (never married)</option><option value="divorced">Divorced</option><option value="widowed">Widowed</option><option value="separated">Separated</option></select></div>
+        </div>
+      </div>
+      <div class="m-fsec"><p class="m-fsec__h">Locations</p>
+        <div class="grid gap-5 md:grid-cols-2">
+          <div class="flex flex-col gap-2"><label class="text-sm font-bold text-archive-muted">Native place <span class="text-archive-gold">*</span></label><input class="m-input" name="native_location" required placeholder="e.g. Lucknow, U.P."/></div>
+          <div class="flex flex-col gap-2"><label class="text-sm font-bold text-archive-muted">Birth place</label><input class="m-input" name="birth_location" placeholder="City, state"/></div>
+        </div>
+        <div class="mt-5 flex flex-col gap-2"><label class="text-sm font-bold text-archive-muted">Current place <span class="text-archive-gold">*</span></label><input class="m-input" name="current_location" required placeholder="City, state, country"/></div>
+      </div>
+      <div class="m-fsec"><p class="m-fsec__h">Education &amp; occupation</p>
+        <div class="flex flex-col gap-5">
+          <div class="flex flex-col gap-2"><label class="text-sm font-bold text-archive-muted">Highest education <span class="text-archive-gold">*</span></label><input class="m-input" name="education" required placeholder="Degree, institution, year"/></div>
+          <div class="flex flex-col gap-2"><label class="text-sm font-bold text-archive-muted">Occupation <span class="text-archive-gold">*</span></label><input class="m-input" name="profession" required placeholder="Designation, organisation"/></div>
+        </div>
+      </div>
+      <div class="m-fsec"><p class="m-fsec__h">Family background</p>
+        <div class="flex flex-col gap-5">
+          <div class="flex flex-col gap-2"><label class="text-sm font-bold text-archive-muted">Family background <span class="text-archive-gold">*</span></label><textarea class="m-input" name="family_background" required rows="4" placeholder="Parents, siblings, family standing, traditions observed…"></textarea></div>
+          <div class="flex flex-col gap-2"><label class="text-sm font-bold text-archive-muted">Expectations from match</label><textarea class="m-input" name="expectations" rows="3" placeholder="What the family is looking for in a match…"></textarea></div>
+        </div>
+      </div>
+      <div class="m-fsec"><p class="m-fsec__h">Contact &amp; community</p>
+        <div class="grid gap-5 md:grid-cols-2">
+          <div class="flex flex-col gap-2"><label class="text-sm font-bold text-archive-muted">Contact person <span class="text-archive-gold">*</span></label><input class="m-input" name="contact_person_name" required placeholder="Guardian / point of contact"/></div>
+          <div class="flex flex-col gap-2"><label class="text-sm font-bold text-archive-muted">Relationship to candidate</label><select class="m-input" name="relationship_to_candidate"><option value="">Select</option><option>Self</option><option>Father</option><option>Mother</option><option>Brother</option><option>Sister</option><option>Uncle / Aunt</option><option>Cousin</option><option>Other</option></select></div>
+          <div class="flex flex-col gap-2"><label class="text-sm font-bold text-archive-muted">WhatsApp / phone <span class="text-archive-gold">*</span></label><input class="m-input" name="phone_whatsapp" required placeholder="+91 9876543210"/></div>
+          <div class="flex flex-col gap-2"><label class="text-sm font-bold text-archive-muted">apnonkitalash.com profile link</label><input class="m-input" name="akt_profile_url" type="url" placeholder="https://apnonkitalash.com/profile/…"/></div>
+        </div>
+      </div>
+      <div class="m-fsec"><p class="m-fsec__h">Photograph (optional)</p>
+        <div class="flex flex-col gap-2"><label class="text-sm font-bold text-archive-muted">Private photo link</label><input class="m-input" name="photo_url" type="url" placeholder="Private Google Drive / iCloud view-only link"/><span class="text-xs text-archive-muted">Not shown publicly — visible only in admin review.</span></div>
+      </div>
+      <hr class="border-archive-line"/>
+      <label class="flex items-start gap-3 text-sm leading-6 text-archive-muted"><input type="checkbox" name="consent" required class="mt-1 h-5 w-5 shrink-0 accent-archive-green"/> I confirm I have the candidate's and family's consent to share these details with the Iraqi Biradari coordination team.</label>
+      <p id="cand-err" class="hidden text-xs font-bold text-red-700"></p>
+      <p id="cand-ok"  class="hidden text-xs font-bold text-green-700"></p>
+      <div class="flex gap-3 flex-wrap">
+        <button type="button" data-go="gate" class="m-btn m-btn-ghost">Save &amp; close</button>
+        <button type="submit" class="m-btn m-btn-primary">Submit candidate details →</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<!-- ══ STAGE: requirement form ════════════════════════════════════════════ -->
+<div data-stage="requirement">
+  <div class="wrap py-12" style="max-width:800px">
+    <button data-go="gate" class="mb-6 text-xs font-black uppercase tracking-[.1em] text-archive-muted hover:text-archive-green transition-colors">← Back to dashboard</button>
+    <p class="text-xs font-black uppercase tracking-[.14em] text-archive-gold">Part 2 · Match requirement</p>
+    <h1 class="mt-2 font-display text-3xl font-bold text-archive-green">Match requirement</h1>
+    <p class="mt-3 text-sm leading-7 text-archive-muted">Tell us what the family is looking for. The coordination team uses this to suggest reciprocal matches.</p>
+    <form id="requirement-form" class="mt-8 flex flex-col gap-6 border border-archive-line bg-white p-8 shadow-soft">
+      <div class="m-fsec"><p class="m-fsec__h">Who this is for</p>
+        <div class="grid gap-5 md:grid-cols-2">
+          <div class="flex flex-col gap-2"><label class="text-sm font-bold text-archive-muted">Seeker / family name <span class="text-archive-gold">*</span></label><input class="m-input" name="seeker_name" required placeholder="The submitter"/></div>
+          <div class="flex flex-col gap-2"><label class="text-sm font-bold text-archive-muted">Seeking for</label><select class="m-input" name="seeking_for"><option value="">Select</option><option>Self</option><option>Son</option><option>Daughter</option><option>Brother</option><option>Sister</option><option>Niece / Nephew</option><option>Other relation</option></select></div>
+        </div>
+      </div>
+      <div class="m-fsec"><p class="m-fsec__h">What you are looking for</p>
+        <div class="grid gap-5 md:grid-cols-2">
+          <div class="flex flex-col gap-2"><label class="text-sm font-bold text-archive-muted">Preferred gender</label><select class="m-input" name="preferred_gender"><option value="">Any</option><option>Male</option><option>Female</option></select></div>
+          <div class="flex flex-col gap-2"><label class="text-sm font-bold text-archive-muted">Preferred marital status</label><select class="m-input" name="preferred_marital_status"><option value="any">Any</option><option value="fresh">Fresh</option><option value="divorced">Divorced</option><option value="widowed">Widowed</option><option value="separated">Separated</option></select></div>
+          <div class="flex flex-col gap-2"><label class="text-sm font-bold text-archive-muted">Preferred age range</label><input class="m-input" name="preferred_age_range" placeholder="e.g. 24–30"/></div>
+          <div class="flex flex-col gap-2"><label class="text-sm font-bold text-archive-muted">Preferred location</label><input class="m-input" name="preferred_location" placeholder="City, state — or 'any'"/></div>
+          <div class="flex flex-col gap-2"><label class="text-sm font-bold text-archive-muted">Preferred education</label><input class="m-input" name="preferred_education" placeholder="e.g. Graduate and above"/></div>
+          <div class="flex flex-col gap-2"><label class="text-sm font-bold text-archive-muted">Preferred occupation</label><input class="m-input" name="preferred_occupation" placeholder="e.g. salaried, business, doctor"/></div>
+        </div>
+      </div>
+      <div class="m-fsec"><p class="m-fsec__h">Notes for the coordination team</p>
+        <div class="flex flex-col gap-2"><label class="text-sm font-bold text-archive-muted">Other preferences or notes</label><textarea class="m-input" name="notes" rows="4" placeholder="Family traditions, must-haves, things to know about your family…"></textarea></div>
+      </div>
+      <hr class="border-archive-line"/>
+      <label class="flex items-start gap-3 text-sm leading-6 text-archive-muted"><input type="checkbox" name="consent" required class="mt-1 h-5 w-5 shrink-0 accent-archive-green"/> I understand the coordination team uses this only to suggest reciprocal matches and does not publish it.</label>
+      <p id="req-err" class="hidden text-xs font-bold text-red-700"></p>
+      <p id="req-ok"  class="hidden text-xs font-bold text-green-700"></p>
+      <div class="flex gap-3 flex-wrap">
+        <button type="button" data-go="gate" class="m-btn m-btn-ghost">Save &amp; close</button>
+        <button type="submit" class="m-btn m-btn-primary">Submit match requirement →</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<!-- ══ STAGE: browse ══════════════════════════════════════════════════════ -->
+<div data-stage="browse">
+  <div class="wrap pt-10 pb-6">
+    <div class="m-dots max-w-xs mb-2"><div class="m-dot done">✓</div><div class="m-dotline done"></div><div class="m-dot done">✓</div><div class="m-dotline done"></div><div class="m-dot active">3</div></div>
+    <button data-go="gate" class="mb-4 text-xs font-black uppercase tracking-[.1em] text-archive-muted hover:text-archive-green transition-colors">← Back to dashboard</button>
+    <p class="text-xs font-black uppercase tracking-[.14em] text-archive-gold">Step 3 of 3 · Browse matches</p>
+    <h1 class="mt-2 font-display text-3xl font-bold text-archive-green">Browse candidates</h1>
+    <p class="mt-2 text-sm leading-6 text-archive-muted max-w-2xl">Filter by marital status. Click a card to view the full profile and request an introduction. Listings show initials only.</p>
+  </div>
+  <div class="border-y border-archive-line bg-archive-paper/50 py-4">
+    <div class="wrap flex flex-wrap gap-3" id="browse-filters">
+      <button class="m-pill on" data-filter="all"><span class="m-pill__label">All</span><span class="m-pill__sub">Every status</span><span class="m-pill__count" id="cnt-all">—</span></button>
+      <button class="m-pill" data-filter="fresh"><span class="m-pill__label">Fresh</span><span class="m-pill__sub">Never married</span><span class="m-pill__count" id="cnt-fresh">—</span></button>
+      <button class="m-pill" data-filter="divorced"><span class="m-pill__label">Divorced</span><span class="m-pill__sub">Legally separated</span><span class="m-pill__count" id="cnt-divorced">—</span></button>
+      <button class="m-pill" data-filter="widowed"><span class="m-pill__label">Widowed</span><span class="m-pill__sub">Spouse deceased</span><span class="m-pill__count" id="cnt-widowed">—</span></button>
+      <button class="m-pill" data-filter="separated"><span class="m-pill__label">Separated</span><span class="m-pill__sub">Living apart</span><span class="m-pill__count" id="cnt-separated">—</span></button>
+    </div>
+  </div>
+  <div class="wrap py-8">
+    <p id="browse-summary" class="mb-4 text-sm text-archive-muted"></p>
+    <div id="browse-grid" class="cand-grid"></div>
+  </div>
+</div>
+
+
+<!-- ══ STAGE: detail ══════════════════════════════════════════════════════ -->
+<div data-stage="detail">
+  <div class="bg-archive-green py-10 md:py-14">
+    <div class="wrap">
+      <button data-go="browse" class="mb-6 text-xs font-black uppercase tracking-[.1em] text-archive-paper/60 hover:text-archive-paper transition-colors">← Back to browse</button>
+      <div id="detail-hero-body"></div>
+    </div>
+  </div>
+  <div class="wrap py-10">
+    <div class="grid gap-10 lg:grid-cols-[1fr_280px]">
+      <div id="detail-main"></div>
+      <aside id="detail-sidebar"></aside>
+    </div>
+  </div>
+</div>
+
+
+<footer class="bg-[#17130f] py-9 text-archive-paper">
+  <div class="mx-auto flex w-[min(1120px,calc(100%-36px))] flex-col gap-5 md:flex-row md:items-center md:justify-between">
+    <div>
+      <p class="font-display text-3xl font-bold text-archive-goldSoft">Iraqi Biradari</p>
+      <p class="mt-1 text-sm text-[#bdb2a3]">Copyright © 2026 iraqibiradari. All Rights Reserved.</p>
+    </div>
+    <div class="flex flex-wrap gap-4 text-xs font-black uppercase tracking-[.12em] text-[#d8cfbf]">
+      <a class="hover:text-archive-goldSoft" href="/announcements/">Announcements</a>
+      <a class="hover:text-archive-goldSoft" href="/events/">Events</a>
+      <a class="hover:text-archive-goldSoft" href="/organizations/">Organizations</a>
+      <a class="hover:text-archive-goldSoft" href="/matrimony/">Matrimony</a>
+      <a class="hover:text-archive-goldSoft" href="/contact/">Support</a>
+    </div>
+  </div>
+</footer>
+
+<script type="module" src="/assets/js/nav.js"></script>
+<script type="module" src="/assets/js/matrimony.js"></script>
 </body>
 </html>
