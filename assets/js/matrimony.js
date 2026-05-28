@@ -192,7 +192,28 @@ async function afterSignIn() {
 }
 
 // ── Submissions check ──────────────────────────────────────────────────────────
+// Gate-only: minimal columns that are guaranteed to exist.
 async function loadSubs() {
+  const [pRes, rRes] = await Promise.all([
+    supabase.from('matrimony_profiles')
+      .select('id,candidate_name,candidate_gender,marital_status,status,created_at')
+      .eq('user_id', currentUser.id)
+      .order('created_at', { ascending: true }),
+    supabase.from('matrimony_requirements')
+      .select('id,seeker_name,seeking_for,status,created_at')
+      .eq('user_id', currentUser.id)
+      .maybeSingle(),
+  ]);
+  if (pRes.error) console.error('[loadSubs] profiles error:', pRes.error);
+  if (rRes.error) console.error('[loadSubs] requirements error:', rRes.error);
+  subs.candidates  = pRes.data  || [];
+  subs.requirement = rRes.data  || null;
+  updateSubsBadge();
+}
+
+// Detailed load for My Submissions — tries extended columns, falls back gracefully.
+async function loadSubsDetailed() {
+  // Try with extended columns first (requires matrimony_submissions_migration.sql)
   const [pRes, rRes] = await Promise.all([
     supabase.from('matrimony_profiles')
       .select('id,candidate_name,candidate_gender,marital_status,status,created_at,updated_at,closed_on,admin_feedback,meta')
@@ -203,10 +224,16 @@ async function loadSubs() {
       .eq('user_id', currentUser.id)
       .maybeSingle(),
   ]);
-  if (pRes.error) console.error('[loadSubs] profiles error:', pRes.error);
-  if (rRes.error) console.error('[loadSubs] requirements error:', rRes.error);
-  subs.candidates  = pRes.data  || [];
-  subs.requirement = rRes.data  || null;
+
+  // If extended columns missing (400), fall back to minimal
+  const pData = pRes.error ? subs.candidates : (pRes.data || []);
+  const rData = rRes.error ? subs.requirement : (rRes.data || null);
+
+  if (pRes.error) console.warn('[loadSubsDetailed] profiles extended columns missing — using cached minimal data');
+  if (rRes.error) console.warn('[loadSubsDetailed] requirements extended columns missing — using cached minimal data');
+
+  subs.candidates  = pData;
+  subs.requirement = rData;
   updateSubsBadge();
 }
 
@@ -314,7 +341,7 @@ let pendingClose = null; // { kind, id }
 let pendingCloseReason = null;
 
 async function renderMySubmissions() {
-  await loadSubs();
+  await loadSubsDetailed();
   showStage('my-submissions');
 
   const candCt = document.getElementById('mysubs-cand-ct');
