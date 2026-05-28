@@ -500,7 +500,22 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
     });
   });
 
+  // Chevron collapse/expand
+  matrimonyList?.addEventListener('click', (e) => {
+    const toggle = e.target.closest('[data-card-toggle]');
+    if (!toggle) return;
+    const card = toggle.closest('[data-matrimony-card]');
+    if (!card) return;
+    const body    = card.querySelector('[data-card-body]');
+    const chevron = card.querySelector('[data-chevron]');
+    if (!body) return;
+    const open = body.style.display !== 'none';
+    body.style.display = open ? 'none' : 'block';
+    if (chevron) chevron.style.transform = open ? '' : 'rotate(180deg)';
+  });
+
   matrimonyList?.addEventListener('click', async (e) => {
+    if (e.target.closest('[data-card-toggle]')) return; // handled above
     const btn  = e.target.closest('button[data-matrimony-action]');
     if (!btn) return;
     const card = btn.closest('[data-matrimony-card]');
@@ -1117,40 +1132,57 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
 
   function matrimonyCard(row) {
     const isProfile = currentMatrimonyType === 'matrimony_profiles';
-    const title    = isProfile ? row.candidate_name : row.seeker_name;
-    const subtitle = isProfile
-      ? [row.candidate_gender, row.age ? `${row.age} years` : '', row.city].filter(Boolean).join(' · ')
+    const title     = isProfile ? row.candidate_name : row.seeker_name;
+    const subtitle  = isProfile
+      ? [row.candidate_gender, row.marital_status ? escapeHtml(row.marital_status) : '', row.current_location || row.city].filter(Boolean).join(' · ')
       : [row.seeking_for, row.preferred_gender ? `Seeking ${row.preferred_gender}` : '', row.preferred_age_range].filter(Boolean).join(' · ');
-    const details  = isProfile
+    const details   = isProfile
       ? [['Education',row.education],['Profession',row.profession],['Marital status',row.marital_status],['Photograph',row.photo_url],['Family background',row.family_background],['Expectations',row.expectations]]
-      : [['Preferred location',row.preferred_location],['Requirement details',row.expectations]];
+      : [['Preferred location',row.preferred_location],['Notes',row.notes]];
     const createdAt = row.created_at ? new Date(row.created_at).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:true}) : '';
+    const statusColour = { new:'text-amber-700 bg-amber-50', review:'text-amber-700 bg-amber-50', reviewing:'text-amber-700 bg-amber-50', approved:'text-green-700 bg-green-50', matched:'text-green-700 bg-green-50', rejected:'text-red-700 bg-red-50', archived:'text-slate-600 bg-slate-100', changes:'text-orange-700 bg-orange-50' }[row.status] || 'text-archive-muted bg-archive-paper';
+    const iChevron  = `<svg data-chevron width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="transition:transform .2s"><path d="M4 6l4 4 4-4"/></svg>`;
 
-    return `<article data-matrimony-card data-matrimony-id="${escapeHtml(row.id)}" class="border border-archive-line bg-archive-cream p-5">
-      <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-        <div>
-          <p class="text-xs font-black uppercase tracking-[0.14em] text-archive-gold">${isProfile?'Candidate Profile':'Seeker Requirement'} · ${escapeHtml(row.status||'new')}</p>
-          <h3 class="mt-2 text-2xl font-black text-archive-green">${escapeHtml(title)}</h3>
-          <p class="mt-1 text-sm font-bold text-archive-muted">${escapeHtml(subtitle||'No summary provided')}</p>
-          <p class="mt-2 text-xs font-bold text-archive-muted">${escapeHtml(createdAt)}</p>
+    return `<article data-matrimony-card data-matrimony-id="${escapeHtml(row.id)}" class="border border-archive-line bg-archive-cream overflow-hidden">
+
+      <!-- ── Collapsed header (always visible) ── -->
+      <div data-card-toggle class="flex items-center gap-4 px-5 py-4 cursor-pointer select-none hover:bg-archive-paper/60 transition-colors">
+        <div class="flex-1 min-w-0">
+          <div class="flex flex-wrap items-center gap-2 mb-0.5">
+            <span class="text-[10px] font-black uppercase tracking-[.12em] text-archive-gold/80">${isProfile ? 'Candidate' : 'Seeker'}</span>
+            <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wide ${statusColour}">${escapeHtml(row.status || 'new')}</span>
+          </div>
+          <div class="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
+            <h3 class="font-black text-archive-green text-base leading-snug">${escapeHtml(title || '—')}</h3>
+            <span class="text-xs text-archive-muted truncate">${escapeHtml(subtitle || '')}</span>
+          </div>
+          <p class="text-[11px] text-archive-muted/70 mt-0.5">${escapeHtml(createdAt)}</p>
         </div>
-        <div class="border border-archive-line bg-white px-4 py-3 text-sm leading-6 text-archive-muted">
-          <p><strong class="text-archive-ink">Contact:</strong> ${escapeHtml(row.contact_person_name)}</p>
-          <p><strong class="text-archive-ink">Phone:</strong> ${escapeHtml(row.phone_whatsapp)}</p>
-          ${row.email?`<p><strong class="text-archive-ink">Email:</strong> ${escapeHtml(row.email)}</p>`:''}
-          ${row.relationship_to_candidate?`<p><strong class="text-archive-ink">Relation:</strong> ${escapeHtml(row.relationship_to_candidate)}</p>`:''}
-        </div>
+        <button type="button" data-card-toggle class="shrink-0 p-1.5 text-archive-muted/50 hover:text-archive-muted" aria-label="Toggle">${iChevron}</button>
       </div>
-      <dl class="mt-5 grid gap-3 md:grid-cols-2">
-        ${details.map(([l,v])=>v?`<div class="border border-archive-line bg-white p-4"><dt class="text-xs font-black uppercase tracking-[0.12em] text-archive-gold">${escapeHtml(l)}</dt><dd class="mt-2 text-sm leading-6 text-archive-muted">${l==='Photograph'?photoLink(v):escapeHtml(v)}</dd></div>`:'').join('')}
-        ${row.browser_hint?`<div class="border border-archive-line bg-white p-4"><dt class="text-xs font-black uppercase tracking-[0.12em] text-archive-gold">Device hint</dt><dd class="mt-2 text-sm leading-6 text-archive-muted">${escapeHtml(row.browser_hint)}</dd></div>`:''}
-      </dl>
-      <label class="mt-5 grid gap-2 text-sm font-bold text-archive-muted">Private admin notes
-        <textarea data-admin-notes rows="3" class="border border-archive-line bg-white p-3 text-archive-ink">${escapeHtml(row.admin_notes||'')}</textarea>
-      </label>
-      <div class="mt-4 flex flex-wrap gap-2">
-        <button data-matrimony-action="notes" class="border border-archive-gold bg-archive-gold px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-archive-ink" type="button">Save notes</button>
-        ${['new','reviewing','approved','matched','rejected','archived'].map(s=>`<button data-matrimony-action="status" data-status-value="${s}" class="border ${row.status===s?'border-archive-gold bg-white text-archive-green':'border-archive-line text-archive-muted'} px-3 py-2 text-xs font-black uppercase tracking-[0.12em]" type="button">${s}</button>`).join('')}
+
+      <!-- ── Expandable body ── -->
+      <div data-card-body style="display:none" class="border-t border-archive-line px-5 pb-5 pt-4">
+        <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between mb-4">
+          <div></div>
+          <div class="border border-archive-line bg-white px-4 py-3 text-sm leading-6 text-archive-muted shrink-0">
+            <p><strong class="text-archive-ink">Contact:</strong> ${escapeHtml(row.contact_person_name||'—')}</p>
+            <p><strong class="text-archive-ink">Phone:</strong> ${escapeHtml(row.phone_whatsapp||'—')}</p>
+            ${row.email ? `<p><strong class="text-archive-ink">Email:</strong> ${escapeHtml(row.email)}</p>` : ''}
+            ${row.relationship_to_candidate ? `<p><strong class="text-archive-ink">Relation:</strong> ${escapeHtml(row.relationship_to_candidate)}</p>` : ''}
+          </div>
+        </div>
+        <dl class="grid gap-3 md:grid-cols-2">
+          ${details.map(([l,v]) => v ? `<div class="border border-archive-line bg-white p-4"><dt class="text-xs font-black uppercase tracking-[0.12em] text-archive-gold">${escapeHtml(l)}</dt><dd class="mt-2 text-sm leading-6 text-archive-muted">${l==='Photograph' ? photoLink(v) : escapeHtml(v)}</dd></div>` : '').join('')}
+          ${row.browser_hint ? `<div class="border border-archive-line bg-white p-4"><dt class="text-xs font-black uppercase tracking-[0.12em] text-archive-gold">Device hint</dt><dd class="mt-2 text-sm leading-6 text-archive-muted">${escapeHtml(row.browser_hint)}</dd></div>` : ''}
+        </dl>
+        <label class="mt-4 grid gap-2 text-sm font-bold text-archive-muted">Private admin notes
+          <textarea data-admin-notes rows="3" class="border border-archive-line bg-white p-3 text-archive-ink">${escapeHtml(row.admin_notes||'')}</textarea>
+        </label>
+        <div class="mt-3 flex flex-wrap gap-2">
+          <button data-matrimony-action="notes" class="border border-archive-gold bg-archive-gold px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-archive-ink" type="button">Save notes</button>
+          ${['new','reviewing','approved','matched','rejected','archived'].map(s => `<button data-matrimony-action="status" data-status-value="${s}" class="border ${row.status===s ? 'border-archive-gold bg-white text-archive-green font-black' : 'border-archive-line text-archive-muted'} px-3 py-2 text-xs font-black uppercase tracking-[0.12em]" type="button">${s}</button>`).join('')}
+        </div>
       </div>
     </article>`;
   }
