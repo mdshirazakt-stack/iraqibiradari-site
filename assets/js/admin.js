@@ -508,9 +508,13 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
     if (!id) return;
 
     if (btn.dataset.matrimonyAction === 'status') {
-      const { error } = await supabase.from(currentMatrimonyType)
-        .update({ status: btn.dataset.statusValue, updated_at: new Date().toISOString() }).eq('id', id);
-      setStatus(error ? error.message : `Status updated to "${btn.dataset.statusValue}".`);
+      const newStatus = btn.dataset.statusValue;
+      // 'approved' flips the profile live in browse; anything else takes it down
+      const published = (currentMatrimonyType === 'matrimony_profiles') ? (newStatus === 'approved') : undefined;
+      const patch = { status: newStatus, updated_at: new Date().toISOString() };
+      if (published !== undefined) patch.published = published;
+      const { error } = await supabase.from(currentMatrimonyType).update(patch).eq('id', id);
+      setStatus(error ? error.message : `Status updated to "${newStatus}".${published ? ' — now visible in browse.' : ''}`);
     }
     if (btn.dataset.matrimonyAction === 'notes') {
       const notes = card.querySelector('[data-admin-notes]').value;

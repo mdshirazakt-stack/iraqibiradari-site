@@ -629,7 +629,7 @@ async function openBrowse() {
     const { data, error } = await withTimeout(
       supabase.from('matrimony_profiles')
         .select('id,initials,candidate_gender,marital_status,education,profession,native_location,current_location,dob,contact_person_name,relationship_to_candidate')
-        .eq('published', true)
+        .eq('status', 'approved')
         .order('created_at', { ascending: false })
     );
 
