@@ -613,8 +613,11 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
       // Subsequent auth events (INITIAL_SESSION re-fire, USER_UPDATED, etc.) are
       // silently ignored so an open editor is never reset.
       setStatus(`Signed in as ${email}.`);
-      await loadTabCounts();
+      // switchSection FIRST — must run before the user can click anything.
+      // loadTabCounts is cosmetic (badge numbers only) and can finish in the
+      // background without blocking or touching the editor.
       switchSection('events');
+      loadTabCounts(); // fire-and-forget — never await this here
     }
   }
 
