@@ -125,7 +125,10 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
   // ── Session ──────────────────────────────────────────────────────────
   const { data: sessionData } = await supabase.auth.getSession();
   await reflectSession(sessionData.session);
-  supabase.auth.onAuthStateChange((_event, session) => reflectSession(session));
+  supabase.auth.onAuthStateChange((event, session) => {
+    if (event === 'TOKEN_REFRESHED') return; // silent refresh — never disrupt an open editor
+    reflectSession(session);
+  });
 
   // ── Auth ─────────────────────────────────────────────────────────────
   loginForm.addEventListener('submit', async (e) => {
@@ -582,8 +585,10 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
   }
 
   async function reflectSession(session) {
-    const email   = session?.user?.email;
-    const allowed = email === ADMIN_EMAIL;
+    const email      = session?.user?.email;
+    const allowed    = email === ADMIN_EMAIL;
+    const wasAllowed = !adminPanel.hidden; // already showing admin? (token refresh / INITIAL_SESSION re-fire)
+
     authPanel.hidden  = Boolean(allowed);
     adminPanel.hidden = !allowed;
 
@@ -592,7 +597,10 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
     if (sessionEmailEl) sessionEmailEl.textContent = email || 'Signed in';
 
     if (email && !allowed) setStatus(`Signed in as ${email}, but access is restricted to ${ADMIN_EMAIL}.`);
-    if (allowed) {
+    if (allowed && !wasAllowed) {
+      // Only run full initialisation when transitioning logged-out → logged-in.
+      // Subsequent auth events (INITIAL_SESSION re-fire, USER_UPDATED, etc.) are
+      // silently ignored so an open editor is never reset.
       setStatus(`Signed in as ${email}.`);
       await loadTabCounts();
       switchSection('events');
