@@ -124,6 +124,8 @@ body{background:#f6efd9}
 .cl-reason__sub{font-size:12px;color:#746b5f;margin-top:1px}
 .cl-modal__acts{display:flex;gap:10px;justify-content:flex-end;margin-top:16px}
 @media(max-width:600px){.sub-row__acts{flex-direction:column;align-items:flex-start}.sub-row__dates{margin-left:0}}
+.akt-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;font-size:10px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;border-radius:3px;background:#e8f4ff;color:#1a5c8a;border:1px solid #b8d8f0}
+.akt-badge svg{width:10px;height:10px;flex-shrink:0}
 </style>
 </head>
 <body class="font-body text-archive-ink antialiased">
@@ -235,7 +237,12 @@ body{background:#f6efd9}
           <div class="flex flex-col gap-2"><label class="text-sm font-bold text-archive-muted">Native location <span class="text-archive-gold">*</span></label><input class="m-input" name="native_location" required placeholder="e.g. Lucknow, U.P."/></div>
           <div class="flex flex-col gap-2"><label class="text-sm font-bold text-archive-muted">Current location <span class="text-archive-gold">*</span></label><input class="m-input" name="current_location" required placeholder="e.g. Bengaluru, Karnataka"/></div>
         </div>
-        <div class="flex flex-col gap-2"><label class="text-sm font-bold text-archive-muted">apnonkitalash.com profile link <span class="font-normal text-archive-muted">(optional)</span></label><input class="m-input" name="akt_profile_url" type="url" placeholder="https://apnonkitalash.com/profile/your-id"/><span class="text-xs text-archive-muted">Providing this helps admins verify your community membership faster.</span></div>
+        <div class="flex flex-col gap-2">
+          <label class="text-sm font-bold text-archive-muted">Your apnonkitalash.com profile link <span class="font-normal text-archive-muted">(optional)</span></label>
+          <input class="m-input" name="akt_profile_url" type="url" placeholder="https://apnonkitalash.com/profile/your-id"/>
+          <span class="text-xs text-archive-muted">Providing this helps admins verify your community membership faster. Your listing will display an <strong>AKT Verified ✓</strong> badge.</span>
+          <a href="https://apnonkitalash.com" target="_blank" rel="noopener" class="self-start text-xs font-bold text-archive-gold underline underline-offset-2 hover:text-archive-green transition-colors">Don't have one? Create your profile on apnonkitalash.com →</a>
+        </div>
         <hr class="border-archive-line my-1"/>
         <label class="flex items-start gap-3 text-sm leading-6 text-archive-muted"><input type="checkbox" name="confirmed" required class="mt-1 h-5 w-5 shrink-0 accent-archive-green"/> I confirm I belong to the <strong class="text-archive-ink mx-1">Iraqi Biradari</strong> and not to any other community, and that any information I submit is truthful and shared with the consent of the candidate and family.</label>
         <p id="consent-err" class="hidden text-xs font-bold text-red-700"></p>
@@ -337,7 +344,12 @@ body{background:#f6efd9}
           <div class="flex flex-col gap-2"><label class="text-sm font-bold text-archive-muted">Contact person <span class="text-archive-gold">*</span></label><input class="m-input" name="contact_person_name" required placeholder="Guardian / point of contact"/></div>
           <div class="flex flex-col gap-2"><label class="text-sm font-bold text-archive-muted">Relationship to candidate</label><select class="m-input" name="relationship_to_candidate"><option value="">Select</option><option>Self</option><option>Father</option><option>Mother</option><option>Brother</option><option>Sister</option><option>Uncle / Aunt</option><option>Cousin</option><option>Other</option></select></div>
           <div class="flex flex-col gap-2"><label class="text-sm font-bold text-archive-muted">WhatsApp / phone <span class="text-archive-gold">*</span></label><input class="m-input" name="phone_whatsapp" required placeholder="+91 9876543210"/></div>
-          <div class="flex flex-col gap-2"><label class="text-sm font-bold text-archive-muted">apnonkitalash.com profile link</label><input class="m-input" name="akt_profile_url" type="url" placeholder="https://apnonkitalash.com/profile/…"/></div>
+          <div class="flex flex-col gap-2">
+            <label class="text-sm font-bold text-archive-muted">Candidate's apnonkitalash.com profile link</label>
+            <input class="m-input" name="akt_profile_url" type="url" placeholder="https://apnonkitalash.com/profile/…"/>
+            <span class="text-xs text-archive-muted">If provided, the listing shows an <strong>AKT Verified ✓</strong> badge.</span>
+            <a href="https://apnonkitalash.com" target="_blank" rel="noopener" class="self-start text-xs font-bold text-archive-gold underline underline-offset-2 hover:text-archive-green transition-colors">No profile yet? Create one on apnonkitalash.com →</a>
+          </div>
         </div>
       </div>
       <div class="m-fsec"><p class="m-fsec__h">Photograph (optional)</p>

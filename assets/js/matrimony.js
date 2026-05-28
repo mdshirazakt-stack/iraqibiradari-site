@@ -687,7 +687,7 @@ async function openBrowse() {
 
     const { data, error } = await withTimeout(
       supabase.from('matrimony_profiles')
-        .select('id,initials,candidate_gender,marital_status,education,profession,native_location,current_location,dob,contact_person_name,relationship_to_candidate')
+        .select('id,initials,candidate_gender,marital_status,education,profession,native_location,current_location,dob,contact_person_name,relationship_to_candidate,akt_profile_url')
         .eq('status', 'approved')
         .order('created_at', { ascending: false })
     );
@@ -730,12 +730,14 @@ function renderBrowseGrid() {
   }
 
   if (browseGrid) browseGrid.innerHTML = list.map(c => {
-    const initials = c.initials || (c.candidate_gender === 'Male' ? 'M' : 'F');
-    const ms       = c.marital_status || 'fresh';
-    const badgeTxt = cap(ms);
-    const edu      = (c.education || '').split(',')[0].split('(')[0].trim();
-    const ageStr   = c.age ? `, ${c.age}` : '';
-    const rel      = c.relationship_to_candidate || c.contact_person_name ? (c.relationship_to_candidate || 'Contact') : '';
+    const initials  = c.initials || (c.candidate_gender === 'Male' ? 'M' : 'F');
+    const ms        = c.marital_status || 'fresh';
+    const badgeTxt  = cap(ms);
+    const edu       = (c.education || '').split(',')[0].split('(')[0].trim();
+    const ageStr    = c.age ? `, ${c.age}` : '';
+    const rel       = c.relationship_to_candidate || c.contact_person_name ? (c.relationship_to_candidate || 'Contact') : '';
+    const aktVerified = !!c.akt_profile_url;
+    const aktBadge  = aktVerified ? `<span class="akt-badge"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5l2 2 4-4"/></svg>AKT Verified</span>` : '';
     const infoRows = [
       edu ? `<div class="cand-inforow"><dt>Education</dt><dd>${esc(edu)}</dd></div>` : '',
       rel ? `<div class="cand-inforow"><dt>Submitted by</dt><dd>${esc(rel)} · Verified</dd></div>` : '',
@@ -744,7 +746,10 @@ function renderBrowseGrid() {
     <button class="cand-card" onclick="window.__openDetail('${esc(c.id)}')">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
         <div class="cand-av">${esc(initials)}</div>
-        <span class="cand-badge cand-badge-${esc(ms)}">${badgeTxt}</span>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+          <span class="cand-badge cand-badge-${esc(ms)}">${badgeTxt}</span>
+          ${aktBadge}
+        </div>
       </div>
       <div style="margin-top:12px">
         <div style="font-family:'Amiri',serif;font-size:19px;font-weight:700;color:#1f3a2a;line-height:1.2">${esc(initials)} · ${esc(c.candidate_gender || '')}${ageStr}</div>
@@ -803,6 +808,7 @@ async function loadDetail(profileId) {
         ${c.profession ? `<p class="mt-1 text-archive-paper/80">${esc(c.profession)}</p>` : ''}
         <div class="mt-3 flex items-center gap-3 flex-wrap">
           <span class="${badgeCls}">${badgeTxt}</span>
+          ${c.akt_profile_url ? `<a href="${esc(c.akt_profile_url)}" target="_blank" rel="noopener" class="akt-badge" style="text-decoration:none"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:10px;height:10px"><path d="M2 5l2 2 4-4"/></svg>AKT Verified</a>` : ''}
           ${c.current_location ? `<span class="text-sm text-archive-paper/60">${esc(c.current_location)}</span>` : ''}
         </div>
       </div>
