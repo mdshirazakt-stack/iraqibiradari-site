@@ -24,8 +24,8 @@ const GROUPS = [
   },
   { label: 'Organizations', href: '/organizations/' },
   { label: 'Matrimony', href: '/matrimony/' },
-  { label: 'Helpdesk', href: '/helpdesk/' },
   { label: 'Support Us', href: '/contact/' },
+  { label: 'Helpdesk', href: '/helpdesk/' },
 ];
 
 function isActive(href) {
