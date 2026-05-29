@@ -286,8 +286,8 @@ body{background:#f6efd9}
           <p class="text-xs font-black uppercase tracking-[.14em] text-archive-gold mb-2">Policy Agreement Required</p>
           <p class="text-xs">Before continuing, please read our <a href="/matrimony/policy/" target="_blank" rel="noopener" class="font-bold text-archive-green underline decoration-archive-gold underline-offset-2">Matrimony Service Policy</a> — it covers accuracy of information, code of conduct, privacy, limitation of liability, and the community welfare disclaimer.</p>
         </div>
-        <label class="flex items-start gap-3 text-sm leading-6 text-archive-muted"><input type="checkbox" name="policy_agreed" required class="mt-1 h-5 w-5 shrink-0 accent-archive-green"/> I confirm that all information submitted by me is true and accurate to the best of my knowledge. I understand that this platform acts only as a facilitator and I remain solely responsible for independently verifying all matrimonial information and proposals. I agree to the <a href="/matrimony/policy/" target="_blank" rel="noopener" class="font-bold text-archive-green underline decoration-archive-gold underline-offset-2">Matrimony Service Policy</a>, Code of Conduct, and Limitation of Liability.</label>
-        <label class="flex items-start gap-3 text-sm leading-6 text-archive-muted"><input type="checkbox" name="confirmed" required class="mt-1 h-5 w-5 shrink-0 accent-archive-green"/> I confirm I belong to the <strong class="text-archive-ink mx-1">Iraqi Biradari</strong> and not to any other community, and that any information I submit is truthful and shared with the consent of the candidate and family.</label>
+        <label class="flex items-start gap-3 text-sm leading-6 text-archive-muted"><input type="checkbox" name="policy_agreed" required class="mt-1 h-5 w-5 shrink-0 accent-archive-green"/><span>I confirm that all information submitted by me is true and accurate to the best of my knowledge. I understand that this platform acts only as a facilitator and I remain solely responsible for independently verifying all matrimonial information and proposals. I agree to the <a href="/matrimony/policy/" target="_blank" rel="noopener" class="font-bold text-archive-green underline decoration-archive-gold underline-offset-2">Matrimony Service Policy</a>, Code of Conduct, and Limitation of Liability.</span></label>
+        <label class="flex items-start gap-3 text-sm leading-6 text-archive-muted"><input type="checkbox" name="confirmed" required class="mt-1 h-5 w-5 shrink-0 accent-archive-green"/><span>I confirm I belong to the <strong class="text-archive-ink">Iraqi Biradari</strong> and not to any other community, and that any information I submit is truthful and shared with the consent of the candidate and family.</span></label>
         <p id="consent-err" class="hidden text-xs font-bold text-red-700"></p>
         <button type="submit" class="m-btn m-btn-primary self-start">Continue to next step →</button>
       </form>
@@ -344,7 +344,7 @@ body{background:#f6efd9}
         <form id="policy-gate-form" class="flex flex-col gap-4">
           <label class="flex items-start gap-3 text-sm leading-6 text-archive-muted">
             <input id="policy-gate-check" type="checkbox" name="policy_agreed" required class="mt-1 h-5 w-5 shrink-0 accent-archive-green"/>
-            I confirm that all information submitted by me is true and accurate to the best of my knowledge. I understand that this platform acts only as a facilitator and I remain solely responsible for independently verifying all matrimonial information and proposals. I agree to the <a href="/matrimony/policy/" target="_blank" rel="noopener" class="font-bold text-archive-green underline decoration-archive-gold underline-offset-2">Matrimony Service Policy</a>, Code of Conduct, and Limitation of Liability.
+            <span>I confirm that all information submitted by me is true and accurate to the best of my knowledge. I understand that this platform acts only as a facilitator and I remain solely responsible for independently verifying all matrimonial information and proposals. I agree to the <a href="/matrimony/policy/" target="_blank" rel="noopener" class="font-bold text-archive-green underline decoration-archive-gold underline-offset-2">Matrimony Service Policy</a>, Code of Conduct, and Limitation of Liability.</span>
           </label>
           <p id="policy-gate-err" class="hidden text-xs font-bold text-red-700"></p>
           <button id="policy-gate-submit" type="submit" disabled class="m-btn m-btn-primary self-start opacity-40 cursor-not-allowed">I agree — continue to dashboard →</button>
@@ -455,7 +455,7 @@ body{background:#f6efd9}
         <div class="flex flex-col gap-2"><label class="text-sm font-bold text-archive-muted">Private photo link</label><input class="m-input" name="photo_url" type="url" placeholder="Private Google Drive / iCloud view-only link"/><span class="text-xs text-archive-muted">Not shown publicly — visible only in admin review.</span></div>
       </div>
       <hr class="border-archive-line"/>
-      <label class="flex items-start gap-3 text-sm leading-6 text-archive-muted"><input type="checkbox" name="consent" required class="mt-1 h-5 w-5 shrink-0 accent-archive-green"/> I confirm I have the candidate's and family's consent to share these details with the Iraqi Biradari coordination team.</label>
+      <label class="flex items-start gap-3 text-sm leading-6 text-archive-muted"><input type="checkbox" name="consent" required class="mt-1 h-5 w-5 shrink-0 accent-archive-green"/><span>I confirm I have the candidate's and family's consent to share these details with the Iraqi Biradari coordination team.</span></label>
       <p id="cand-err" class="hidden text-xs font-bold text-red-700"></p>
       <p id="cand-ok"  class="hidden text-xs font-bold text-green-700"></p>
       <div class="flex gap-3 flex-wrap">
@@ -495,7 +495,7 @@ body{background:#f6efd9}
         <div class="flex flex-col gap-2"><label class="text-sm font-bold text-archive-muted">Other preferences or notes</label><textarea class="m-input" name="notes" rows="4" placeholder="Family traditions, must-haves, things to know about your family…"></textarea></div>
       </div>
       <hr class="border-archive-line"/>
-      <label class="flex items-start gap-3 text-sm leading-6 text-archive-muted"><input type="checkbox" name="consent" required class="mt-1 h-5 w-5 shrink-0 accent-archive-green"/> I understand the coordination team uses this only to suggest reciprocal matches and does not publish it.</label>
+      <label class="flex items-start gap-3 text-sm leading-6 text-archive-muted"><input type="checkbox" name="consent" required class="mt-1 h-5 w-5 shrink-0 accent-archive-green"/><span>I understand the coordination team uses this only to suggest reciprocal matches and does not publish it.</span></label>
       <p id="req-err" class="hidden text-xs font-bold text-red-700"></p>
       <p id="req-ok"  class="hidden text-xs font-bold text-green-700"></p>
       <div class="flex gap-3 flex-wrap">
