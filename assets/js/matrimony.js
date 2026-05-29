@@ -101,12 +101,36 @@ function validateMobile(showErr = true) {
   const hint    = opt?.dataset.hint || 'valid digits';
 
   // update hint text whenever country changes
-  if (mobileHint) mobileHint.textContent = `Digits only — no spaces or dashes. ${cc}: ${hint}.`;
+  if (!cc) {
+    if (mobileHint) mobileHint.textContent = 'Enter your full number including country code (e.g. +33612345678).';
+    if (mobileNum)  mobileNum.placeholder  = '+33612345678';
+  } else {
+    if (mobileHint) mobileHint.textContent = `Digits only — no spaces or dashes. ${cc}: ${hint}.`;
+    if (mobileNum)  mobileNum.placeholder  = hint.match(/(\d+) digit/)?.[1] === '10' ? '9876543210' : '5XXXXXXXX';
+  }
 
   if (!num) {
     if (mobileErr) mobileErr.classList.add('hidden');
     if (mobileHidden) mobileHidden.value = '';
     return false;
+  }
+
+  // "Other country" — no regex, accept any 6–15 digit string as-is
+  if (!cc) {
+    const digitsOnly = num.replace(/\D/g, '');
+    const ok = digitsOnly.length >= 6 && digitsOnly.length <= 15;
+    if (ok) {
+      if (mobileErr) mobileErr.classList.add('hidden');
+      if (mobileHidden) mobileHidden.value = num; // store as typed (user includes own code)
+      return true;
+    } else {
+      if (showErr && mobileErr) {
+        mobileErr.textContent = 'Please enter your full number including country code (6–15 digits).';
+        mobileErr.classList.remove('hidden');
+      }
+      if (mobileHidden) mobileHidden.value = '';
+      return false;
+    }
   }
 
   const ok = pattern ? new RegExp(pattern).test(num) : num.length >= 6;
