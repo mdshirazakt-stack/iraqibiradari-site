@@ -240,7 +240,32 @@ body{background:#f6efd9}
     <div class="mt-10 grid gap-8 lg:grid-cols-[1fr_300px]">
       <form id="consent-form" class="flex flex-col gap-5 border border-archive-line bg-white p-8 shadow-soft">
         <div class="flex flex-col gap-2"><label class="text-sm font-bold text-archive-muted">Full name <span class="text-archive-gold">*</span></label><input class="m-input" id="consent-name" name="full_name" required placeholder="As on Aadhaar / passport"/></div>
-        <div class="flex flex-col gap-2"><label class="text-sm font-bold text-archive-muted">Mobile number <span class="text-archive-gold">*</span></label><input class="m-input" name="mobile" required placeholder="+91 9876543210" type="tel"/><span class="text-xs text-archive-muted">May be used by the coordination team for follow-up.</span></div>
+        <div class="flex flex-col gap-2">
+          <label class="text-sm font-bold text-archive-muted">Mobile number <span class="text-archive-gold">*</span></label>
+          <div class="flex gap-2">
+            <select id="mobile-cc" class="m-input" style="width:172px;flex-shrink:0">
+              <option value="+91"  data-pattern="^[6-9]\d{9}$"   data-hint="10 digits, starts with 6–9"  selected>🇮🇳 +91 India</option>
+              <option value="+964" data-pattern="^7[3-9]\d{8}$"  data-hint="10 digits, starts with 7"   >🇮🇶 +964 Iraq</option>
+              <option value="+971" data-pattern="^5\d{8}$"       data-hint="9 digits, starts with 5"    >🇦🇪 +971 UAE</option>
+              <option value="+966" data-pattern="^5\d{8}$"       data-hint="9 digits, starts with 5"    >🇸🇦 +966 Saudi Arabia</option>
+              <option value="+965" data-pattern="^[569]\d{7}$"   data-hint="8 digits"                   >🇰🇼 +965 Kuwait</option>
+              <option value="+974" data-pattern="^[3-7]\d{7}$"   data-hint="8 digits"                   >🇶🇦 +974 Qatar</option>
+              <option value="+973" data-pattern="^[3-6]\d{7}$"   data-hint="8 digits"                   >🇧🇭 +973 Bahrain</option>
+              <option value="+968" data-pattern="^[79]\d{7}$"    data-hint="8 digits"                   >🇴🇲 +968 Oman</option>
+              <option value="+44"  data-pattern="^7\d{9}$"       data-hint="10 digits, starts with 7"   >🇬🇧 +44 UK</option>
+              <option value="+1"   data-pattern="^[2-9]\d{9}$"   data-hint="10 digits"                  >🇺🇸 +1 USA / Canada</option>
+              <option value="+61"  data-pattern="^4\d{8}$"       data-hint="9 digits, starts with 4"    >🇦🇺 +61 Australia</option>
+              <option value="+49"  data-pattern="^\d{10,11}$"    data-hint="10–11 digits"               >🇩🇪 +49 Germany</option>
+              <option value="+92"  data-pattern="^3\d{9}$"       data-hint="10 digits, starts with 3"   >🇵🇰 +92 Pakistan</option>
+            </select>
+            <input id="mobile-num" class="m-input" style="flex:1;min-width:0" type="tel" inputmode="numeric" placeholder="9876543210" autocomplete="tel-national"/>
+          </div>
+          <!-- hidden field carries the combined value that matrimony.js reads via FormData -->
+          <input type="hidden" name="mobile" id="mobile-hidden"/>
+          <p id="mobile-hint" class="text-xs text-archive-muted">Digits only — no spaces or dashes. India: 10 digits starting with 6–9.</p>
+          <p id="mobile-err"  class="hidden text-xs font-bold text-red-600"></p>
+          <span class="text-xs text-archive-muted">May be used by the coordination team for follow-up.</span>
+        </div>
         <div class="grid gap-5 md:grid-cols-2">
           <div class="flex flex-col gap-2"><label class="text-sm font-bold text-archive-muted">Native location <span class="text-archive-gold">*</span></label><input class="m-input" name="native_location" required placeholder="e.g. Lucknow, U.P."/></div>
           <div class="flex flex-col gap-2"><label class="text-sm font-bold text-archive-muted">Current location <span class="text-archive-gold">*</span></label><input class="m-input" name="current_location" required placeholder="e.g. Bengaluru, Karnataka"/></div>

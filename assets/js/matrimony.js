@@ -28,6 +28,13 @@ const consentForm    = document.getElementById('consent-form');
 const consentSignedAs= document.getElementById('consent-signed-as');
 const consentErr     = document.getElementById('consent-err');
 
+// mobile number combo (consent form)
+const mobileCC     = document.getElementById('mobile-cc');
+const mobileNum    = document.getElementById('mobile-num');
+const mobileHidden = document.getElementById('mobile-hidden');
+const mobileHint   = document.getElementById('mobile-hint');
+const mobileErr    = document.getElementById('mobile-err');
+
 // gate
 const gateFirstname  = document.getElementById('gate-firstname');
 const gateCardCand   = document.getElementById('gate-card-cand');
@@ -82,6 +89,45 @@ async function logActivity(event_type, meta = {}) {
       meta: Object.keys(meta).length ? meta : null,
     });
   } catch (_) { /* never block UX */ }
+}
+
+// ── Mobile number validation ───────────────────────────────────────────────────
+function validateMobile(showErr = true) {
+  if (!mobileCC || !mobileNum) return true; // elements not present — skip
+  const cc  = mobileCC.value;
+  const num = mobileNum.value.replace(/[\s\-().]/g, '');
+  const opt = mobileCC.options[mobileCC.selectedIndex];
+  const pattern = opt?.dataset.pattern;
+  const hint    = opt?.dataset.hint || 'valid digits';
+
+  // update hint text whenever country changes
+  if (mobileHint) mobileHint.textContent = `Digits only — no spaces or dashes. ${cc}: ${hint}.`;
+
+  if (!num) {
+    if (mobileErr) mobileErr.classList.add('hidden');
+    if (mobileHidden) mobileHidden.value = '';
+    return false;
+  }
+
+  const ok = pattern ? new RegExp(pattern).test(num) : num.length >= 6;
+  if (ok) {
+    if (mobileErr) mobileErr.classList.add('hidden');
+    if (mobileHidden) mobileHidden.value = cc + num;
+    return true;
+  } else {
+    if (showErr && mobileErr) {
+      mobileErr.textContent = `Invalid number for ${cc} — expected: ${hint}.`;
+      mobileErr.classList.remove('hidden');
+    }
+    if (mobileHidden) mobileHidden.value = '';
+    return false;
+  }
+}
+
+if (mobileCC)  { mobileCC.addEventListener('change', () => validateMobile(false)); }
+if (mobileNum) {
+  mobileNum.addEventListener('input', () => validateMobile(false));
+  mobileNum.addEventListener('blur',  () => validateMobile(true));
 }
 
 // data-go routing (event delegation)
@@ -605,9 +651,16 @@ async function doReopen(kind, id) {
 consentForm?.addEventListener('submit', async e => {
   e.preventDefault();
   const btn = consentForm.querySelector('button[type="submit"]');
+  if (consentErr) consentErr.classList.add('hidden');
+
+  // Validate mobile before anything else
+  if (!validateMobile(true)) {
+    if (mobileNum) mobileNum.focus();
+    return;
+  }
+
   const data = new FormData(consentForm);
   btn.disabled = true; btn.textContent = 'Saving…';
-  if (consentErr) consentErr.classList.add('hidden');
 
   const payload = {
     user_id:           currentUser.id,
