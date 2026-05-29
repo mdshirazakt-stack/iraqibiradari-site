@@ -77,7 +77,7 @@ let subs = { candidates: [], requirement: null };
 let browseData = [], browseFilter = 'all';
 let shortlistedIds = new Set();
 
-const POLICY_VERSION = '2025-v1';
+const POLICY_VERSION = 'May2026-v1';
 
 // ── Bootstrap ──────────────────────────────────────────────────────────────────
 supabase = await createSupabaseClient();
