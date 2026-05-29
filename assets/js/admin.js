@@ -1146,6 +1146,9 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
           <p class="text-sm text-archive-muted">${data.length} member${data.length !== 1 ? 's' : ''} have agreed to the Matrimony Service Policy.</p>
         </div>
         <div class="border border-archive-line bg-white overflow-hidden">
+          <div class="border-b border-archive-line bg-archive-paper/50 px-5 py-3 grid grid-cols-[1fr_1fr_auto_auto] gap-4 text-[10px] font-black uppercase tracking-[.12em] text-archive-gold">
+            <span>Name / Email</span><span>Location</span><span>Policy Version</span><span>Agreed At</span>
+          </div>
           ${data.map(consentRow).join('')}
         </div>`;
       return;
@@ -1193,18 +1196,16 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
     const agreedAt = row.policy_agreed_at
       ? new Date(row.policy_agreed_at).toLocaleString('en-IN', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true })
       : '—';
-    const parts = [
-      row.user_email  || null,
-      row.mobile      ? `📱 ${row.mobile}` : null,
-      row.native_location && row.current_location ? `${row.native_location} → ${row.current_location}` : (row.native_location || row.current_location || null),
-    ].filter(Boolean).join(' · ');
-    return `<div class="px-5 py-4 border-b border-archive-line/60 last:border-b-0 hover:bg-archive-paper/30 transition-colors">
-      <p class="text-sm leading-6 text-archive-ink">
-        <strong class="text-archive-green">${escapeHtml(row.full_name || '—')}</strong>
-        agreed to the <span class="font-bold">${escapeHtml(row.policy_version || 'Matrimony Service Policy')}</span>
-        on <span class="font-bold">${agreedAt}</span>.
-      </p>
-      ${parts ? `<p class="mt-0.5 text-xs text-archive-muted">${escapeHtml(parts)}</p>` : ''}
+    const location = [row.native_location, row.current_location].filter(Boolean).join(' → ') || '—';
+    return `<div class="grid grid-cols-[1fr_1fr_auto_auto] gap-4 items-start px-5 py-4 border-b border-archive-line/60 last:border-b-0 hover:bg-archive-paper/30 transition-colors">
+      <div class="min-w-0">
+        <p class="font-bold text-archive-green text-sm truncate">${escapeHtml(row.full_name || '—')}</p>
+        <p class="text-xs text-archive-muted truncate mt-0.5">${escapeHtml(row.user_email || '—')}</p>
+        ${row.mobile ? `<p class="text-xs text-archive-muted/70 mt-0.5">${escapeHtml(row.mobile)}</p>` : ''}
+      </div>
+      <p class="text-xs text-archive-muted leading-5">${escapeHtml(location)}</p>
+      <span class="inline-block rounded-full bg-green-50 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-green-700 whitespace-nowrap">${escapeHtml(row.policy_version || '—')}</span>
+      <p class="text-[11px] text-archive-muted/70 whitespace-nowrap text-right">${agreedAt}</p>
     </div>`;
   }
 
