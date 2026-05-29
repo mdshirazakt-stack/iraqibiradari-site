@@ -329,7 +329,7 @@ policyGateForm?.addEventListener('submit', async e => {
   const now = new Date().toISOString();
   const { error } = await supabase
     .from('matrimony_members')
-    .update({ policy_agreed_at: now, policy_version: POLICY_VERSION })
+    .update({ policy_agreed_at: now, policy_version: POLICY_VERSION, user_email: currentUser.email })
     .eq('user_id', currentUser.id);
 
   btn.disabled = false; btn.textContent = 'I agree — continue to dashboard →';
@@ -723,6 +723,7 @@ consentForm?.addEventListener('submit', async e => {
 
   const payload = {
     user_id:           currentUser.id,
+    user_email:        currentUser.email,
     full_name:         str(data, 'full_name'),
     mobile:            str(data, 'mobile'),
     native_location:   str(data, 'native_location'),
