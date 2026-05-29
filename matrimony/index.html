@@ -312,12 +312,20 @@ body{background:#f6efd9}
 
         <form id="policy-gate-form" class="flex flex-col gap-4">
           <label class="flex items-start gap-3 text-sm leading-6 text-archive-muted">
-            <input type="checkbox" name="policy_agreed" required class="mt-1 h-5 w-5 shrink-0 accent-archive-green"/>
+            <input id="policy-gate-check" type="checkbox" name="policy_agreed" required class="mt-1 h-5 w-5 shrink-0 accent-archive-green"/>
             I confirm that all information submitted by me is true and accurate to the best of my knowledge. I understand that this platform acts only as a facilitator and I remain solely responsible for independently verifying all matrimonial information and proposals. I agree to the <a href="/matrimony/policy/" target="_blank" rel="noopener" class="font-bold text-archive-green underline decoration-archive-gold underline-offset-2">Matrimony Service Policy</a>, Code of Conduct, and Limitation of Liability.
           </label>
           <p id="policy-gate-err" class="hidden text-xs font-bold text-red-700"></p>
-          <button type="submit" class="m-btn m-btn-primary self-start">I agree — continue to dashboard →</button>
+          <button id="policy-gate-submit" type="submit" disabled class="m-btn m-btn-primary self-start opacity-40 cursor-not-allowed">I agree — continue to dashboard →</button>
         </form>
+        <script>
+          document.getElementById('policy-gate-check')?.addEventListener('change', function() {
+            const btn = document.getElementById('policy-gate-submit');
+            btn.disabled = !this.checked;
+            btn.classList.toggle('opacity-40', !this.checked);
+            btn.classList.toggle('cursor-not-allowed', !this.checked);
+          });
+        </script>
 
       </div>
     </div>
