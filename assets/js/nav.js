@@ -23,7 +23,7 @@ const GROUPS = [
     ],
   },
   { label: 'Organizations', href: '/organizations/' },
-  { label: 'Matrimony', href: '/matrimony/', badge: 'NEW' },
+  { label: 'Matrimony', href: '/matrimony/' },
   { label: 'Support Us', href: '/contact/' },
 ];
 
