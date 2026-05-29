@@ -45,7 +45,7 @@ const CLOSE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" 
 
 function desktopItem(item) {
   const on = groupActive(item);
-  const base = 'text-xs font-black uppercase tracking-[0.12em] transition-colors';
+  const base = 'text-xs font-black uppercase tracking-[0.09em] transition-colors';
   const color = on ? 'text-archive-green' : 'text-archive-muted hover:text-archive-green';
 
   if (item.children) {
@@ -55,7 +55,7 @@ function desktopItem(item) {
       return `<a href="${c.href}"${ext} role="menuitem" class="block px-4 py-3 text-xs font-black uppercase tracking-[0.1em] transition-colors hover:bg-archive-cream hover:text-archive-green${ca ? ' bg-archive-cream text-archive-green' : ' text-archive-muted'}">${c.label}</a>`;
     }).join('');
     return `<div class="relative" data-desktop-group>
-      <button type="button" data-group-btn class="flex items-center gap-1 rounded px-3 py-2 ${base} ${color}" aria-haspopup="true" aria-expanded="false">${item.label}${CHEVRON}</button>
+      <button type="button" data-group-btn class="flex items-center gap-1 rounded px-2 py-2 ${base} ${color}" aria-haspopup="true" aria-expanded="false">${item.label}${CHEVRON}</button>
       <div data-dropdown role="menu" style="display:none;position:absolute;right:0;top:100%;z-index:50;margin-top:4px;min-width:200px;background:#fff;border:1px solid #ded2bc;padding:4px 0;box-shadow:0 18px 45px rgba(32,28,23,.12)">${links}</div>
     </div>`;
   }
@@ -64,7 +64,7 @@ function desktopItem(item) {
   const labelHtml = item.badge
     ? `<span style="position:relative;display:inline-block"><span style="position:absolute;top:-9px;left:50%;transform:translateX(-50%);white-space:nowrap;padding:1px 5px;border-radius:999px;font-size:8px;font-weight:900;letter-spacing:.06em;background:#b99045;color:#fff;line-height:1.7;pointer-events:none">${item.badge}</span>${item.label}</span>`
     : item.label;
-  return `<a href="${item.href}"${ext} class="rounded px-3 pt-4 pb-2 ${base} ${color}">${labelHtml}</a>`;
+  return `<a href="${item.href}"${ext} class="rounded px-2 py-2 ${base} ${color}">${labelHtml}</a>`;
 }
 
 function mobileItem(item) {
@@ -100,7 +100,7 @@ function inject() {
     <div class="bg-archive-maroon text-archive-cream">
       <div class="mx-auto flex min-h-11 w-[min(1120px,calc(100%-36px))] flex-col justify-center gap-1 py-2 text-sm md:flex-row md:items-center md:justify-between md:gap-6">
         <p id="event-ribbon" class="font-bold">Upcoming Events: No upcoming events. Keep a watch.</p>
-        <a class="shrink-0 font-bold" href="tel:+918789034923">+91 87890 34923</a>
+        <a class="shrink-0 font-bold" href="tel:+919818555830">+91 98185 55830</a>
       </div>
     </div>
 
