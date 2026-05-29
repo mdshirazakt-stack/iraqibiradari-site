@@ -425,6 +425,7 @@ Heritage ▾
   └─ Announcements
 Organizations
 Matrimony          ← was "Connect" dropdown, now direct link
+Directory          ← PLANNED — not yet live, to be restored in next phase
 Support Us
 ```
 
@@ -454,10 +455,22 @@ Support Us
 3. Run the email backfill SQL above after step 1.
 
 ### Features not yet built
+
+#### Directory (next phase — priority)
+- The Directory was previously under the "Connect" dropdown alongside Matrimony.
+- When Matrimony was promoted to a top-level nav item, Directory was removed from the nav and deferred.
+- **Directory needs to be brought back** as its own top-level section (`/directory/`).
+- Suggested scope:
+  - Searchable listing of community members (name, city, profession, contact).
+  - Public-facing with optional login gate for contact details.
+  - Admin CRUD to manage and approve directory entries.
+  - Separate Supabase table (`directory_members` or similar).
+  - Nav entry to be added back alongside Matrimony once ready.
+
+#### Other pending features
 - Admin delete button for matrimony records (currently only status change).
 - Email notification to admin when a new matrimony submission arrives.
 - Matrimony coordinator assignment workflow (`assigned_to`, `follow_up_date`).
-- Directory section (was in "Connect" dropdown, deferred to next phase).
 - Admin export of matrimony records (CSV/PDF).
 - Rate limiting / CAPTCHA for matrimony submission.
 
