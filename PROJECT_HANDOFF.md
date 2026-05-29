@@ -28,6 +28,7 @@
 | Announcements | `announcements/index.html` |
 | Matrimony | `matrimony/index.html` |
 | Matrimony Service Policy | `matrimony/policy/index.html` |
+| Helpdesk / FAQ | `helpdesk/index.html` |
 | Admin panel | `admin/index.html` |
 | Nav component | `assets/js/nav.js` |
 | Supabase credentials | `assets/js/supabase-config.js` |
@@ -426,6 +427,7 @@ Heritage ▾
 Organizations
 Matrimony          ← was "Connect" dropdown, now direct link
 Directory          ← PLANNED — not yet live, to be restored in next phase
+Helpdesk           ← FAQ and guidance page at /helpdesk/
 Support Us
 ```
 

@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Helpdesk — Iraqi Biradari</title>
+<meta name="description" content="Guidance and FAQs on how to use Iraqi Biradari — for individuals, organisations, and matrimonial services. Includes a step-by-step guide to building your AKT profile."/>
+<link rel="icon" href="/iraqi_biradari_favicon.ico" sizes="any"/>
+<link rel="icon" type="image/png" sizes="32x32" href="/iraqi_biradari_favicon_32x32.png"/>
+<link rel="icon" type="image/png" sizes="16x16" href="/iraqi_biradari_favicon_16x16.png"/>
+<link rel="apple-touch-icon" href="/Iraquibiradari-final-logo-2.png"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config={theme:{extend:{colors:{archive:{cream:'#fbf7ed',paper:'#f3ead8',green:'#173f31',gold:'#b99045',goldSoft:'#ead7a2',ink:'#201c17',muted:'#746b5f',line:'#ded2bc',maroon:'#743a32'}},fontFamily:{body:['Lato','Arial','sans-serif'],display:['Amiri','serif']},boxShadow:{soft:'0 18px 45px rgba(32,28,23,.12)'}}}};</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet"/>
+<style>
+  /* ── Accordion ─────────────────────────────────────────────────────── */
+  .faq-item { border-bottom: 1px solid #ded2bc; }
+  .faq-btn  { display:flex; width:100%; align-items:center; justify-content:space-between;
+              gap:1rem; padding:1.1rem 0; text-align:left; background:transparent; border:none;
+              cursor:pointer; font-family:'Lato',Arial,sans-serif; font-size:.9375rem;
+              font-weight:700; color:#201c17; line-height:1.5; }
+  .faq-btn:hover { color:#173f31; }
+  .faq-chevron { flex-shrink:0; width:18px; height:18px; color:#b99045; transition:transform .22s; }
+  .faq-btn[aria-expanded="true"] .faq-chevron { transform:rotate(180deg); }
+  .faq-body  { display:none; padding-bottom:1.1rem; color:#746b5f; font-size:.9rem;
+               line-height:1.8; }
+  .faq-body.open { display:block; }
+  .faq-body p  { margin-top:.6rem; }
+  .faq-body p:first-child { margin-top:0; }
+  .faq-body ol { list-style:decimal; padding-left:1.5rem; margin-top:.6rem; display:flex; flex-direction:column; gap:.35rem; }
+  .faq-body ul { list-style:none; padding:0; margin-top:.6rem; display:flex; flex-direction:column; gap:.35rem; }
+  .faq-body ul li { padding-left:1.2rem; position:relative; }
+  .faq-body ul li::before { content:"·"; position:absolute; left:0; color:#b99045; font-weight:900; }
+  .faq-body strong { color:#201c17; }
+  .faq-body a { color:#173f31; font-weight:700; text-decoration:underline; text-decoration-color:#b99045; text-underline-offset:3px; }
+  .faq-body a:hover { color:#b99045; }
+  .faq-body .step-box { background:#f3ead8; border-left:3px solid #b99045; padding:.75rem 1rem; margin-top:.75rem; border-radius:0 4px 4px 0; }
+  .faq-body .step-box strong { display:block; font-size:.7rem; font-weight:900; text-transform:uppercase; letter-spacing:.14em; color:#b99045; margin-bottom:.35rem; }
+  .faq-body code { background:#f3ead8; border:1px solid #ded2bc; border-radius:3px; padding:1px 6px; font-size:.82rem; color:#173f31; word-break:break-all; }
+
+  /* ── Section headers ────────────────────────────────────────────────── */
+  .hd-section { scroll-margin-top: 90px; }
+</style>
+</head>
+<body class="bg-archive-cream font-body text-archive-ink">
+
+  <main>
+
+    <!-- ── Hero ── -->
+    <section class="bg-archive-green py-12 md:py-16 text-archive-cream">
+      <div class="mx-auto w-[min(1120px,calc(100%-36px))]">
+        <p class="text-xs font-black uppercase tracking-[0.18em] text-archive-goldSoft">Helpdesk</p>
+        <h1 class="mt-3 max-w-3xl font-display text-4xl font-bold leading-tight text-white md:text-5xl">How can we help?</h1>
+        <p class="mt-4 max-w-2xl text-base leading-7 text-archive-paper">Step-by-step guidance on using Iraqi Biradari — for individuals, organisations, and matrimonial services. Includes how to build your profile on Apnon Ki Talash.</p>
+        <!-- Jump links -->
+        <div class="mt-7 flex flex-wrap gap-2">
+          <a href="#general"       class="inline-flex items-center rounded-full border border-archive-goldSoft/50 px-4 py-1.5 text-xs font-black uppercase tracking-[.1em] text-archive-goldSoft hover:bg-archive-goldSoft/20 transition-colors">General</a>
+          <a href="#individuals"   class="inline-flex items-center rounded-full border border-archive-goldSoft/50 px-4 py-1.5 text-xs font-black uppercase tracking-[.1em] text-archive-goldSoft hover:bg-archive-goldSoft/20 transition-colors">For Individuals</a>
+          <a href="#organisations" class="inline-flex items-center rounded-full border border-archive-goldSoft/50 px-4 py-1.5 text-xs font-black uppercase tracking-[.1em] text-archive-goldSoft hover:bg-archive-goldSoft/20 transition-colors">For Organisations</a>
+          <a href="#matrimony"     class="inline-flex items-center rounded-full border border-archive-goldSoft/50 px-4 py-1.5 text-xs font-black uppercase tracking-[.1em] text-archive-goldSoft hover:bg-archive-goldSoft/20 transition-colors">Matrimonial Services</a>
+          <a href="#akt"           class="inline-flex items-center rounded-full border border-archive-goldSoft/50 px-4 py-1.5 text-xs font-black uppercase tracking-[.1em] text-archive-goldSoft hover:bg-archive-goldSoft/20 transition-colors">AKT Profile</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Content ── -->
+    <section class="py-14 md:py-20">
+      <div class="mx-auto w-[min(860px,calc(100%-36px))]">
+
+        <!-- ── GENERAL ──────────────────────────────────────────────── -->
+        <div id="general" class="hd-section">
+          <p class="text-xs font-black uppercase tracking-[.16em] text-archive-gold">Getting Started</p>
+          <h2 class="mt-2 font-display text-3xl font-bold text-archive-green">General</h2>
+          <div class="mt-6 rounded border border-archive-line bg-white">
+
+            <div class="faq-item px-5">
+              <button class="faq-btn" aria-expanded="false">
+                What is Iraqi Biradari?
+                <svg class="faq-chevron" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06z" clip-rule="evenodd"/></svg>
+              </button>
+              <div class="faq-body">
+                <p>Iraqi Biradari is the online heritage and community platform for the Iraqi Biradari community — a distinct Muslim community with roots in Iraq who have settled primarily across North India.</p>
+                <p>The platform brings together community events, organisations, heritage documents, culture stories, achievers, and a private matrimonial service — all in one place at <a href="https://iraqibiradari.com/">iraqibiradari.com</a>.</p>
+              </div>
+            </div>
+
+            <div class="faq-item px-5">
+              <button class="faq-btn" aria-expanded="false">
+                Who is this website for?
+                <svg class="faq-chevron" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06z" clip-rule="evenodd"/></svg>
+              </button>
+              <div class="faq-body">
+                <p>The website is open to everyone, but is primarily intended for:</p>
+                <ul>
+                  <li>Members of the Iraqi Biradari community — individuals and families.</li>
+                  <li>Community organisations that serve Iraqi Biradari members.</li>
+                  <li>Families using the matrimonial service (restricted to verified community members).</li>
+                  <li>Researchers, historians, and those interested in the community's heritage.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="faq-item px-5">
+              <button class="faq-btn" aria-expanded="false">
+                Do I need an account to use this website?
+                <svg class="faq-chevron" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06z" clip-rule="evenodd"/></svg>
+              </button>
+              <div class="faq-body">
+                <p>Most of the website — events, organisations, culture stories, documents, videos — is freely accessible without any account.</p>
+                <p>A <strong>Google account sign-in</strong> is required only for the <a href="/matrimony/">Matrimonial Service</a>, where you will also need to complete a one-time membership verification step.</p>
+              </div>
+            </div>
+
+            <div class="faq-item px-5">
+              <button class="faq-btn" aria-expanded="false">
+                Is there a mobile app?
+                <svg class="faq-chevron" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06z" clip-rule="evenodd"/></svg>
+              </button>
+              <div class="faq-body">
+                <p>There is no standalone mobile app at present. The website is fully responsive and works well on all smartphones and tablets through your mobile browser.</p>
+                <p>On most phones you can add it to your home screen: tap the Share button in your browser and select <strong>"Add to Home Screen"</strong> for a shortcut that feels like an app.</p>
+              </div>
+            </div>
+
+            <div class="faq-item px-5">
+              <button class="faq-btn" aria-expanded="false">
+                How do I report a problem or get help?
+                <svg class="faq-chevron" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06z" clip-rule="evenodd"/></svg>
+              </button>
+              <div class="faq-body">
+                <p>You can reach the webmaster through the following:</p>
+                <ul>
+                  <li>WhatsApp: <a href="https://wa.me/919818555830">+91 98185 55830</a></li>
+                  <li>Webmaster profile: <a href="https://mdshiraz.com/" target="_blank" rel="noopener">mdshiraz.com</a></li>
+                </ul>
+                <p>Please include a brief description of the issue and, if possible, a screenshot.</p>
+              </div>
+            </div>
+
+          </div>
+        </div><!-- /general -->
+
+        <!-- ── FOR INDIVIDUALS ────────────────────────────────────────── -->
+        <div id="individuals" class="hd-section mt-14">
+          <p class="text-xs font-black uppercase tracking-[.16em] text-archive-gold">Individuals</p>
+          <h2 class="mt-2 font-display text-3xl font-bold text-archive-green">For Individuals</h2>
+          <div class="mt-6 rounded border border-archive-line bg-white">
+
+            <div class="faq-item px-5">
+              <button class="faq-btn" aria-expanded="false">
+                What can I do as an individual on this website?
+                <svg class="faq-chevron" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06z" clip-rule="evenodd"/></svg>
+              </button>
+              <div class="faq-body">
+                <p>As an individual, you can:</p>
+                <ul>
+                  <li>Browse community events, organisations, and announcements.</li>
+                  <li>Read heritage documents and watch archived videos.</li>
+                  <li>Submit your own story or achievement to the <a href="/culture/">Our Culture</a> section.</li>
+                  <li>Use the private matrimonial service (requires Google sign-in and membership verification).</li>
+                  <li>Find your family lineage on <a href="https://apnonkitalash.com/" target="_blank" rel="noopener">Apnon Ki Talash</a> — the dedicated Shajra platform.</li>
+                  <li>Volunteer to help run sections of the platform.</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="faq-item px-5">
+              <button class="faq-btn" aria-expanded="false">
+                How do I submit my story or achievement?
+                <svg class="faq-chevron" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06z" clip-rule="evenodd"/></svg>
+              </button>
+              <div class="faq-body">
+                <p>Go to <a href="/culture/submit/">Our Culture — Submit Your Story</a> and fill in the form. You can write about an individual achievement, a community tradition, an ancestral place, or an elder's life story.</p>
+                <p>The form has a rich text editor where you can add text, images, and video embeds. Your submission will be reviewed before being published.</p>
+              </div>
+            </div>
+
+            <div class="faq-item px-5">
+              <button class="faq-btn" aria-expanded="false">
+                How do I find my family tree / Shajra?
+                <svg class="faq-chevron" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06z" clip-rule="evenodd"/></svg>
+              </button>
+              <div class="faq-body">
+                <p>The family tree (Shajra) is maintained on a separate dedicated platform called <strong>Apnon Ki Talash</strong>. Visit <a href="https://apnonkitalash.com/" target="_blank" rel="noopener">apnonkitalash.com</a> and search for your family name.</p>
+                <p>If your family is not listed yet or you need to update existing information, contact the webmaster through WhatsApp at <a href="https://wa.me/919818555830">+91 98185 55830</a>.</p>
+              </div>
+            </div>
+
+            <div class="faq-item px-5">
+              <button class="faq-btn" aria-expanded="false">
+                How do I join the WhatsApp community group?
+                <svg class="faq-chevron" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06z" clip-rule="evenodd"/></svg>
+              </button>
+              <div class="faq-body">
+                <p>Use the link on the <a href="/contact/">Support Us</a> page, or message directly on WhatsApp: <a href="https://wa.me/919818555830">+91 98185 55830</a>.</p>
+              </div>
+            </div>
+
+            <div class="faq-item px-5">
+              <button class="faq-btn" aria-expanded="false">
+                Can I use this website from outside India?
+                <svg class="faq-chevron" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06z" clip-rule="evenodd"/></svg>
+              </button>
+              <div class="faq-body">
+                <p>Yes. The website works from anywhere in the world. The matrimonial service also supports international phone numbers — you can select your country code when registering as a member.</p>
+              </div>
+            </div>
+
+          </div>
+        </div><!-- /individuals -->
+
+        <!-- ── FOR ORGANISATIONS ─────────────────────────────────────── -->
+        <div id="organisations" class="hd-section mt-14">
+          <p class="text-xs font-black uppercase tracking-[.16em] text-archive-gold">Organisations</p>
+          <h2 class="mt-2 font-display text-3xl font-bold text-archive-green">For Organisations</h2>
+          <div class="mt-6 rounded border border-archive-line bg-white">
+
+            <div class="faq-item px-5">
+              <button class="faq-btn" aria-expanded="false">
+                How do I get my organisation listed?
+                <svg class="faq-chevron" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06z" clip-rule="evenodd"/></svg>
+              </button>
+              <div class="faq-body">
+                <p>Fill in the <a href="https://forms.gle/HKKqpmJ3nqnkXyfF6" target="_blank" rel="noopener">Organisation Registration Form</a>. Once reviewed, your organisation will be published in the <a href="/organizations/">Organisations</a> section.</p>
+                <div class="step-box">
+                  <strong>What to prepare</strong>
+                  Organisation name · Type (Welfare / Cultural / Educational / Religious / Other) · Founding year · City · Contact number and email · A brief description · Logo image link (optional, use Google Drive or similar) · Social media links (optional)
+                </div>
+              </div>
+            </div>
+
+            <div class="faq-item px-5">
+              <button class="faq-btn" aria-expanded="false">
+                What types of organisations are listed?
+                <svg class="faq-chevron" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06z" clip-rule="evenodd"/></svg>
+              </button>
+              <div class="faq-body">
+                <p>Any organisation that serves the Iraqi Biradari community can apply for listing. This includes:</p>
+                <ul>
+                  <li>Welfare and charitable trusts</li>
+                  <li>Cultural and heritage bodies</li>
+                  <li>Educational institutions</li>
+                  <li>Mosques and religious institutions</li>
+                  <li>Youth and women's groups</li>
+                  <li>Business associations</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="faq-item px-5">
+              <button class="faq-btn" aria-expanded="false">
+                How long does it take to get listed after submitting?
+                <svg class="faq-chevron" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06z" clip-rule="evenodd"/></svg>
+              </button>
+              <div class="faq-body">
+                <p>There is no fixed turnaround. The platform is managed by volunteers, so review times may vary. If you have not heard back within a week, you are welcome to follow up on WhatsApp at <a href="https://wa.me/919818555830">+91 98185 55830</a>.</p>
+              </div>
+            </div>
+
+            <div class="faq-item px-5">
+              <button class="faq-btn" aria-expanded="false">
+                Can I update or add events for my organisation?
+                <svg class="faq-chevron" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06z" clip-rule="evenodd"/></svg>
+              </button>
+              <div class="faq-body">
+                <p>Currently, updates and event additions are handled by the admin team. Send your event details or update requests to the webmaster via WhatsApp and they will be processed.</p>
+                <p>A self-service portal for organisations is planned for a future release.</p>
+              </div>
+            </div>
+
+          </div>
+        </div><!-- /organisations -->
+
+        <!-- ── MATRIMONIAL SERVICES ───────────────────────────────────── -->
+        <div id="matrimony" class="hd-section mt-14">
+          <p class="text-xs font-black uppercase tracking-[.16em] text-archive-gold">Matrimonial Services</p>
+          <h2 class="mt-2 font-display text-3xl font-bold text-archive-green">Using the Matrimonial Service</h2>
+          <p class="mt-2 text-sm text-archive-muted leading-6">The matrimonial service is a private, moderated platform for verified members of the Iraqi Biradari community only. <a href="/matrimony/policy/" class="font-bold text-archive-green underline decoration-archive-gold underline-offset-2">Read the full Service Policy →</a></p>
+          <div class="mt-5 rounded border border-archive-line bg-white">
+
+            <div class="faq-item px-5">
+              <button class="faq-btn" aria-expanded="false">
+                How do I sign in to the matrimonial service?
+                <svg class="faq-chevron" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06z" clip-rule="evenodd"/></svg>
+              </button>
+              <div class="faq-body">
+                <ol>
+                  <li>Go to <a href="/matrimony/">iraqibiradari.com/matrimony/</a>.</li>
+                  <li>Click the <strong>"Sign in with Google"</strong> button.</li>
+                  <li>Choose your Google account from the pop-up.</li>
+                  <li>You will be returned to the matrimony page — signed in.</li>
+                </ol>
+                <p>The service uses Google OAuth for secure sign-in. No separate password is needed.</p>
+              </div>
+            </div>
+
+            <div class="faq-item px-5">
+              <button class="faq-btn" aria-expanded="false">
+                What is the membership verification step?
+                <svg class="faq-chevron" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06z" clip-rule="evenodd"/></svg>
+              </button>
+              <div class="faq-body">
+                <p>First-time users must complete a one-time membership verification form before accessing the service. This confirms your identity and community affiliation.</p>
+                <div class="step-box">
+                  <strong>Information required</strong>
+                  Full name · Mobile number (with country code) · Native location (ancestral village / city) · Current location · Apnon Ki Talash (AKT) profile link (optional but recommended)
+                </div>
+                <p>You also confirm that all information is true and that you belong to the Iraqi Biradari community. This record is kept privately by the platform administrators.</p>
+              </div>
+            </div>
+
+            <div class="faq-item px-5">
+              <button class="faq-btn" aria-expanded="false">
+                How do I submit a candidate profile?
+                <svg class="faq-chevron" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06z" clip-rule="evenodd"/></svg>
+              </button>
+              <div class="faq-body">
+                <ol>
+                  <li>Sign in and complete membership verification.</li>
+                  <li>From your dashboard, click <strong>"Add a Candidate Profile"</strong>.</li>
+                  <li>Fill in the candidate's details: name, gender, age, marital status, education, profession, city, country, and family background.</li>
+                  <li>Optionally add a private photograph link (Google Drive view-only link recommended).</li>
+                  <li>Optionally add your AKT profile link for identity verification.</li>
+                  <li>Confirm consent that you have the candidate's and family's permission to submit.</li>
+                  <li>Submit — your profile goes into the admin review queue.</li>
+                </ol>
+                <p>Once approved by the admin team, your profile will appear in the Browse section for other verified members.</p>
+              </div>
+            </div>
+
+            <div class="faq-item px-5">
+              <button class="faq-btn" aria-expanded="false">
+                How do I browse profiles?
+                <svg class="faq-chevron" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06z" clip-rule="evenodd"/></svg>
+              </button>
+              <div class="faq-body">
+                <ol>
+                  <li>Sign in and complete membership verification (first time only).</li>
+                  <li>From your dashboard, click <strong>"Browse Profiles"</strong>.</li>
+                  <li>Approved candidate profiles are shown as cards with name initials, age, city, education, and profession.</li>
+                  <li>Click any card to view the full profile details.</li>
+                </ol>
+                <p>Contact details are not shown publicly in browse. To initiate contact, use the coordination team via WhatsApp.</p>
+              </div>
+            </div>
+
+            <div class="faq-item px-5">
+              <button class="faq-btn" aria-expanded="false">
+                How do I shortlist a profile?
+                <svg class="faq-chevron" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06z" clip-rule="evenodd"/></svg>
+              </button>
+              <div class="faq-body">
+                <p>On any profile card in the Browse section, tap or click the <strong>heart (♥) icon</strong> in the corner. The card will show a filled heart to confirm it is shortlisted.</p>
+                <p>Tap again to remove from your shortlist. Your shortlist is private and only visible to you.</p>
+                <p>To view all your shortlisted profiles, click your name chip in the top-right and select <strong>"My Submissions"</strong>.</p>
+              </div>
+            </div>
+
+            <div class="faq-item px-5">
+              <button class="faq-btn" aria-expanded="false">
+                What does "AKT Verified" mean on a profile?
+                <svg class="faq-chevron" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06z" clip-rule="evenodd"/></svg>
+              </button>
+              <div class="faq-body">
+                <p>Profiles with an <strong>"AKT Verified ✓"</strong> green badge have had their Apnon Ki Talash (AKT) genealogy profile link reviewed and confirmed by the admin team. This provides an extra layer of identity and community-lineage verification.</p>
+                <p>A profile showing <strong>"⏳ AKT Pending"</strong> means an AKT link was provided but has not yet been reviewed by the admin.</p>
+                <p>Profiles with no AKT badge have not provided an AKT link. This is optional and does not affect the validity of the profile, but verified profiles give families additional confidence.</p>
+              </div>
+            </div>
+
+            <div class="faq-item px-5">
+              <button class="faq-btn" aria-expanded="false">
+                How is my information kept private?
+                <svg class="faq-chevron" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06z" clip-rule="evenodd"/></svg>
+              </button>
+              <div class="faq-body">
+                <p>The matrimonial service is not a public directory. Profiles are only visible to signed-in, verified members. Contact details are not exposed in the browse view. The platform does not share your information with any third party.</p>
+                <p>For the full policy on accuracy, privacy, limitation of liability, and community welfare, read the <a href="/matrimony/policy/">Matrimony Service Policy</a>.</p>
+              </div>
+            </div>
+
+            <div class="faq-item px-5">
+              <button class="faq-btn" aria-expanded="false">
+                What should I do after finding a suitable profile?
+                <svg class="faq-chevron" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06z" clip-rule="evenodd"/></svg>
+              </button>
+              <div class="faq-body">
+                <p>Contact the coordination team via WhatsApp at <a href="https://wa.me/919818555830">+91 98185 55830</a> mentioning you found a profile of interest through the matrimony service. The coordinator will facilitate an introduction between the two families.</p>
+                <p>The platform acts only as a facilitator. All further discussions, meetings, and decisions are between the families involved.</p>
+              </div>
+            </div>
+
+          </div>
+        </div><!-- /matrimony -->
+
+        <!-- ── AKT PROFILE ─────────────────────────────────────────────── -->
+        <div id="akt" class="hd-section mt-14">
+          <p class="text-xs font-black uppercase tracking-[.16em] text-archive-gold">Apnon Ki Talash</p>
+          <h2 class="mt-2 font-display text-3xl font-bold text-archive-green">Building Your AKT Profile</h2>
+          <p class="mt-2 text-sm text-archive-muted leading-6">Apnon Ki Talash is a separate platform at <a href="https://apnonkitalash.com/" target="_blank" rel="noopener" class="font-bold text-archive-green underline decoration-archive-gold underline-offset-2">apnonkitalash.com</a> that maintains the Iraqi Biradari family tree (Shajra). Linking your AKT profile to your matrimony submission helps the admin team verify your community lineage.</p>
+          <div class="mt-5 rounded border border-archive-line bg-white">
+
+            <div class="faq-item px-5">
+              <button class="faq-btn" aria-expanded="false">
+                What is Apnon Ki Talash?
+                <svg class="faq-chevron" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06z" clip-rule="evenodd"/></svg>
+              </button>
+              <div class="faq-body">
+                <p><strong>Apnon Ki Talash</strong> (meaning "Search for Your Own") is the dedicated genealogy and family tree platform for the Iraqi Biradari community. It hosts the Shajra — a detailed record of lineages, family branches, and ancestral connections.</p>
+                <p>It is available at <a href="https://apnonkitalash.com/" target="_blank" rel="noopener">apnonkitalash.com</a> and is maintained separately from this website.</p>
+              </div>
+            </div>
+
+            <div class="faq-item px-5">
+              <button class="faq-btn" aria-expanded="false">
+                Why should I link my AKT profile to my matrimony submission?
+                <svg class="faq-chevron" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06z" clip-rule="evenodd"/></svg>
+              </button>
+              <div class="faq-body">
+                <p>Providing your AKT profile link does two things:</p>
+                <ul>
+                  <li><strong>Lineage verification</strong> — it allows the admin team to confirm you are listed in the community Shajra, adding a layer of authenticity to your profile.</li>
+                  <li><strong>AKT Verified badge</strong> — once reviewed, your matrimony profile receives a green "AKT Verified ✓" badge visible to other browsing members, increasing trust and interest in your profile.</li>
+                </ul>
+                <p>Linking an AKT profile is optional, but strongly recommended. It also helps families who are browsing to do their own background research.</p>
+              </div>
+            </div>
+
+            <div class="faq-item px-5">
+              <button class="faq-btn" aria-expanded="false">
+                How do I find myself on Apnon Ki Talash?
+                <svg class="faq-chevron" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06z" clip-rule="evenodd"/></svg>
+              </button>
+              <div class="faq-body">
+                <ol>
+                  <li>Go to <a href="https://apnonkitalash.com/" target="_blank" rel="noopener">apnonkitalash.com</a>.</li>
+                  <li>Use the search bar to search for your name or your father's/grandfather's name.</li>
+                  <li>Browse the results to find the correct person.</li>
+                  <li>Click on your name to open your individual profile page.</li>
+                </ol>
+                <p>If you cannot find yourself, your family may not yet be added to the Shajra. Contact the webmaster at <a href="https://wa.me/919818555830">+91 98185 55830</a> to request an addition.</p>
+              </div>
+            </div>
+
+            <div class="faq-item px-5">
+              <button class="faq-btn" aria-expanded="false">
+                How do I copy my AKT profile link?
+                <svg class="faq-chevron" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06z" clip-rule="evenodd"/></svg>
+              </button>
+              <div class="faq-body">
+                <ol>
+                  <li>Open <a href="https://apnonkitalash.com/" target="_blank" rel="noopener">apnonkitalash.com</a> and find your individual profile page.</li>
+                  <li>Look at the address bar in your browser — it should show a URL that looks like:<br/><code>https://apnonkitalash.com/person/12345</code> or similar.</li>
+                  <li>Tap or click the address bar to select the full URL.</li>
+                  <li>Copy it (long-press → Copy on mobile; Ctrl+C / Cmd+C on desktop).</li>
+                  <li>Paste this URL into the <strong>"AKT Profile Link"</strong> field on the matrimony membership form or candidate profile form.</li>
+                </ol>
+                <div class="step-box">
+                  <strong>Important</strong>
+                  Make sure the name on your AKT profile matches the candidate name you enter on the matrimony form. The admin team uses this to cross-check identity. If your name is recorded differently on AKT (e.g. a different spelling or nickname), mention this in the family background notes.
+                </div>
+              </div>
+            </div>
+
+            <div class="faq-item px-5">
+              <button class="faq-btn" aria-expanded="false">
+                What if my name is spelled differently on AKT?
+                <svg class="faq-chevron" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06z" clip-rule="evenodd"/></svg>
+              </button>
+              <div class="faq-body">
+                <p>This is common — many names have multiple transliteration spellings (e.g. "Hussain / Husain / Hussayn"). If your matrimony candidate name differs from the AKT entry:</p>
+                <ul>
+                  <li>Still provide the AKT link — the admin team will manually cross-check.</li>
+                  <li>In the <strong>Family Background</strong> field, add a note such as: "AKT profile listed under 'Mohammad Hussain', same person."</li>
+                </ul>
+                <p>Alternatively, you can request the AKT webmaster to update the spelling on your profile before submitting the matrimony form.</p>
+              </div>
+            </div>
+
+            <div class="faq-item px-5">
+              <button class="faq-btn" aria-expanded="false">
+                My family is not on AKT yet. Can I still use the matrimony service?
+                <svg class="faq-chevron" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06z" clip-rule="evenodd"/></svg>
+              </button>
+              <div class="faq-body">
+                <p>Yes. The AKT profile link is optional. You can complete the matrimony membership verification and submit a candidate profile without it.</p>
+                <p>However, your profile will not carry the "AKT Verified" badge and may receive less attention from families that prioritise lineage verification. We recommend getting your family added to AKT first, which typically takes just a message to the webmaster.</p>
+              </div>
+            </div>
+
+          </div>
+        </div><!-- /akt -->
+
+        <!-- ── Still need help ─────────────────────────────────────────── -->
+        <div class="mt-14 rounded border border-archive-gold/40 bg-archive-paper p-7 text-center">
+          <p class="font-display text-2xl font-bold text-archive-green">Still need help?</p>
+          <p class="mt-2 text-sm text-archive-muted leading-6">Send a message on WhatsApp and the team will get back to you as soon as possible.</p>
+          <a href="https://wa.me/919818555830" target="_blank" rel="noopener" class="mt-5 inline-flex min-h-11 items-center justify-center bg-archive-green px-7 text-sm font-black uppercase tracking-[0.12em] text-archive-cream hover:bg-archive-gold transition-colors">WhatsApp +91 98185 55830 →</a>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="bg-[#17130f] py-9 text-archive-paper">
+    <div class="mx-auto flex w-[min(1120px,calc(100%-36px))] flex-col gap-5 md:flex-row md:items-center md:justify-between">
+      <div>
+        <p class="font-display text-3xl font-bold text-archive-goldSoft">Iraqi Biradari</p>
+        <p class="mt-1 text-sm text-[#bdb2a3]">Copyright © 2026 iraqibiradari. All Rights Reserved.</p>
+      </div>
+      <div class="flex flex-wrap gap-4 text-xs font-black uppercase tracking-[0.12em] text-[#d8cfbf]">
+        <a class="hover:text-archive-goldSoft" href="/matrimony/">Matrimony</a>
+        <a class="hover:text-archive-goldSoft" href="/helpdesk/">Helpdesk</a>
+        <a class="hover:text-archive-goldSoft" href="/contact/">Support Us</a>
+      </div>
+    </div>
+  </footer>
+
+  <script type="module" src="/assets/js/nav.js"></script>
+  <script>
+    document.querySelectorAll('.faq-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const expanded = btn.getAttribute('aria-expanded') === 'true';
+        const body = btn.nextElementSibling;
+        btn.setAttribute('aria-expanded', String(!expanded));
+        body.classList.toggle('open', !expanded);
+      });
+    });
+  </script>
+</body>
+</html>
