@@ -60,8 +60,10 @@ function desktopItem(item) {
   }
 
   const ext = item.external ? ' target="_blank" rel="noopener"' : '';
-  const badge = item.badge ? ` <span style="display:inline-block;vertical-align:middle;margin-left:5px;padding:1px 6px;border-radius:999px;font-size:9px;font-weight:900;letter-spacing:.08em;background:#b99045;color:#fff;line-height:1.6">${item.badge}</span>` : '';
-  return `<a href="${item.href}"${ext} class="rounded px-3 py-2 ${base} ${color}">${item.label}${badge}</a>`;
+  const labelHtml = item.badge
+    ? `<span style="position:relative;display:inline-block"><span style="position:absolute;top:-9px;left:50%;transform:translateX(-50%);white-space:nowrap;padding:1px 5px;border-radius:999px;font-size:8px;font-weight:900;letter-spacing:.06em;background:#b99045;color:#fff;line-height:1.7;pointer-events:none">${item.badge}</span>${item.label}</span>`
+    : item.label;
+  return `<a href="${item.href}"${ext} class="rounded px-3 pt-4 pb-2 ${base} ${color}">${labelHtml}</a>`;
 }
 
 function mobileItem(item) {
@@ -81,8 +83,10 @@ function mobileItem(item) {
   }
 
   const ext = item.external ? ' target="_blank" rel="noopener"' : '';
-  const badge = item.badge ? ` <span style="display:inline-block;vertical-align:middle;margin-left:6px;padding:1px 6px;border-radius:999px;font-size:9px;font-weight:900;letter-spacing:.08em;background:#b99045;color:#fff;line-height:1.6">${item.badge}</span>` : '';
-  return `<a href="${item.href}"${ext} style="display:block;border-bottom:1px solid #ded2bc;padding:16px 0" class="text-xs font-black uppercase tracking-[0.12em] transition-colors hover:text-archive-green ${color}">${item.label}${badge}</a>`;
+  const labelHtml = item.badge
+    ? `<span style="position:relative;display:inline-block"><span style="position:absolute;top:-9px;left:50%;transform:translateX(-50%);white-space:nowrap;padding:1px 5px;border-radius:999px;font-size:8px;font-weight:900;letter-spacing:.06em;background:#b99045;color:#fff;line-height:1.7;pointer-events:none">${item.badge}</span>${item.label}</span>`
+    : item.label;
+  return `<a href="${item.href}"${ext} style="display:block;border-bottom:1px solid #ded2bc;padding:20px 0 16px" class="text-xs font-black uppercase tracking-[0.12em] transition-colors hover:text-archive-green ${color}">${labelHtml}</a>`;
 }
 
 function inject() {
