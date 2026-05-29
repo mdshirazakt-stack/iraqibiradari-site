@@ -66,8 +66,23 @@ let subs = { candidates: [], requirement: null };
 let browseData = [], browseFilter = 'all';
 let shortlistedIds = new Set();
 
+const POLICY_VERSION = '2025-v1';
+
 // ── Bootstrap ──────────────────────────────────────────────────────────────────
 supabase = await createSupabaseClient();
+
+// ── Activity logger ────────────────────────────────────────────────────────────
+async function logActivity(event_type, meta = {}) {
+  if (!currentUser) return;
+  try {
+    await supabase.from('matrimony_activity_log').insert({
+      user_id:    currentUser.id,
+      user_email: currentUser.email,
+      event_type,
+      meta: Object.keys(meta).length ? meta : null,
+    });
+  } catch (_) { /* never block UX */ }
+}
 
 // data-go routing (event delegation)
 document.addEventListener('click', e => {
@@ -172,6 +187,7 @@ btnGoogleSignin?.addEventListener('click', async () => {
 
 // ── After sign-in routing ──────────────────────────────────────────────────────
 async function afterSignIn() {
+  logActivity('login');
   const { data: member } = await supabase
     .from('matrimony_members')
     .select('*')
@@ -558,14 +574,17 @@ consentForm?.addEventListener('submit', async e => {
   if (consentErr) consentErr.classList.add('hidden');
 
   const payload = {
-    user_id:          currentUser.id,
-    full_name:        str(data, 'full_name'),
-    mobile:           str(data, 'mobile'),
-    native_location:  str(data, 'native_location'),
-    current_location: str(data, 'current_location'),
-    akt_profile_url:  str(data, 'akt_profile_url'),
+    user_id:           currentUser.id,
+    full_name:         str(data, 'full_name'),
+    mobile:            str(data, 'mobile'),
+    native_location:   str(data, 'native_location'),
+    current_location:  str(data, 'current_location'),
+    akt_profile_url:   str(data, 'akt_profile_url'),
+    policy_agreed_at:  new Date().toISOString(),
+    policy_version:    POLICY_VERSION,
   };
 
+  logActivity('policy_agree', { policy_version: POLICY_VERSION });
   const { error } = await supabase.from('matrimony_members').upsert(payload, { onConflict: 'user_id' });
 
   btn.disabled = false; btn.textContent = 'Continue to next step →';
@@ -613,6 +632,7 @@ candidateForm?.addEventListener('submit', async e => {
   btn.disabled = false; btn.textContent = 'Submit candidate details →';
   if (error) { if (candErr) { candErr.textContent = error.message; candErr.classList.remove('hidden'); } return; }
 
+  logActivity('candidate_submit', { name: payload.candidate_name });
   if (candOk) { candOk.textContent = 'Candidate profile submitted — returning to dashboard…'; candOk.classList.remove('hidden'); }
   subs.candidates.push(inserted || { id: 'new', candidate_name: payload.candidate_name });
   setTimeout(() => renderGate(), 1200);
@@ -674,6 +694,7 @@ requirementForm?.addEventListener('submit', async e => {
     return;
   }
 
+  logActivity('requirement_submit', { seeker_name: payload.seeker_name });
   if (reqOk) { reqOk.textContent = 'Match requirement submitted — returning to dashboard…'; reqOk.classList.remove('hidden'); }
   if (!subs.requirement) subs.requirement = { id: 'new', seeker_name: payload.seeker_name };
   setTimeout(() => renderGate(), 1200);
@@ -682,6 +703,7 @@ requirementForm?.addEventListener('submit', async e => {
 // ── Browse ─────────────────────────────────────────────────────────────────────
 async function openBrowse() {
   showStage('browse');
+  logActivity('browse_open');
 
   if (!browseData.length) {
     if (browseGrid) browseGrid.innerHTML = `<div class="bg-archive-paper p-12 text-center text-sm text-archive-muted" style="grid-column:1/-1">Loading listings…</div>`;
@@ -785,7 +807,7 @@ browseFilters?.addEventListener('click', e => {
   renderBrowseGrid();
 });
 
-window.__openDetail = (id) => loadDetail(id);
+window.__openDetail = (id) => { logActivity('profile_view', { profile_id: id }); loadDetail(id); };
 
 window.__toggleShortlist = async (profileId) => {
   const btn = browseGrid?.querySelector(`[data-sl="${profileId}"]`);
@@ -799,8 +821,10 @@ window.__toggleShortlist = async (profileId) => {
     btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="${nowOn?'#c07060':'none'}" stroke="${nowOn?'#c07060':'#a09080'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`;
   }
   if (wasOn) {
+    logActivity('shortlist_remove', { profile_id: profileId });
     await supabase.from('matrimony_shortlists').delete().eq('user_id', currentUser.id).eq('profile_id', profileId);
   } else {
+    logActivity('shortlist_add', { profile_id: profileId });
     await supabase.from('matrimony_shortlists').insert({ user_id: currentUser.id, profile_id: profileId });
   }
 };

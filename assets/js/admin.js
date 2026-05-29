@@ -1116,6 +1116,33 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
 
   async function renderMatrimonyList() {
     if (!matrimonyList) return;
+    updateMatrimonyTypeButtons();
+
+    // ── Activity Log tab ──
+    if (currentMatrimonyType === 'activity') {
+      matrimonyList.innerHTML = `<div class="p-5 text-archive-muted text-sm">Loading activity log…</div>`;
+      let data, error;
+      try {
+        ({ data, error } = await withTimeout(
+          supabase.from('matrimony_activity_log').select('*').order('created_at', { ascending: false }).limit(300)
+        ));
+      } catch (err) {
+        matrimonyList.innerHTML = `<div class="p-5 text-archive-muted">⏱ ${escapeHtml(err.message)} — <button type="button" onclick="location.reload()" class="font-bold text-archive-green underline">Reload</button></div>`;
+        return;
+      }
+      if (error) { matrimonyList.innerHTML = `<div class="p-5 text-archive-muted">${escapeHtml(error.message)}</div>`; return; }
+      if (!data || !data.length) { matrimonyList.innerHTML = `<div class="border border-archive-line bg-archive-cream p-5 text-archive-muted">No activity recorded yet.</div>`; return; }
+      matrimonyList.innerHTML = `
+        <div class="border border-archive-line bg-white overflow-hidden">
+          <div class="border-b border-archive-line bg-archive-paper/50 px-5 py-3 grid grid-cols-[auto_1fr_auto_auto] gap-4 text-[10px] font-black uppercase tracking-[.12em] text-archive-gold">
+            <span>Event</span><span>User</span><span>Details</span><span>Time</span>
+          </div>
+          ${data.map(activityRow).join('')}
+        </div>`;
+      return;
+    }
+
+    // ── Profiles / Seekers tabs ──
     let data, error;
     try {
       ({ data, error } = await withTimeout(
@@ -1126,8 +1153,31 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
       return;
     }
     if (error) { matrimonyList.innerHTML = `<div class="p-5 text-archive-muted">${escapeHtml(error.message)}</div>`; return; }
-    updateMatrimonyTypeButtons();
     matrimonyList.innerHTML = (data || []).map(matrimonyCard).join('') || '<div class="border border-archive-line bg-archive-cream p-5 text-archive-muted">No matrimony submissions yet.</div>';
+  }
+
+  const EVENT_LABELS = {
+    login:              '🔑 Login',
+    browse_open:        '👁 Browse opened',
+    profile_view:       '📋 Profile viewed',
+    shortlist_add:      '❤️ Shortlisted',
+    shortlist_remove:   '🤍 Shortlist removed',
+    policy_agree:       '✅ Policy agreed',
+    candidate_submit:   '📤 Candidate submitted',
+    requirement_submit: '📤 Requirement submitted',
+  };
+
+  function activityRow(row) {
+    const time    = row.created_at ? new Date(row.created_at).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:true}) : '—';
+    const label   = EVENT_LABELS[row.event_type] || escapeHtml(row.event_type);
+    const metaBits = row.meta ? Object.entries(row.meta).map(([k,v]) => `<span class="text-archive-muted">${escapeHtml(k)}:</span> <strong class="text-archive-ink">${escapeHtml(String(v).slice(0,40))}</strong>`).join(' · ') : '';
+    const rowBg   = { policy_agree:'bg-green-50', candidate_submit:'bg-blue-50', requirement_submit:'bg-blue-50', login:'bg-archive-paper/30' }[row.event_type] || '';
+    return `<div class="grid grid-cols-[auto_1fr_auto_auto] gap-4 items-start px-5 py-3 border-b border-archive-line/60 text-sm ${rowBg} last:border-b-0">
+      <span class="whitespace-nowrap font-bold text-archive-green">${label}</span>
+      <span class="text-archive-muted truncate text-xs">${escapeHtml(row.user_email || '—')}</span>
+      <span class="text-xs text-archive-muted max-w-[220px] truncate">${metaBits}</span>
+      <span class="text-[11px] text-archive-muted/70 whitespace-nowrap">${time}</span>
+    </div>`;
   }
 
   function matrimonyCard(row) {
@@ -1151,6 +1201,7 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
           <div class="flex flex-wrap items-center gap-2 mb-0.5">
             <span class="text-[10px] font-black uppercase tracking-[.12em] text-archive-gold/80">${isProfile ? 'Candidate' : 'Seeker'}</span>
             <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wide ${statusColour}">${escapeHtml(row.status || 'new')}</span>
+            ${row.policy_agreed_at ? `<span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wide text-green-700 bg-green-50">✅ Policy agreed</span>` : `<span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wide text-amber-700 bg-amber-50">⚠ Policy pending</span>`}
           </div>
           <div class="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
             <h3 class="font-black text-archive-green text-base leading-snug">${escapeHtml(title || '—')}</h3>
