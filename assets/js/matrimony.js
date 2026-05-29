@@ -35,6 +35,10 @@ const mobileHidden = document.getElementById('mobile-hidden');
 const mobileHint   = document.getElementById('mobile-hint');
 const mobileErr    = document.getElementById('mobile-err');
 
+// AKT profile URL (consent form)
+const aktUrlInput  = document.getElementById('akt-url-input');
+const aktUrlErr    = document.getElementById('akt-url-err');
+
 // gate
 const gateFirstname  = document.getElementById('gate-firstname');
 const gateCardCand   = document.getElementById('gate-card-cand');
@@ -152,6 +156,31 @@ if (mobileCC)  { mobileCC.addEventListener('change', () => validateMobile(false)
 if (mobileNum) {
   mobileNum.addEventListener('input', () => validateMobile(false));
   mobileNum.addEventListener('blur',  () => validateMobile(true));
+}
+
+// ── AKT profile URL validation ────────────────────────────────────────────────
+function validateAktUrl(showErr = true) {
+  if (!aktUrlInput) return true;
+  const val = aktUrlInput.value.trim();
+  if (!val) { // optional field — blank is fine
+    if (aktUrlErr) aktUrlErr.classList.add('hidden');
+    return true;
+  }
+  const ok = /^https:\/\/(www\.)?apnonkitalash\.com\//i.test(val);
+  if (ok) {
+    if (aktUrlErr) aktUrlErr.classList.add('hidden');
+    return true;
+  }
+  if (showErr && aktUrlErr) {
+    aktUrlErr.textContent = 'Link must start with https://apnonkitalash.com/ — please check the URL.';
+    aktUrlErr.classList.remove('hidden');
+  }
+  return false;
+}
+
+if (aktUrlInput) {
+  aktUrlInput.addEventListener('blur',  () => validateAktUrl(true));
+  aktUrlInput.addEventListener('input', () => { if (aktUrlErr && !aktUrlErr.classList.contains('hidden')) validateAktUrl(false); });
 }
 
 // data-go routing (event delegation)
@@ -683,6 +712,12 @@ consentForm?.addEventListener('submit', async e => {
     return;
   }
 
+  // Validate AKT URL format (optional field — only fails if something is typed)
+  if (!validateAktUrl(true)) {
+    if (aktUrlInput) aktUrlInput.focus();
+    return;
+  }
+
   const data = new FormData(consentForm);
   btn.disabled = true; btn.textContent = 'Saving…';
 
@@ -824,7 +859,7 @@ async function openBrowse() {
     const [profileRes, slRes] = await Promise.all([
       withTimeout(
         supabase.from('matrimony_profiles')
-          .select('id,initials,candidate_gender,marital_status,education,profession,native_location,current_location,dob,contact_person_name,relationship_to_candidate,akt_profile_url')
+          .select('id,initials,candidate_gender,marital_status,education,profession,native_location,current_location,dob,contact_person_name,relationship_to_candidate,akt_profile_url,akt_verified')
           .eq('status', 'approved')
           .order('created_at', { ascending: false })
       ),
@@ -877,8 +912,11 @@ function renderBrowseGrid() {
     const edu       = (c.education || '').split(',')[0].split('(')[0].trim();
     const ageStr    = c.age ? `, ${c.age}` : '';
     const rel       = c.relationship_to_candidate || c.contact_person_name ? (c.relationship_to_candidate || 'Contact') : '';
-    const aktVerified = !!c.akt_profile_url;
-    const aktBadge  = aktVerified ? `<span class="akt-badge"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5l2 2 4-4"/></svg>AKT Verified</span>` : '';
+    const aktBadge = c.akt_verified
+      ? `<span class="akt-badge"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:10px;height:10px;flex-shrink:0"><path d="M2 5l2 2 4-4"/></svg>AKT Verified</span>`
+      : c.akt_profile_url
+        ? `<span class="akt-badge" style="background:#fef9ec;color:#92701a;border-color:#e8d48a">⏳ AKT Pending</span>`
+        : '';
     const infoRows = [
       edu ? `<div class="cand-inforow"><dt>Education</dt><dd>${esc(edu)}</dd></div>` : '',
       rel ? `<div class="cand-inforow"><dt>Submitted by</dt><dd>${esc(rel)} · Verified</dd></div>` : '',
@@ -976,7 +1014,11 @@ async function loadDetail(profileId) {
         ${c.profession ? `<p class="mt-1 text-archive-paper/80">${esc(c.profession)}</p>` : ''}
         <div class="mt-3 flex items-center gap-3 flex-wrap">
           <span class="${badgeCls}">${badgeTxt}</span>
-          ${c.akt_profile_url ? `<a href="${esc(c.akt_profile_url)}" target="_blank" rel="noopener" class="akt-badge" style="text-decoration:none"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:10px;height:10px"><path d="M2 5l2 2 4-4"/></svg>AKT Verified</a>` : ''}
+          ${c.akt_verified
+            ? `<a href="${esc(c.akt_profile_url)}" target="_blank" rel="noopener" class="akt-badge" style="text-decoration:none"><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:10px;height:10px;flex-shrink:0"><path d="M2 5l2 2 4-4"/></svg>AKT Verified</a>`
+            : c.akt_profile_url
+              ? `<span class="akt-badge" style="background:#fef9ec;color:#92701a;border-color:#e8d48a">⏳ AKT Pending Verification</span>`
+              : ''}
           ${c.current_location ? `<span class="text-sm text-archive-paper/60">${esc(c.current_location)}</span>` : ''}
         </div>
       </div>

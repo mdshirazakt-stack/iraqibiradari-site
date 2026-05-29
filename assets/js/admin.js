@@ -537,6 +537,11 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
         .update({ admin_notes: notes, updated_at: new Date().toISOString() }).eq('id', id);
       setStatus(error ? error.message : 'Notes saved.');
     }
+    if (btn.dataset.matrimonyAction === 'akt-verify') {
+      const { error } = await supabase.from('matrimony_profiles')
+        .update({ akt_verified: true, updated_at: new Date().toISOString() }).eq('id', id);
+      setStatus(error ? error.message : 'AKT profile marked as verified ✓');
+    }
     await renderMatrimonyList();
   });
 
@@ -1230,6 +1235,14 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
         <label class="mt-4 grid gap-2 text-sm font-bold text-archive-muted">Private admin notes
           <textarea data-admin-notes rows="3" class="border border-archive-line bg-white p-3 text-archive-ink">${escapeHtml(row.admin_notes||'')}</textarea>
         </label>
+        ${isProfile && row.akt_profile_url ? `
+        <div class="mt-4 flex flex-wrap items-center gap-2 rounded border border-blue-100 bg-blue-50 px-4 py-3">
+          <span class="text-xs font-black uppercase tracking-[.12em] text-blue-700">AKT Profile</span>
+          <a href="${escapeHtml(row.akt_profile_url)}" target="_blank" rel="noopener" class="text-xs font-bold text-blue-700 underline underline-offset-2 break-all hover:text-blue-900 flex-1">${escapeHtml(row.akt_profile_url)}</a>
+          ${row.akt_verified
+            ? `<span class="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-black uppercase text-green-700">✓ Verified</span>`
+            : `<button data-matrimony-action="akt-verify" class="border border-blue-300 bg-white px-3 py-1.5 text-xs font-black uppercase tracking-[.12em] text-blue-700 hover:bg-blue-100 transition-colors" type="button">Mark AKT Verified</button>`}
+        </div>` : ''}
         <div class="mt-3 flex flex-wrap gap-2">
           <button data-matrimony-action="notes" class="border border-archive-gold bg-archive-gold px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-archive-ink" type="button">Save notes</button>
           ${['new','reviewing','approved','matched','rejected','archived'].map(s => `<button data-matrimony-action="status" data-status-value="${s}" class="border ${row.status===s ? 'border-archive-gold bg-white text-archive-green font-black' : 'border-archive-line text-archive-muted'} px-3 py-2 text-xs font-black uppercase tracking-[0.12em]" type="button">${s}</button>`).join('')}

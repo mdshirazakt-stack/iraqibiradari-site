@@ -273,9 +273,13 @@ body{background:#f6efd9}
         </div>
         <div class="flex flex-col gap-2">
           <label class="text-sm font-bold text-archive-muted">Your apnonkitalash.com profile link <span class="font-normal text-archive-muted">(optional)</span></label>
-          <input class="m-input" name="akt_profile_url" type="url" placeholder="https://apnonkitalash.com/profile/your-id"/>
-          <span class="text-xs text-archive-muted">Providing this helps admins verify your community membership faster. Your listing will display an <strong>AKT Verified ✓</strong> badge.</span>
-          <a href="https://apnonkitalash.com" target="_blank" rel="noopener" class="self-start text-xs font-bold text-archive-gold underline underline-offset-2 hover:text-archive-green transition-colors">Don't have one? Create your profile on apnonkitalash.com →</a>
+          <input id="akt-url-input" class="m-input" name="akt_profile_url" type="url" placeholder="https://apnonkitalash.com/profile/your-id"/>
+          <p id="akt-url-err" class="hidden text-xs font-bold text-red-600"></p>
+          <div class="rounded border border-archive-line bg-archive-paper/50 p-3 text-xs leading-5 text-archive-muted flex flex-col gap-1.5">
+            <p>⚠ <strong class="text-archive-ink">Important:</strong> The name you entered above must match the name on your apnonkitalash.com profile <em>exactly</em> (or very closely). Spelling variations may delay or prevent admin verification.</p>
+            <p>Admins will open your profile link to confirm your identity. Once confirmed, your submissions will display an <strong class="text-archive-ink">AKT Verified ✓</strong> badge. Until then it will show as <em>Pending</em>.</p>
+          </div>
+          <a href="https://apnonkitalash.com" target="_blank" rel="noopener" class="self-start text-xs font-bold text-archive-gold underline underline-offset-2 hover:text-archive-green transition-colors">Don't have a profile? Create one on apnonkitalash.com →</a>
         </div>
         <hr class="border-archive-line my-1"/>
         <div class="rounded border border-archive-gold/40 bg-archive-paper/60 p-4 text-sm leading-6 text-archive-muted">
