@@ -23,14 +23,7 @@ const GROUPS = [
     ],
   },
   { label: 'Organizations', href: '/organizations/' },
-  {
-    label: 'Connect',
-    pages: ['/directory', '/matrimony'],
-    children: [
-      { label: 'Directory', href: '/directory/' },
-      { label: 'Matrimony', href: '/matrimony/' },
-    ],
-  },
+  { label: 'Matrimony', href: '/matrimony/', badge: 'NEW' },
   { label: 'Support Us', href: '/contact/' },
 ];
 
@@ -67,7 +60,8 @@ function desktopItem(item) {
   }
 
   const ext = item.external ? ' target="_blank" rel="noopener"' : '';
-  return `<a href="${item.href}"${ext} class="rounded px-3 py-2 ${base} ${color}">${item.label}</a>`;
+  const badge = item.badge ? ` <span style="display:inline-block;vertical-align:middle;margin-left:5px;padding:1px 6px;border-radius:999px;font-size:9px;font-weight:900;letter-spacing:.08em;background:#b99045;color:#fff;line-height:1.6">${item.badge}</span>` : '';
+  return `<a href="${item.href}"${ext} class="rounded px-3 py-2 ${base} ${color}">${item.label}${badge}</a>`;
 }
 
 function mobileItem(item) {
@@ -87,7 +81,8 @@ function mobileItem(item) {
   }
 
   const ext = item.external ? ' target="_blank" rel="noopener"' : '';
-  return `<a href="${item.href}"${ext} style="display:block;border-bottom:1px solid #ded2bc;padding:16px 0" class="text-xs font-black uppercase tracking-[0.12em] transition-colors hover:text-archive-green ${color}">${item.label}</a>`;
+  const badge = item.badge ? ` <span style="display:inline-block;vertical-align:middle;margin-left:6px;padding:1px 6px;border-radius:999px;font-size:9px;font-weight:900;letter-spacing:.08em;background:#b99045;color:#fff;line-height:1.6">${item.badge}</span>` : '';
+  return `<a href="${item.href}"${ext} style="display:block;border-bottom:1px solid #ded2bc;padding:16px 0" class="text-xs font-black uppercase tracking-[0.12em] transition-colors hover:text-archive-green ${color}">${item.label}${badge}</a>`;
 }
 
 function inject() {
