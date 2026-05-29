@@ -1,516 +1,516 @@
-# Iraqi Biradari Website Handoff
-
-Last updated: 10 May 2026, after matrimony table creation and photograph-link update  
-Repository: `/Users/shiraz/apnonkitalash/iraqibiradari-site`  
-Branch: `main`  
-Latest pushed commit: `c2ff68e Add matrimony photograph link`  
-Live domain: `https://iraqibiradari.com/`  
-Related genealogy platform: `https://apnonkitalash.com/`
-
-## 1. Starting Point
-
-The work began with two related but separate web properties:
-
-- **Apnon Ki Talash / Shajra** at `apnonkitalash.com`
-  - Existing genealogy/tree platform.
-  - Has its own `index.html` and `admin.html`.
-  - Uses GEDCOM upload/parsing and a separate Supabase project/account.
-  - Connected with `mdshiraz.akt@gmail.com`.
-
-- **Iraqi Biradari** at `iraqibiradari.com`
-  - Intended as the public heritage, archive, events, videos, announcements, support, and community platform.
-  - Should not appear as “Apnon Ki Talash” because Shajra is a separate genealogy tool.
-  - Uses a different Supabase project/account.
-  - Connected with `mdshiraz.ib@outlook.com`.
-
-The initial Iraqi Biradari site had branding inconsistencies:
-
-- Page title showed “Apnon Ki Talash”.
-- Top ribbon/header also carried “Apnon Ki Talash”.
-- Logo/icon handling needed to use the Iraqi Biradari assets.
-- Secondary pages had inconsistent page title and header branding.
-
-## 2. Major Decisions Made
-
-### Separate Brand Identities
-
-`iraqibiradari.com` is now positioned as the **Iraqi Biradari Heritage Platform**.
-
-`apnonkitalash.com` remains the **Shajra / genealogy tree platform**.
-
-Where the word **Shajra** appears on Iraqi Biradari pages, it should link to `https://apnonkitalash.com/`.
-
-### Iraqi Biradari Site Scope
-
-The Iraqi Biradari website is now treated as the public gateway for:
-
-- Community announcements
-- Events
-- Documents
-- Videos
-- Support/foundation information
-- About/people behind the initiative
-- Matrimony assistance
-- Links into Shajra where relevant
-
-### Supabase Use
-
-Supabase is used for content management and public rendering.
-
-Current Iraqi Biradari Supabase project:
-
-- Project ID: `dcslkrgocuxcogvmvfkr`
-- URL: `https://dcslkrgocuxcogvmvfkr.supabase.co`
-- Admin email: `mdshiraz.ib@outlook.com`
-
-The anon public key is stored in:
-
-- `assets/js/supabase-config.js`
-
-The schema is maintained in:
-
-- `supabase/schema.sql`
-
-## 3. What Has Been Built
-
-### Branding and Design
-
-The site now uses Iraqi Biradari branding consistently:
-
-- Correct page title: `Iraqi Biradari`
-- Correct top identity: `Iraqi Biradari Heritage Platform`
-- Iraqi Biradari logo and favicon files are used.
-- Header logo treatment was adjusted so the white rounded logo image blends better with the cream page background.
-- The home page was redesigned around heritage, community, documents, videos, support, events, and Shajra references.
-
-Important files:
-
-- `index.html`
-- `Iraquibiradari-final-logo.png`
-- `Iraquibiradari-final-logo-2.png`
-- `iraqi_biradari_favicon.ico`
-- `iraqi_biradari_favicon_16x16.png`
-- `iraqi_biradari_favicon_32x32.png`
-
-### Navigation and Page Uniformity
-
-The following pages now share Iraqi Biradari identity and navigation:
-
-- `/`
-- `/about/`
-- `/announcements/`
-- `/documents/`
-- `/videos/`
-- `/events/`
-- `/contact/`
-- `/matrimony/`
-- `/admin/`
-
-The secondary-page hero sections were reduced so mobile users are not forced through overly large green intro blocks before seeing real content.
-
-### About Page
-
-A final About Us page was added:
-
-- `about/index.html`
-
-It explains:
-
-- The people behind the initiative
-- How they contribute
-- Heritage preservation work
-- Shajra separation
-- Support/foundation route
-
-The home page About content was also updated using a short summary adapted from:
-
-- `https://en.wikipedia.org/wiki/Iraqi_Biradari`
-
-Credit is shown on the page.
-
-### Support Page
-
-The contact page was repurposed into a support/foundation page:
-
-- `contact/index.html`
-
-Current bank details:
-
-- Account Name: `INDIA IRAQUI BIRADARE WELFARE FOUNDATION CHARITABLE TRUST`
-- Bank: `AXIS BANK`
-- Branch: `Kumhrar, Patna - 800020`
-- Account No.: `925020022131364`
-- IFSC Code: `UTIB0002848`
-
-Important note shown:
-
-- `We do not accept foreign donations.`
-
-### Admin Panel
-
-The admin panel is at:
-
-- `/admin/`
-
-It uses Supabase magic-link login for:
-
-- `mdshiraz.ib@outlook.com`
-
-Admin can currently manage:
-
-- Documents
-- Videos
-- Events
-- Announcements
-- Matrimony submissions
-
-Important files:
-
-- `admin/index.html`
-- `assets/js/admin.js`
-- `assets/js/supabase-config.js`
-
-### Content Tables
-
-Supabase-backed content tables:
-
-- `announcements`
-- `events`
-- `documents`
-- `videos`
-
-Features already implemented:
-
-- Create content
-- Edit title/description/metadata
-- Publish/unpublish
-- Delete
-- Drag-and-drop display ordering
-- One-time starter JSON seed tool
-- Public pages read Supabase first and can fall back to local JSON where implemented
-
-### Events Behavior
-
-Homepage event ribbon now says:
-
-- `Upcoming Events: No upcoming events. Keep a watch.`
-
-When an event is published with:
-
-- Future/current event date
-- Registration URL
-- Published status
-
-then the ribbon can show an active event with attention-grabbing animation.
-
-To delist an event:
-
-- Let the event date pass, or
-- Unpublish it in admin
-
-### Announcements Page
-
-Announcements are blog-like:
-
-- Small preview content
-- Expandable/read-more style behavior
-- Managed through admin
-
-Useful for:
-
-- Appeals
-- Community announcements
-- Notices
-- Public messages
-
-### Documents and Videos
-
-Documents and videos are Supabase-backed and admin-managed.
-
-Existing Drive archive material was curated selectively. Useless or irrelevant content, such as old tree export files, should not be published unless needed later.
-
-### Matrimony Section
-
-Newest work added a private, moderated matrimony workflow.
-
-Public page:
-
-- `/matrimony/`
-- File: `matrimony/index.html`
-
-Frontend script:
-
-- `assets/js/matrimony.js`
-
-Admin review:
-
-- Built into `/admin/`
-- Implemented in `assets/js/admin.js`
-
-Supabase tables added:
-
-- `matrimony_profiles`
-- `matrimony_requests`
-
-Confirmed in Supabase Table Editor:
-
-- `announcements`
-- `documents`
-- `events`
-- `matrimony_profiles`
-- `matrimony_requests`
-- `videos`
-
-Design decision:
-
-- There is **no public profile directory**.
-- There is **no public browsing/searching of candidates**.
-- Visitors can only submit details.
-- Admin privately reviews submissions.
-
-Two public submission flows:
-
-1. **Submit candidate details**
-   - For candidate/family profile submission.
-   - Includes an optional private photograph link visible only in admin review.
-   - Current implementation stores a private photo URL, not an uploaded image file. This avoids opening an anonymous public upload bucket at this stage.
-
-2. **Share match requirement**
-   - For seekers/families looking for a suitable match.
-
-Abuse-prevention choices already included:
-
-- No public listing
-- Consent checkbox required
-- Honeypot field for basic spam reduction
-- Admin-only review queue
-- Admin status tracking
-- Admin private notes
-
-Admin statuses:
-
-- `new`
-- `reviewing`
-- `approved`
-- `matched`
-- `rejected`
-- `archived`
-
-## 4. Supabase Schema Status
-
-The repo contains the latest schema here:
-
-- `supabase/schema.sql`
-
-The latest schema includes:
-
-- Existing content tables
-- New matrimony tables
-- `photo_url` on `matrimony_profiles`
-- RLS policies
-- Admin-only management policies
-- Public insert-only policies for matrimony
-- Indexes for matrimony review queues
-
-Important:
-
-The matrimony table creation SQL has now been run in the Iraqi Biradari Supabase project connected to `mdshiraz.ib@outlook.com`. The Table Editor shows `matrimony_profiles` and `matrimony_requests` alongside the existing content tables.
-
-If the full schema is not rerun later, the minimum photo-link migration is:
-
-```sql
-alter table public.matrimony_profiles
-add column if not exists photo_url text;
+# Iraqi Biradari Website — Project Handoff
+
+**Last updated:** 30 May 2026
+**Repository:** `/Users/shiraz/apnonkitalash/iraqibiradari-site`
+**Branch:** `main`
+**Latest commit:** `76e3bc0` — Fix checkbox labels splitting into columns on mobile
+**Live domain:** `https://iraqibiradari.com/`
+**Admin panel:** `https://iraqibiradari.com/admin/`
+**Supabase project:** `dcslkrgocuxcogvmvfkr` (`mdshiraz.ib@outlook.com`)
+**Related platform:** `https://apnonkitalash.com/` (separate genealogy project — do not mix)
+
+---
+
+## Quick Reference — File Map
+
+| Purpose | File |
+|---|---|
+| Home page | `index.html` |
+| About | `about/index.html` |
+| Support / Volunteer | `contact/index.html` |
+| Events listing | `events/index.html` |
+| Event detail (SPA) | `events/detail/index.html` |
+| Organizations listing | `organizations/index.html` |
+| Organization detail (SPA) | `organizations/detail/index.html` |
+| Our Culture / Achievers | `culture/index.html` |
+| Culture story detail (SPA) | `culture/detail/index.html` |
+| Culture story submission | `culture/submit/index.html` |
+| Announcements | `announcements/index.html` |
+| Matrimony | `matrimony/index.html` |
+| Matrimony Service Policy | `matrimony/policy/index.html` |
+| Admin panel | `admin/index.html` |
+| Nav component | `assets/js/nav.js` |
+| Supabase credentials | `assets/js/supabase-config.js` |
+| Admin logic | `assets/js/admin.js` |
+| Matrimony logic | `assets/js/matrimony.js` |
+| Supabase base schema | `supabase/schema.sql` |
+
+---
+
+## 1. Platform Overview
+
+**Iraqi Biradari** (`iraqibiradari.com`) is the public-facing heritage and community platform for the Iraqi Biradari community. It is entirely separate from **Apnon Ki Talash** (`apnonkitalash.com`), which is the private genealogy/Shajra platform.
+
+The IB site is a static HTML/JS/Tailwind site hosted on GitHub Pages. All dynamic content (events, organizations, matrimony, culture stories, etc.) is stored in Supabase and fetched client-side.
+
+**Stack:**
+- Static HTML + Tailwind CSS (CDN) + vanilla ES modules
+- Supabase (Postgres + Auth + RLS) for all data
+- Google OAuth for matrimony member login
+- Supabase magic-link for admin login
+- No build step — edit and push directly
+
+---
+
+## 2. All Changes Made (Chronological)
+
+### Phase 1 — Foundation (9–10 May 2026)
+
+**Initial site setup (`f8272c1`):**
+- Created the Iraqi Biradari heritage portal from scratch.
+- Established the brand identity separate from Apnon Ki Talash.
+- Set up favicon, logos, and consistent page titles across all pages.
+
+**Branding unification (`1477d91`):**
+- All secondary pages unified to show "Iraqi Biradari" — removed "Apnon Ki Talash" references.
+- Consistent hero sections across About, Documents, Videos, Events, Contact.
+
+**About page (`e056a19`):**
+- Built `about/index.html` — explains the people, mission, and heritage context.
+- Home page About section updated.
+
+**Admin panel — Phase 1 (`c6672a9`, `902b068`):**
+- Built `admin/index.html` and `assets/js/admin.js`.
+- Magic-link authentication for `mdshiraz.ib@outlook.com`.
+- CRUD for: Documents, Videos, Events, Announcements.
+- Drag-and-drop sort ordering.
+- One-time JSON seed tool.
+
+**Support page (`3b1c454`, `f250a23`):**
+- `contact/index.html` built with Axis Bank donation details (Foundation era).
+
+**Announcements (`eb449de`):**
+- Announcements feature built with publish/unpublish, expandable previews.
+
+**Homepage links and hero reduction (`ed356dc`):**
+- Compact hero sections on secondary pages for better mobile UX.
+- Homepage links updated.
+
+**Matrimony — Phase 1 (`19c6676`, `c2ff68e`, `719b872`):**
+- First version of `matrimony/index.html` — anonymous form-based submission (no auth).
+- Two submission flows: candidate profile + seeker requirements.
+- Honeypot spam field, consent checkbox, no public listing.
+- `photo_url` field added for private photograph links.
+- Admin review section added to admin panel.
+
+---
+
+### Phase 2 — Navigation & Content Sections (24–25 May 2026)
+
+**Grouped mobile-first navigation (`9f20b4e`):**
+- Rebuilt `assets/js/nav.js` from scratch.
+- Left-slide drawer for mobile.
+- Grouped nav: About, Community (dropdown), Heritage (dropdown), Organizations, Connect (dropdown — later changed), Support.
+- Consistent nav injected across all pages.
+
+**Admin console redesign — Phases 2 & 3 (`4596004`, `c570fec`, `40a1cc9`, `902edc4`):**
+- Rebuilt admin UI: slide-over drawer, card list, filter chips, search.
+- Full-page 2-column editor layout.
+- Added Events section with richer fields (category, registration URL, YouTube embed).
+- CSS matched to a design mockup.
+
+**Events & Announcements feature (`4596004`):**
+- Events feature: rich content, detail pages, category filters.
+- Event ribbon on homepage (shows active upcoming event or "Keep a watch" message).
+- Announcements with expandable read-more.
+
+**Our Culture / Achievers (`f9d1b28`, `785e98e`):**
+- New `culture/` section: community stories and achievers.
+- `culture/index.html` — listing page.
+- `culture/submit/index.html` — public story submission form.
+- Added Ancestral Places as a category.
+- Rich Quill editor with auto-save and video embeds (`5f06c16`).
+
+**Organizations feature (`1fc0065`):**
+- New `organizations/` section.
+- `organizations/index.html` — listing page.
+- `organizations/detail/index.html` — SPA detail page (tabbed: About, Events, Members, Gallery).
+- Full CRUD admin for organizations: name, type, founding year, contacts, logo, social links.
+- Admin can assign events to an organization.
+- Missing RLS admin policies patched (`e426fad`).
+
+---
+
+### Phase 3 — Matrimony v2 Rebuild (28–29 May 2026)
+
+**Matrimony full rebuild (`02685f4`):**
+- Tore down the anonymous form approach.
+- Rebuilt with 8-stage workflow using Google OAuth authentication.
+- New stages: `landing` → `consent` → `gate` → `browse` → `candidate-form` → `requirements-form` → `my-submissions` → `detail`.
+- `matrimony_members` table: one record per authenticated user (membership verification step — name, mobile, location, AKT profile link).
+- `matrimony_requirements` table: per-user match preferences.
+- `matrimony_profiles` table extended: `user_id`, `initials`, `native_location`, `birth_location`, `current_location`, `akt_profile_url`, `published` flag.
+- Multi-profile support (one user can submit multiple candidate profiles).
+- Admin approve → sets `published = true` → profile appears in browse.
+- SQL migration: `supabase/matrimony_migration.sql`.
+
+**Google OAuth sign-in + multi-profile (`51c1c78`):**
+- Google OAuth configured as the sole login method.
+- Multi-profile architecture confirmed.
+
+**Nav chip dropdown + My Submissions (`a7041ff`):**
+- After login: green auth chip in top-right shows signed-in user avatar.
+- Dropdown: "My Submissions", "Browse", "Sign out".
+- My Submissions page: lists user's own candidate profiles + requirements with status.
+
+**Browse grid redesign (`9311a70`):**
+- Browse shows approved/published profiles.
+- Card grid layout matching the design prototype.
+- Initials avatar, age, location, education, profession shown on cards.
+
+**Phone number display (`bcf1ea5`, `346a276`):**
+- Admin detail view shows full phone + WhatsApp contact button.
+- Browse/public view masks the phone number until admin-approved connection.
+
+**Marital status normalisation (`2b1635d`):**
+- Legacy `marital_status` values normalised to `'fresh'` for consistency.
+
+**Requirement form fixes (`fc08b22`, `5a0f5c5`, `5996a74`, `32d2807`):**
+- Fixed upsert vs insert/update logic for requirements form.
+- Decoupled gate query from extended columns to prevent crashes.
+
+**AKT profile links + verified badge (`239d0fd`):**
+- Optional AKT profile URL field on candidate form.
+- Admin can see AKT link in profile card.
+- Verified badge shown on browse cards when AKT is confirmed.
+
+**Shortlist heart icon (`88ce583`):**
+- Browse cards show a heart icon to shortlist/unshortlist profiles.
+- `matrimony_shortlists` table: `(user_id, profile_id)` unique pairs.
+- SQL migration: `supabase/matrimony_shortlists_migration.sql`.
+
+**Tab-switch fix + step 3 dots removed (`bec56f0`):**
+- Fixed bug where tab-switch in browse was kicking users back to gate.
+- Removed extraneous step 3 dots from UI progress indicators.
+
+**Admin: collapsible matrimony cards (`ac913ff`):**
+- Admin matrimony cards (profiles, seekers) now collapse/expand with a chevron toggle.
+- Reduces cognitive load when reviewing many submissions.
+
+---
+
+### Phase 4 — Organizations & Events Polish (28 May 2026)
+
+**Organization page redesign (`e251cee`):**
+- `organizations/index.html` redesigned: richer listing cards, type tags, founding year.
+- `organizations/detail/index.html` redesigned: tabbed layout (About / Events / Members / Gallery).
+- Admin: new fields for org detail (description, contact, logo URL, type, social links).
+- Admin: YouTube embed thumbnails in org event tab.
+
+**Event card fixes (`e445e54`, `da20bde`, `57cf14f`):**
+- Event cards made fully clickable using stretched-link pattern.
+- Fixed z-index so the stretched link doesn't get blocked by inner elements.
+- Org events filtered out of the main events listing page (org events only show under their org).
+
+---
+
+### Phase 5 — Admin Stability Fixes (27–28 May 2026)
+
+A series of fixes to address admin panel instability:
+
+| Commit | Fix |
+|---|---|
+| `7e6f172` | Made `loadEntryForEdit` async — fixed SyntaxError on admin page load |
+| `005d314` | Wrapped form upsert in try/catch — Saving button no longer gets stuck |
+| `9ad3fa2` | Replaced upsert with explicit insert/update — fixed save hanging |
+| `da0c84f` | Moved helper functions to top of organizations.js, added try/catch |
+| `76688ae` | Pinned Supabase SDK version, cached client, added modulepreload to all pages |
+| `f97f616` | Timeout safety net + daily keep-alive for Supabase free-tier pausing |
+| `8272688` | Added `withTimeout` to all admin.js queries |
+| `99f1e9c` | Increased keep-alive interval to 6 hours (free tier pauses after idle) |
+| `282bf3c` | Added `withTimeout` to form submit insert/update — root cause of Save freezing |
+| `b03bd17` | Stopped editor resetting when Supabase JWT auto-refreshes |
+| `bb06a9f` | Fixed three more admin editor reset / data-loss bugs |
+| `5ef695b` | Fixed root cause of 10–15s editor reset: `switchSection` was awaiting `loadTabCounts` |
+
+---
+
+### Phase 6 — Home Page, Nav & Support Revamp (29 May 2026)
+
+**Home page updates (`1c4244c`, `c623442`, `a4559a2`):**
+- Community Support banner changed to volunteer recruitment banner: "IraqiBiradari.com needs your help. Volunteer with us."
+- Heritage cards reordered: Lineage → Matrimony → Community → Archives.
+- Community card rewritten to reference Directory and Organizations with sub-links.
+- Hero tagline updated.
+- Trust Member Registration link fixed to point to `/organizations/`.
+
+**Support page full rewrite (`bdd089e`):**
+- Removed all Foundation/trust/Axis Bank/account number content.
+- Rebuilt as a volunteer-first page with 9 contribution pathways:
+  - Register your Organisation → `https://forms.gle/HKKqpmJ3nqnkXyfF6`
+  - Matrimony Coordinator
+  - Directory Curator
+  - Archives & Documents
+  - Our Culture submissions → `https://iraqibiradari.com/culture/submit/`
+  - Podcast & Elder Stories → `https://iraqibiradari.com/culture/submit/`
+  - Admin Volunteers
+  - Financial Contribution → `https://forms.gle/uATjeKCZdsMzWQmM7`
+  - WhatsApp Group → `wa.me/919818555830`
+
+**Nav label "Support Us" (`7e92861`):**
+- Nav label changed from "Support" to "Support Us" across nav.js and all footer instances.
+
+**Webmaster profile link (`f9d63d5`):**
+- Footer webmaster link updated to `https://mdshiraz.com/` (was LinkedIn, which produced errors).
+
+---
+
+### Phase 7 — Matrimony Policy & Compliance (29–30 May 2026)
+
+**Matrimony Service Policy page (`2fe89c0`):**
+- Created `matrimony/policy/index.html` — 9-section formal policy document.
+- Sections: Purpose, Accuracy of Information, Independent Verification, Code of Conduct, Ghosting Policy, Privacy, No Matchmaking Guarantee, Limitation of Liability, Community Welfare Disclaimer.
+- Policy version: `May2026-v1`.
+
+**Activity logging (`2fe89c0`):**
+- `logActivity(event_type, meta)` helper added to `matrimony.js`.
+- Logs silently to `matrimony_activity_log` table (never blocks UX).
+- Events logged: `login`, `browse_open`, `profile_view`, `shortlist_add`, `shortlist_remove`, `policy_agree`, `candidate_submit`, `requirement_submit`.
+- SQL migration: `supabase/matrimony_activity_log_migration.sql`.
+
+**Admin Activity Log tab (`2fe89c0`):**
+- New "Activity Log" tab in admin matrimony section.
+- Shows event type, user email, timestamp, and meta data.
+
+**Policy gate for existing members (`153f0eb`):**
+- When an existing member logs in without `policy_agreed_at`, they are intercepted before the dashboard.
+- A dedicated `policy-gate` stage shows the full terms with a checkbox.
+- Submit button is disabled until checkbox is ticked.
+- On agree: updates `matrimony_members` with `policy_agreed_at`, `policy_version`, `user_email`.
+- SQL migration: `supabase/matrimony_policy_fields_migration.sql` — adds `policy_agreed_at` and `policy_version` to `matrimony_members`.
+
+**Policy-gate submit button gating (`f92bc4b`):**
+- Fixed: submit button starts disabled + greyed (`opacity-40`, `cursor-not-allowed`).
+- JS listener enables it only when checkbox is ticked.
+
+**Policy accessibility (`7d08d37`, `acc7798`, `a8879b8`):**
+- Policy link available in: auth chip dropdown ("Service Policy"), notice bar above footer, footer nav link, landing page below sign-in CTA.
+
+**Nav: Connect → Matrimony (`70d975f`, `41c1a27`):**
+- Replaced "Connect" dropdown (which had Directory + Matrimony) with a direct "Matrimony" top-level link.
+- NEW badge was tried (inline, then floating) but removed — was overlapping the nav text.
+
+**Country code selector + phone validation (`f8b63c2`, `10f8dae`):**
+- Replaced plain `<input name="mobile">` in consent form with:
+  - `<select id="mobile-cc">` — 13 countries with per-country regex (`data-pattern`) and hint (`data-hint`).
+  - `<input id="mobile-num">` — number digits only.
+  - `<input type="hidden" name="mobile" id="mobile-hidden">` — populated with E.164 value (e.g. `+919876543210`).
+- "Other country" option: no regex, accepts 6–15 digits, user enters full number.
+- `validateMobile(showErr)` validates on blur and blocks form submit if invalid.
+
+**AKT URL validation + 3-state badge + admin verify (`ebf6827`):**
+- `validateAktUrl(showErr)`: URL must start with `https://apnonkitalash.com/` (optional field, empty passes).
+- Name advisory box: tells users to use their exact AKT profile name for matching.
+- 3-state badge on browse cards:
+  - `akt_verified = true` → green "AKT Verified ✓"
+  - URL present but not verified → amber "⏳ AKT Pending"
+  - No URL → no badge
+- Admin: AKT section in profile card with clickable URL + "Mark AKT Verified" button.
+- SQL migration: `supabase/matrimony_akt_verified_migration.sql` — adds `akt_verified boolean DEFAULT false` to `matrimony_profiles`.
+
+**Dedicated Consents tab in admin (`10fd3bb`):**
+- Separate from Activity Log.
+- Queries `matrimony_members WHERE policy_agreed_at IS NOT NULL ORDER BY policy_agreed_at DESC`.
+- 4-column grid: Name / Email / Mobile | Location | Policy Version pill | Agreed At timestamp.
+- Count shown above the table.
+
+**`user_email` column on `matrimony_members` (`4371afa`, SQL):**
+- `user_email text` column added to `matrimony_members`.
+- Saved in both: consent form on first join, and policy-gate agree for existing members.
+- SQL migration: `supabase/matrimony_member_email_migration.sql`.
+- Backfill SQL for existing records: `UPDATE matrimony_members m SET user_email = u.email FROM auth.users u WHERE m.user_id = u.id AND m.user_email IS NULL;`
+
+**Policy version standardised (`4371afa`):**
+- Constant `POLICY_VERSION = 'May2026-v1'` in `matrimony.js`.
+- Updated everywhere that previously said `2025-v1`.
+
+**Checkbox label mobile fix (`76e3bc0`):**
+- Fixed: `flex` on `<label>` was treating each text node and `<a>`/`<strong>` tag as a separate flex column on mobile.
+- Fix: wrapped text content in `<span>` on all 5 consent checkboxes across the matrimony page.
+
+---
+
+## 3. Database Schema
+
+### Supabase Project
+- **Project ID:** `dcslkrgocuxcogvmvfkr`
+- **URL:** `https://dcslkrgocuxcogvmvfkr.supabase.co`
+- **Admin email:** `mdshiraz.ib@outlook.com`
+- **Anon key location:** `assets/js/supabase-config.js`
+
+### Tables
+
+| Table | Purpose |
+|---|---|
+| `announcements` | Community announcements, managed in admin |
+| `events` | Events with date, category, registration URL |
+| `documents` | Heritage documents with Drive links |
+| `videos` | Heritage video links |
+| `people` | People behind the initiative |
+| `stories` | Our Culture / Achievers community stories |
+| `organizations` | Community organisations |
+| `matrimony_profiles` | Candidate profiles submitted by members |
+| `matrimony_requests` | (Legacy) anonymous match requests |
+| `matrimony_requirements` | Per-member match preferences |
+| `matrimony_members` | Auth-gated membership record (one per user) |
+| `matrimony_shortlists` | User shortlisted profiles |
+| `matrimony_activity_log` | Per-event audit trail of member activity |
+
+### Key `matrimony_members` columns
+```
+id, user_id, full_name, mobile, native_location, current_location,
+akt_profile_url, user_email, policy_agreed_at, policy_version,
+created_at, updated_at
 ```
 
-## 5. Latest Pushed Commits
+### Key `matrimony_profiles` columns
+```
+id, user_id, candidate_name, initials, photo_url, candidate_gender,
+age, marital_status, education, profession, native_location,
+birth_location, current_location, family_background, expectations,
+akt_profile_url, akt_verified, consent_confirmed, status,
+published, admin_notes, created_at, updated_at
+```
 
-Recent Iraqi Biradari commits:
+### `matrimony_activity_log` event types
+| Event | Trigger |
+|---|---|
+| `login` | User signs in |
+| `browse_open` | User opens Browse section |
+| `profile_view` | User opens a candidate detail |
+| `shortlist_add` | User shortlists a profile |
+| `shortlist_remove` | User removes a shortlist |
+| `policy_agree` | User agrees to matrimony policy |
+| `candidate_submit` | User submits a candidate profile |
+| `requirement_submit` | User submits match requirements |
 
-- `c2ff68e Add matrimony photograph link`
-- `a5a26ee Add project handoff document`
-- `19c6676 Add private matrimony workflow`
-- `f250a23 Update support bank details`
-- `c7a364d Move founding year into community detail`
-- `805dabd Remove homepage heritage nav link`
-- `e056a19 Finalize About Us page`
-- `ed356dc Update homepage links and compact page heroes`
-- `902b068 Add admin edit mode and drag ordering`
-- `3b1c454 Add support page and admin ordering controls`
-- `eb449de Add announcements page and event visibility rules`
-- `ee59a7d Fix admin auth redirect URL`
-- `c6672a9 Add Supabase-backed content admin`
-- `1477d91 Unify secondary page branding`
+---
 
-Recent AKT/Shajra commits:
+## 4. SQL Migrations — Status
 
-- `dde19a5 Polish landing page and visitor table`
-- `703fd0f Enrich visitor activity tracking`
-- `74ed8b9 Add import stats and fix tree printing`
-- `42d2a1c Latest allnamefile.json`
-- `e604509 Add GEDCOM upload safeguards and archive references`
-- `01541bd Add project handoff notes`
+| File | Purpose | Status |
+|---|---|---|
+| `supabase/schema.sql` | Base schema (all content tables + original matrimony tables) | Run |
+| `supabase/matrimony_migration.sql` | Matrimony v2: `matrimony_members`, `matrimony_requirements`, extends `matrimony_profiles` | Run |
+| `supabase/matrimony_policy_fields_migration.sql` | Adds `policy_agreed_at`, `policy_version` to `matrimony_members` | Run |
+| `supabase/matrimony_activity_log_migration.sql` | Creates `matrimony_activity_log` table + RLS + indexes | Run |
+| `supabase/matrimony_shortlists_migration.sql` | Creates `matrimony_shortlists` table + RLS | Run |
+| `supabase/matrimony_member_email_migration.sql` | Adds `user_email` column to `matrimony_members` | **Needs to be run** |
+| `supabase/matrimony_akt_verified_migration.sql` | Adds `akt_verified boolean` to `matrimony_profiles` | **Needs to be run** |
+| `supabase/matrimony_normalise_marital_status.sql` | Normalises legacy `marital_status` values | Run |
 
-## 6. AKT / Shajra Platform Status
+### Email backfill (run after `matrimony_member_email_migration.sql`)
+```sql
+UPDATE matrimony_members m
+SET user_email = u.email
+FROM auth.users u
+WHERE m.user_id = u.id
+  AND m.user_email IS NULL;
+```
 
-Repository:
+---
 
-- `/Users/shiraz/apnonkitalash/akt`
+## 5. Navigation Structure (Current)
 
-Purpose:
+```
+About
+Community ▾
+  ├─ Events
+  ├─ Organizations
+  ├─ Our Culture
+  └─ People
+Heritage ▾
+  ├─ Documents
+  ├─ Videos
+  └─ Announcements
+Organizations
+Matrimony          ← was "Connect" dropdown, now direct link
+Support Us
+```
 
-- Genealogy-only Shajra platform.
+---
 
-Important current behavior:
+## 6. Key External Links / Integrations
 
-- GEDCOM upload/parser works.
-- Duplicate GEDCOM filename warning was added.
-- Person duplicate check was intentionally removed from upload flow for now.
-- Stats tab was repurposed toward import stats / migration thinking.
-- Print tree bug was fixed so search results do not get appended to tree printouts.
-- Visitor/admin tracking was enriched with timestamp, visits, activity, device/timezone, and optional location hint.
-- Landing page was beautified with the Apnon Ki Talash logo/favicon treatment.
+| Integration | URL / Value |
+|---|---|
+| Register Organisation form | `https://forms.gle/HKKqpmJ3nqnkXyfF6` |
+| Financial Contribution form | `https://forms.gle/uATjeKCZdsMzWQmM7` |
+| WhatsApp community | `https://wa.me/919818555830` |
+| Culture story submission | `https://iraqibiradari.com/culture/submit/` |
+| Webmaster profile | `https://mdshiraz.com/` |
+| AKT genealogy platform | `https://apnonkitalash.com/` |
+| Admin phone (footer) | `9818555830` |
+| Admin location (footer) | Kanpur |
+| Webmaster name | Mohammad Shiraz Anwar |
 
-Data-migration direction discussed:
+---
 
-- Short term: delete and reupload GEDCOM data carefully.
-- Better future direction: allow reupload of an existing GEDCOM and compare/apply changes incrementally.
+## 7. Known Pending Items
 
-## 7. Current Known Gaps / Watch Items
+### SQL to run in Supabase (urgent)
+1. `supabase/matrimony_member_email_migration.sql` — adds `user_email` to `matrimony_members`.
+2. `supabase/matrimony_akt_verified_migration.sql` — adds `akt_verified` to `matrimony_profiles`.
+3. Run the email backfill SQL above after step 1.
 
-### Iraqi Biradari
+### Features not yet built
+- Admin delete button for matrimony records (currently only status change).
+- Email notification to admin when a new matrimony submission arrives.
+- Matrimony coordinator assignment workflow (`assigned_to`, `follow_up_date`).
+- Directory section (was in "Connect" dropdown, deferred to next phase).
+- Admin export of matrimony records (CSV/PDF).
+- Rate limiting / CAPTCHA for matrimony submission.
 
-1. **Verify matrimony form save**
-   - Matrimony tables are now visible in Supabase.
-   - Submit one test candidate profile with a photo link and one seeker requirement.
-   - Confirm both appear in `/admin/`.
+### Design / UX
+- Visual QA pass on `/matrimony/` on real iOS/Android devices after latest fixes.
+- Review admin matrimony cards on narrow laptop screens.
 
-2. **Matrimony moderation policy**
-   - The page is structurally private, but the human review rules still need to be decided:
-     - Who can review?
-     - What information must be verified?
-     - When to contact a family?
-     - When to reject/archive?
+---
 
-3. **Matrimony notification flow**
-   - Admin currently has to check the admin panel.
-   - Future improvement: email notification to admin when a new matrimony submission arrives.
+## 8. Admin Panel — Section Guide
 
-4. **Data privacy text**
-   - Current page has basic privacy/safety copy.
-   - A more formal privacy/disclaimer statement should be added before wider launch.
+| Tab | What it manages |
+|---|---|
+| Events | Create/edit/publish events with date, category, registration URL |
+| Announcements | Community notices, expandable previews |
+| Documents | Heritage documents with category and Drive links |
+| Videos | Heritage videos with YouTube URLs |
+| People | People behind the initiative |
+| Stories | Our Culture / Achievers community submissions |
+| Organizations | Full org CRUD with contacts, type, events, gallery |
+| Matrimony → Profiles | Candidate profiles: review, approve, reject, add notes |
+| Matrimony → Seekers | Seeker requirements: review, status, notes |
+| Matrimony → Consents | One row per member who accepted the policy, with timestamp |
+| Matrimony → Activity Log | Full event log: logins, browses, shortlists, submits |
 
-5. **Admin delete/archive for matrimony**
-   - Current matrimony admin can status-track and save notes.
-   - Deletion is not exposed in UI yet.
-   - Safer default is archive, but deletion may be needed for privacy requests.
+**Admin login:** Magic-link to `mdshiraz.ib@outlook.com`.
 
-6. **Drive archive curation**
-   - Continue categorizing relevant Drive files only.
-   - Avoid old tree files, random images, and irrelevant folders unless explicitly needed.
+---
 
-7. **Visual QA after deploy**
-   - Check `/matrimony/` on mobile and desktop after GitHub Pages/deploy finishes.
-   - Check the admin matrimony review section with real Supabase data.
+## 9. Deployment
 
-### AKT / Shajra
-
-1. **Future GEDCOM update strategy**
-   - Decide between:
-     - Delete and reupload entire GEDCOM dataset
-     - Incremental GEDCOM diff/update system
-
-2. **Data governance**
-   - Need a clear policy for edited GEDCOM files, reuploads, duplicates, and family updates.
-
-3. **Visitor analytics**
-   - Current tracking is richer, but needs ongoing monitoring for privacy and usefulness.
-
-4. **Sorting/source file order**
-   - Source file dropdown ordering issue was observed and should be kept under watch.
-
-## 8. Recommended Next Steps
-
-### Immediate
-
-1. Test `/matrimony/` by submitting one test candidate profile with a photograph link.
-2. Test one seeker requirement submission.
-3. Sign into `/admin/` and verify both submissions appear.
-4. Open the photograph link from the admin review card.
-5. Change statuses and save private notes.
-6. Archive or delete test records directly in Supabase if not needed.
-
-### Short Term
-
-1. Add admin-side delete button for matrimony submissions, with confirmation.
-2. Add an email notification mechanism for new matrimony submissions.
-3. Add a short privacy/disclaimer section on `/matrimony/`.
-4. Decide whether to keep photo links or move to private Supabase Storage signed URLs.
-5. Add optional fields:
-   - caste/sub-community notes, if appropriate
-   - preferred education
-   - preferred profession
-   - family contact verification status
-6. Add admin filters:
-   - status
-   - gender
-   - city
-   - profile/request type
-
-### Medium Term
-
-1. Add a proper coordinator workflow:
-   - assigned_to
-   - follow_up_date
-   - last_contacted_at
-   - verification_status
-2. Add export capability for admin review.
-3. Add audit log for admin actions.
-4. Add Supabase Edge Function or trusted server process for email notifications.
-5. Add a privacy policy page for the whole site.
-
-### Later
-
-1. Consider role-based admin access if more coordinators are added.
-2. Consider private invite-only family matching dashboard.
-3. Consider OTP or email verification before accepting matrimony submissions.
-4. Consider rate limiting or CAPTCHA alternative if spam appears.
-
-## 9. Deployment Notes
-
-The Iraqi Biradari site is static and GitHub-backed.
-
-Recent changes have already been pushed to:
-
-- `main`
-
-Latest push:
-
-- `19c6676 Add private matrimony workflow`
-
-After future changes:
+The site is static and hosted on GitHub Pages behind the `iraqibiradari.com` CNAME.
 
 ```bash
-git status
+# After any change:
 git add <files>
-git commit -m "<message>"
+git commit -m "description"
 git push
+# GitHub Pages auto-deploys within ~60 seconds
 ```
 
-## 10. Useful URLs
+No build step. No CI/CD pipeline. Just push to `main`.
 
-- Iraqi Biradari live site: `https://iraqibiradari.com/`
-- Iraqi Biradari admin: `https://iraqibiradari.com/admin/`
-- Iraqi Biradari matrimony: `https://iraqibiradari.com/matrimony/`
-- Iraqi Biradari support: `https://iraqibiradari.com/contact/`
-- Shajra / Apnon Ki Talash: `https://apnonkitalash.com/`
-- Wikipedia source used for brief community summary: `https://en.wikipedia.org/wiki/Iraqi_Biradari`
+---
 
-## 11. Guiding Principle
+## 10. Guiding Principles
 
-The current architecture keeps the two products cleanly separated:
+1. **Iraqi Biradari ≠ Apnon Ki Talash.** Keep the two platforms strictly separate. IB is the public community hub; AKT is the private genealogy tool. Where Shajra is referenced on IB pages, it links to `apnonkitalash.com`.
 
-- **Apnon Ki Talash** is the private/technical genealogy and Shajra system.
-- **Iraqi Biradari** is the public-facing heritage and community platform.
+2. **No public matrimony directory.** Profiles are only visible to authenticated, admin-approved members. The browse section requires login and membership verification.
 
-That separation should be preserved unless there is a strong reason to merge functionality later.
+3. **Admin is the single source of truth.** All content is Supabase-backed and managed through `/admin/`. No local JSON overrides are active.
+
+4. **Policy version is a constant.** `POLICY_VERSION = 'May2026-v1'` in `matrimony.js` flows into all consent records. To update the policy, bump this constant and update `matrimony/policy/index.html`.
+
+5. **No anonymous matrimony submissions.** The v2 rebuild requires Google OAuth sign-in + membership verification before any profile can be submitted or browsed.
