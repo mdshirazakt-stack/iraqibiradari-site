@@ -206,9 +206,45 @@ async function afterSignIn() {
   }
 
   memberRecord = member;
+
+  // Existing member hasn't agreed to the policy yet — intercept before gate
+  if (!member.policy_agreed_at) {
+    showStage('policy-gate');
+    return;
+  }
+
   await loadSubs();
   renderGate();
 }
+
+// ── Policy gate (existing members who haven't agreed yet) ──────────────────────
+const policyGateForm = document.getElementById('policy-gate-form');
+const policyGateErr  = document.getElementById('policy-gate-err');
+
+policyGateForm?.addEventListener('submit', async e => {
+  e.preventDefault();
+  const btn = policyGateForm.querySelector('button[type="submit"]');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  if (policyGateErr) policyGateErr.classList.add('hidden');
+
+  const now = new Date().toISOString();
+  const { error } = await supabase
+    .from('matrimony_members')
+    .update({ policy_agreed_at: now, policy_version: POLICY_VERSION })
+    .eq('user_id', currentUser.id);
+
+  btn.disabled = false; btn.textContent = 'I agree — continue to dashboard →';
+
+  if (error) {
+    if (policyGateErr) { policyGateErr.textContent = error.message; policyGateErr.classList.remove('hidden'); }
+    return;
+  }
+
+  logActivity('policy_agree', { policy_version: POLICY_VERSION, existing_member: true });
+  memberRecord = { ...memberRecord, policy_agreed_at: now, policy_version: POLICY_VERSION };
+  await loadSubs();
+  renderGate();
+});
 
 // ── Submissions check ──────────────────────────────────────────────────────────
 // Gate-only: minimal columns that are guaranteed to exist.

@@ -275,6 +275,54 @@ body{background:#f6efd9}
 </div>
 
 
+<!-- ══ STAGE: policy-gate (shown to existing members who haven't agreed yet) ══ -->
+<div data-stage="policy-gate">
+  <div class="wrap py-12">
+    <div class="mx-auto max-w-2xl">
+      <p class="text-xs font-black uppercase tracking-[.14em] text-archive-gold">Important · Policy Update</p>
+      <h1 class="mt-2 font-display text-3xl font-bold text-archive-green md:text-4xl">Please review and accept our Matrimony Service Policy</h1>
+      <p class="mt-3 max-w-xl text-sm leading-7 text-archive-muted">We have introduced a formal Matrimony Service Policy covering accuracy of information, code of conduct, privacy, and limitation of liability. You must read and agree before continuing.</p>
+
+      <div class="mt-8 border border-archive-line bg-white p-7 shadow-soft flex flex-col gap-5">
+
+        <!-- Policy summary -->
+        <div class="flex flex-col gap-3 text-sm leading-7 text-archive-muted">
+          <div class="border-l-4 border-archive-gold pl-4">
+            <p class="font-black text-archive-ink text-xs uppercase tracking-[.12em] mb-1">Accuracy of Information</p>
+            <p>All information you submit must be true, accurate, and complete. Providing false or misleading information may result in immediate removal and permanent suspension.</p>
+          </div>
+          <div class="border-l-4 border-archive-gold pl-4">
+            <p class="font-black text-archive-ink text-xs uppercase tracking-[.12em] mb-1">Independent Verification</p>
+            <p>The platform does not verify submitted information. All users and families must independently verify identity, background, education, employment, health, and marital status before proceeding.</p>
+          </div>
+          <div class="border-l-4 border-archive-gold pl-4">
+            <p class="font-black text-archive-ink text-xs uppercase tracking-[.12em] mb-1">Code of Conduct</p>
+            <p>No fake profiles, harassment, solicitation, or misrepresentation. Violations result in immediate removal without notice.</p>
+          </div>
+          <div class="border-l-4 border-archive-gold pl-4">
+            <p class="font-black text-archive-ink text-xs uppercase tracking-[.12em] mb-1">Limitation of Liability</p>
+            <p>The platform, its administrators, volunteers, and webmaster are not liable for any outcome — including failed discussions, emotional distress, financial loss, or any other consequence arising from use of this service. Users participate entirely at their own risk.</p>
+          </div>
+          <a href="/matrimony/policy/" target="_blank" rel="noopener" class="self-start text-xs font-black uppercase tracking-[.12em] text-archive-green underline decoration-archive-gold underline-offset-2 hover:text-archive-gold transition-colors">Read the full Matrimony Service Policy →</a>
+        </div>
+
+        <hr class="border-archive-line"/>
+
+        <form id="policy-gate-form" class="flex flex-col gap-4">
+          <label class="flex items-start gap-3 text-sm leading-6 text-archive-muted">
+            <input type="checkbox" name="policy_agreed" required class="mt-1 h-5 w-5 shrink-0 accent-archive-green"/>
+            I confirm that all information submitted by me is true and accurate to the best of my knowledge. I understand that this platform acts only as a facilitator and I remain solely responsible for independently verifying all matrimonial information and proposals. I agree to the <a href="/matrimony/policy/" target="_blank" rel="noopener" class="font-bold text-archive-green underline decoration-archive-gold underline-offset-2">Matrimony Service Policy</a>, Code of Conduct, and Limitation of Liability.
+          </label>
+          <p id="policy-gate-err" class="hidden text-xs font-bold text-red-700"></p>
+          <button type="submit" class="m-btn m-btn-primary self-start">I agree — continue to dashboard →</button>
+        </form>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+
 <!-- ══ STAGE: gate ═════════════════════════════════════════════════════════ -->
 <div data-stage="gate">
   <div class="wrap py-12">
