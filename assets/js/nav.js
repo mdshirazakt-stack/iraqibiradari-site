@@ -31,7 +31,7 @@ const GROUPS = [
       { label: 'Matrimony', href: '/matrimony/' },
     ],
   },
-  { label: 'Support', href: '/contact/' },
+  { label: 'Support Us', href: '/contact/' },
 ];
 
 function isActive(href) {
