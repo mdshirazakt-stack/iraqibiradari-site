@@ -399,6 +399,7 @@ published, admin_notes, created_at, updated_at
 | `supabase/matrimony_member_email_migration.sql` | Adds `user_email` column to `matrimony_members` | **Needs to be run** |
 | `supabase/matrimony_akt_verified_migration.sql` | Adds `akt_verified boolean` to `matrimony_profiles` | **Needs to be run** |
 | `supabase/matrimony_normalise_marital_status.sql` | Normalises legacy `marital_status` values | Run |
+| `supabase/admin_system_migration.sql` | Creates `admin_users` + `admin_activity_log`, `is_platform_admin()` helper, updates all content table RLS policies | **Needs to be run** |
 
 ### Email backfill (run after `matrimony_member_email_migration.sql`)
 ```sql
@@ -456,6 +457,12 @@ Support Us
 2. `supabase/matrimony_akt_verified_migration.sql` — adds `akt_verified` to `matrimony_profiles`.
 3. Run the email backfill SQL above after step 1.
 
+### SQL still to run in Supabase (urgent, updated)
+1. `supabase/matrimony_member_email_migration.sql`
+2. `supabase/matrimony_akt_verified_migration.sql`
+3. Email backfill SQL (see Section 4)
+4. **`supabase/admin_system_migration.sql`** — required before inviting any sub-admins
+
 ### Features not yet built
 
 #### Directory (next phase — priority)
@@ -497,6 +504,8 @@ Support Us
 | Matrimony → Seekers | Seeker requirements: review, status, notes |
 | Matrimony → Consents | One row per member who accepted the policy, with timestamp |
 | Matrimony → Activity Log | Full event log: logins, browses, shortlists, submits |
+| Admin Users | (Superadmin only) Add/deactivate admins, assign roles |
+| Admin Log | (Superadmin only) Every admin action across all roles, colour-coded |
 
 **Admin login:** Magic-link to `mdshiraz.ib@outlook.com`.
 
