@@ -604,15 +604,23 @@
             </div>
             <div class="grid gap-1.5">
               <label class="text-xs font-black uppercase tracking-[.1em] text-archive-muted">Role *</label>
-              <select name="adminRole" class="min-h-10 rounded-lg border border-archive-line px-3 text-sm bg-archive-cream focus:outline-none focus:border-archive-green">
+              <select name="adminRole" data-admin-role-select class="min-h-10 rounded-lg border border-archive-line px-3 text-sm bg-archive-cream focus:outline-none focus:border-archive-green">
                 <option value="org_admin">Organisation Admin — manages org pages</option>
                 <option value="matrimony_admin">Matrimony Admin — reviews matrimony submissions</option>
                 <option value="content_admin">Content Admin — writes culture, people, achievers</option>
               </select>
             </div>
+            <!-- Org assignment — shown only when org_admin is selected -->
+            <div data-org-assign-row class="grid gap-1.5 lg:col-span-3 md:col-span-2">
+              <label class="text-xs font-black uppercase tracking-[.1em] text-archive-muted">Assign Organisation *</label>
+              <select name="adminOrgId" data-admin-org-select class="min-h-10 rounded-lg border border-archive-gold px-3 text-sm bg-archive-cream focus:outline-none focus:border-archive-green">
+                <option value="">— loading organisations… —</option>
+              </select>
+              <p class="text-xs text-archive-muted">This admin will only see and edit this organisation's page.</p>
+            </div>
             <div class="grid gap-1.5 md:col-span-2">
               <label class="text-xs font-black uppercase tracking-[.1em] text-archive-muted">Notes (optional)</label>
-              <input name="adminNotes" class="min-h-10 rounded-lg border border-archive-line px-3 text-sm bg-archive-cream focus:outline-none focus:border-archive-green" placeholder="Which organisation, area of responsibility, contact…"/>
+              <input name="adminNotes" class="min-h-10 rounded-lg border border-archive-line px-3 text-sm bg-archive-cream focus:outline-none focus:border-archive-green" placeholder="Contact person, responsibilities…"/>
             </div>
             <div class="grid gap-1.5">
               <label class="text-xs font-black uppercase tracking-[.1em] text-archive-muted">&nbsp;</label>

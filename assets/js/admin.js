@@ -740,9 +740,17 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
     // Update session chip
     const sessionEmailEl = document.querySelector('[data-session-email]');
     if (sessionEmailEl) {
-      const label = isSuperAdmin
+      let label = isSuperAdmin
         ? currentAdminUser.email
         : `${currentAdminUser.name} · ${r.replace(/_/g, ' ')}`;
+      // Org admins: fetch and show their org name inline (best-effort, fire-and-forget)
+      if (r === 'org_admin' && currentAdminUser.assigned_org_ids?.length) {
+        supabase.from('organizations').select('title')
+          .in('id', currentAdminUser.assigned_org_ids).limit(1)
+          .then(({ data: od }) => {
+            if (od?.[0]?.title) sessionEmailEl.textContent = `${currentAdminUser.name} · ${od[0].title}`;
+          });
+      }
       sessionEmailEl.textContent = label;
     }
   }
@@ -777,17 +785,30 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
   async function renderAdminUsers() {
     if (!adminUsersList) return;
     adminUsersList.innerHTML = `<p class="text-sm text-archive-muted">Loading…</p>`;
-    let data, error;
+
+    // Load admins + orgs in parallel
+    let admins, orgs;
     try {
-      ({ data, error } = await withTimeout(
-        supabase.from('admin_users').select('*').order('created_at', { ascending: false })
-      ));
+      ([{ data: admins }, { data: orgs }] = await withTimeout(Promise.all([
+        supabase.from('admin_users').select('*').order('created_at', { ascending: false }),
+        supabase.from('organizations').select('id, title').order('title'),
+      ])));
     } catch (err) {
       adminUsersList.innerHTML = `<p class="text-sm text-archive-muted">⏱ ${escapeHtml(err.message)}</p>`;
       return;
     }
-    if (error) { adminUsersList.innerHTML = `<p class="text-sm text-archive-muted">${escapeHtml(error.message)}</p>`; return; }
-    if (!data?.length) {
+
+    // Build org lookup map for display
+    const orgMap = Object.fromEntries((orgs || []).map(o => [o.id, o.title]));
+
+    // Populate org selector in the invite form
+    const orgSelect = document.querySelector('[data-admin-org-select]');
+    if (orgSelect && orgs?.length) {
+      orgSelect.innerHTML = `<option value="">— select organisation —</option>` +
+        (orgs || []).map(o => `<option value="${escapeHtml(o.id)}">${escapeHtml(o.title)}</option>`).join('');
+    }
+
+    if (!admins?.length) {
       adminUsersList.innerHTML = `<p class="text-sm text-archive-muted italic">No additional admins yet. Invite one below.</p>`;
       return;
     }
@@ -798,22 +819,26 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
     adminUsersList.innerHTML = `
       <div class="overflow-hidden border border-archive-line">
         <div class="grid grid-cols-[1fr_auto_auto_auto] gap-4 items-center border-b border-archive-line bg-archive-paper/50 px-5 py-3 text-[10px] font-black uppercase tracking-[.12em] text-archive-gold">
-          <span>Admin</span><span>Role</span><span>Status</span><span>Action</span>
+          <span>Admin · Organisation</span><span>Role</span><span>Status</span><span>Action</span>
         </div>
-        ${data.map(u => `
-        <div class="grid grid-cols-[1fr_auto_auto_auto] gap-4 items-center border-b border-archive-line/60 last:border-b-0 px-5 py-4 hover:bg-archive-cream/40">
-          <div class="min-w-0">
-            <p class="text-sm font-bold text-archive-ink truncate">${escapeHtml(u.name)}</p>
-            <p class="text-xs text-archive-muted truncate">${escapeHtml(u.email)}</p>
-            ${u.notes ? `<p class="mt-0.5 text-xs text-archive-muted/70 italic truncate">${escapeHtml(u.notes)}</p>` : ''}
-          </div>
-          <span class="rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[.08em] ${roleColor(u.role)}">${roleLabel(u.role)}</span>
-          <span class="rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[.08em] ${u.is_active ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'}">${u.is_active ? 'Active' : 'Inactive'}</span>
-          <button data-admin-toggle="${escapeHtml(u.id)}" data-active="${u.is_active}"
-            class="text-xs font-bold ${u.is_active ? 'text-red-500 hover:text-red-700' : 'text-archive-green hover:text-archive-green/70'}">
-            ${u.is_active ? 'Deactivate' : 'Reactivate'}
-          </button>
-        </div>`).join('')}
+        ${admins.map(u => {
+          const assignedOrgs = (u.assigned_org_ids || []).map(id => orgMap[id]).filter(Boolean);
+          return `
+          <div class="grid grid-cols-[1fr_auto_auto_auto] gap-4 items-center border-b border-archive-line/60 last:border-b-0 px-5 py-4 hover:bg-archive-cream/40">
+            <div class="min-w-0">
+              <p class="text-sm font-bold text-archive-ink truncate">${escapeHtml(u.name)}</p>
+              <p class="text-xs text-archive-muted truncate">${escapeHtml(u.email)}</p>
+              ${assignedOrgs.length ? `<p class="mt-1 text-xs font-bold text-blue-700 truncate">🏛 ${assignedOrgs.map(escapeHtml).join(', ')}</p>` : ''}
+              ${u.notes ? `<p class="mt-0.5 text-xs text-archive-muted/70 italic truncate">${escapeHtml(u.notes)}</p>` : ''}
+            </div>
+            <span class="rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[.08em] ${roleColor(u.role)}">${roleLabel(u.role)}</span>
+            <span class="rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[.08em] ${u.is_active ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'}">${u.is_active ? 'Active' : 'Inactive'}</span>
+            <button data-admin-toggle="${escapeHtml(u.id)}" data-active="${u.is_active}"
+              class="text-xs font-bold ${u.is_active ? 'text-red-500 hover:text-red-700' : 'text-archive-green hover:text-archive-green/70'}">
+              ${u.is_active ? 'Deactivate' : 'Reactivate'}
+            </button>
+          </div>`;
+        }).join('')}
       </div>`;
 
     adminUsersList.querySelectorAll('[data-admin-toggle]').forEach(btn => {
@@ -829,6 +854,22 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
     });
   }
 
+  // Show/hide org assignment row based on selected role
+  document.querySelector('[data-admin-role-select]')?.addEventListener('change', function () {
+    const orgRow = document.querySelector('[data-org-assign-row]');
+    const orgSel = document.querySelector('[data-admin-org-select]');
+    if (!orgRow) return;
+    const isOrg = this.value === 'org_admin';
+    orgRow.style.display = isOrg ? '' : 'none';
+    if (orgSel) orgSel.required = isOrg;
+  });
+  // Init: hide org row (org_admin is first option, so show it on load)
+  (() => {
+    const roleEl = document.querySelector('[data-admin-role-select]');
+    const orgRow = document.querySelector('[data-org-assign-row]');
+    if (orgRow && roleEl) orgRow.style.display = roleEl.value === 'org_admin' ? '' : 'none';
+  })();
+
   addAdminForm?.addEventListener('submit', async e => {
     e.preventDefault();
     const fd    = new FormData(addAdminForm);
@@ -836,13 +877,21 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
     const email = String(fd.get('adminEmail') || '').trim().toLowerCase();
     const role  = String(fd.get('adminRole')  || 'content_admin');
     const notes = String(fd.get('adminNotes') || '').trim() || null;
+    const orgId = String(fd.get('adminOrgId') || '').trim();
     if (!name || !email) return;
+    if (role === 'org_admin' && !orgId) {
+      setStatus('Please select an organisation for this admin.');
+      return;
+    }
 
     const btn = addAdminForm.querySelector('button[type="submit"]');
     if (btn) { btn.disabled = true; btn.textContent = 'Adding…'; }
 
+    const assigned_org_ids = (role === 'org_admin' && orgId) ? [orgId] : [];
+
     const { error } = await supabase.from('admin_users').insert({
       email, name, role, notes,
+      assigned_org_ids,
       invited_by: currentAdminUser?.email || ADMIN_EMAIL,
     });
 
@@ -971,6 +1020,13 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
     }
 
     allEntries = data || [];
+
+    // Org admins only see their assigned organisations
+    if (currentAdminRole === 'org_admin' && currentType === 'organizations') {
+      const allowed = currentAdminUser?.assigned_org_ids || [];
+      if (allowed.length) allEntries = allEntries.filter(r => allowed.includes(r.id));
+    }
+
     renderFilterChips();
     renderFilteredList();
     // Keep tab count badge in sync with current section
