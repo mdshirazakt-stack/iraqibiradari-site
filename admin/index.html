@@ -134,6 +134,12 @@
           <button data-section-tab="matrimony" role="tab" type="button" class="inline-flex items-center gap-2 min-h-9 rounded-lg px-4 text-xs font-black uppercase tracking-[0.1em]">
             Matrimony <span data-tab-count="matrimony" class="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-archive-paper px-1.5 text-[11px]">0</span>
           </button>
+          <button data-section-tab="admin-users" role="tab" type="button" class="inline-flex items-center gap-2 min-h-9 rounded-lg px-4 text-xs font-black uppercase tracking-[0.1em]">
+            Admin Users <span data-tab-count="admin-users" class="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-archive-paper px-1.5 text-[11px]">—</span>
+          </button>
+          <button data-section-tab="admin-log" role="tab" type="button" class="inline-flex items-center gap-2 min-h-9 rounded-lg px-4 text-xs font-black uppercase tracking-[0.1em]">
+            Admin Log
+          </button>
         </div>
         <div class="mt-0 border-b border-archive-line"></div>
       </div>
@@ -571,6 +577,59 @@
           </div>
         </div>
         <div data-matrimony-list class="mt-6 grid gap-4"></div>
+      </section>
+
+      <!-- ── ADMIN USERS SECTION ──────────────────────────────── -->
+      <section data-admin-users-section hidden class="mx-auto mt-6 w-[min(1120px,calc(100%-36px))] grid gap-5">
+
+        <!-- Current admins list -->
+        <div class="rounded-xl border border-archive-line bg-white p-6 shadow-card">
+          <p class="text-xs font-black uppercase tracking-[0.18em] text-archive-gold">Access Control</p>
+          <h2 class="mt-2 font-display text-3xl font-bold text-archive-green">Admin Users</h2>
+          <p class="mt-2 max-w-3xl text-sm leading-6 text-archive-muted">Manage who has access to the admin console and what sections they can manage. The superadmin account always has full access and cannot be modified here.</p>
+          <div data-admin-users-list class="mt-6 grid gap-3"></div>
+        </div>
+
+        <!-- Add new admin -->
+        <div class="rounded-xl border border-archive-line bg-white p-6 shadow-card">
+          <p class="text-xs font-black uppercase tracking-[0.18em] text-archive-gold mb-4">Invite a New Admin</p>
+          <form data-add-admin-form class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div class="grid gap-1.5">
+              <label class="text-xs font-black uppercase tracking-[.1em] text-archive-muted">Full Name *</label>
+              <input name="adminName" required class="min-h-10 rounded-lg border border-archive-line px-3 text-sm bg-archive-cream focus:outline-none focus:border-archive-green" placeholder="Mohammad Ali"/>
+            </div>
+            <div class="grid gap-1.5">
+              <label class="text-xs font-black uppercase tracking-[.1em] text-archive-muted">Email Address *</label>
+              <input name="adminEmail" type="email" required class="min-h-10 rounded-lg border border-archive-line px-3 text-sm bg-archive-cream focus:outline-none focus:border-archive-green" placeholder="admin@example.com"/>
+            </div>
+            <div class="grid gap-1.5">
+              <label class="text-xs font-black uppercase tracking-[.1em] text-archive-muted">Role *</label>
+              <select name="adminRole" class="min-h-10 rounded-lg border border-archive-line px-3 text-sm bg-archive-cream focus:outline-none focus:border-archive-green">
+                <option value="org_admin">Organisation Admin — manages org pages</option>
+                <option value="matrimony_admin">Matrimony Admin — reviews matrimony submissions</option>
+                <option value="content_admin">Content Admin — writes culture, people, achievers</option>
+              </select>
+            </div>
+            <div class="grid gap-1.5 md:col-span-2">
+              <label class="text-xs font-black uppercase tracking-[.1em] text-archive-muted">Notes (optional)</label>
+              <input name="adminNotes" class="min-h-10 rounded-lg border border-archive-line px-3 text-sm bg-archive-cream focus:outline-none focus:border-archive-green" placeholder="Which organisation, area of responsibility, contact…"/>
+            </div>
+            <div class="grid gap-1.5">
+              <label class="text-xs font-black uppercase tracking-[.1em] text-archive-muted">&nbsp;</label>
+              <button type="submit" class="min-h-10 rounded-lg bg-archive-green px-5 text-xs font-black uppercase tracking-[0.12em] text-archive-cream hover:bg-archive-green/80">Add Admin →</button>
+            </div>
+          </form>
+          <p data-add-admin-status class="mt-3 hidden text-xs font-bold text-archive-green"></p>
+        </div>
+
+      </section>
+
+      <!-- ── ADMIN ACTIVITY LOG SECTION ────────────────────────── -->
+      <section data-admin-log-section hidden class="mx-auto mt-6 w-[min(1120px,calc(100%-36px))] rounded-xl border border-archive-line bg-white p-6 shadow-card">
+        <p class="text-xs font-black uppercase tracking-[0.18em] text-archive-gold">Superadmin View</p>
+        <h2 class="mt-2 font-display text-3xl font-bold text-archive-green">Admin Activity Log</h2>
+        <p class="mt-2 max-w-3xl text-sm leading-6 text-archive-muted">Every action taken by every admin user — logins, creates, edits, deletes, approvals, and status changes.</p>
+        <div data-admin-log-list class="mt-6 grid gap-2"></div>
       </section>
 
     </section>

@@ -50,6 +50,13 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
   const membersList       = document.querySelector('[data-members-list]');
   const addMemberButton   = document.querySelector('[data-add-member]');
 
+  const adminUsersSection  = document.querySelector('[data-admin-users-section]');
+  const adminLogSection    = document.querySelector('[data-admin-log-section]');
+  const adminUsersList     = document.querySelector('[data-admin-users-list]');
+  const adminLogList       = document.querySelector('[data-admin-log-list]');
+  const addAdminForm       = document.querySelector('[data-add-admin-form]');
+  const addAdminStatus     = document.querySelector('[data-add-admin-status]');
+
   const fieldRows = {
     eventType:       document.querySelector('[data-field="eventType"]'),
     date:            document.querySelector('[data-field="date"]'),
@@ -118,6 +125,8 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
   let draggedEntryId       = null;
   let currentFilter        = 'all';
   let allEntries           = [];
+  let currentAdminRole     = null;   // 'superadmin' | 'org_admin' | 'matrimony_admin' | 'content_admin'
+  let currentAdminUser     = null;   // { email, name, role, assigned_org_ids, ... }
 
   updateSectionTabs('events');
   updateFieldVisibility();
@@ -159,7 +168,9 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
     contentSection.style.display        = 'none';
     editorView.style.display            = 'block';
     submissionsSection.style.display    = 'none';
-    if (orgMembersSection) orgMembersSection.style.display = 'none';
+    if (orgMembersSection)  orgMembersSection.style.display  = 'none';
+    if (adminUsersSection)  adminUsersSection.hidden          = true;
+    if (adminLogSection)    adminLogSection.hidden            = true;
   }
 
   function showList() {
@@ -395,6 +406,13 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
     if (editingNote) editingNote.style.cssText = '';
     if (saveStatus) saveStatus.style.display = 'inline-flex';
 
+    logAdminActivity(
+      editingEntry ? 'update' : 'create',
+      savedType,
+      editingEntry?.id || payload.id || null,
+      payload.title || null
+    );
+
     showList();
     resetFormState(savedType);
     setStatus('Saved successfully.');
@@ -409,8 +427,11 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
 
     if (action === 'delete') {
       if (!confirm('Delete this entry? This cannot be undone.')) return;
+      const delCard = list.querySelector(`[data-entry-id="${CSS.escape(id)}"]`);
+      const delTitle = delCard?.querySelector('h2')?.textContent || null;
       try {
         const { error } = await withTimeout(supabase.from(table).delete().eq('id', id));
+        if (!error) logAdminActivity('delete', table, id, delTitle);
         setStatus(error ? error.message : 'Entry deleted.');
       } catch (err) { setStatus(err.message); return; }
       await renderList();
@@ -419,8 +440,11 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
 
     if (action === 'toggle') {
       const published = button.dataset.published !== 'true';
+      const togCard   = list.querySelector(`[data-entry-id="${CSS.escape(id)}"]`);
+      const togTitle  = togCard?.querySelector('h2')?.textContent || null;
       try {
         const { error } = await withTimeout(supabase.from(table).update({ published }).eq('id', id));
+        if (!error) logAdminActivity(published ? 'publish' : 'unpublish', table, id, togTitle);
         setStatus(error ? error.message : published ? 'Published.' : 'Unpublished.');
       } catch (err) { setStatus(err.message); return; }
       await renderList();
@@ -524,22 +548,27 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
 
     if (btn.dataset.matrimonyAction === 'status') {
       const newStatus = btn.dataset.statusValue;
-      // 'approved' flips the profile live in browse; anything else takes it down
       const published = (currentMatrimonyType === 'matrimony_profiles') ? (newStatus === 'approved') : undefined;
       const patch = { status: newStatus, updated_at: new Date().toISOString() };
       if (published !== undefined) patch.published = published;
       const { error } = await supabase.from(currentMatrimonyType).update(patch).eq('id', id);
+      if (!error) logAdminActivity(
+        ['approved','matched'].includes(newStatus) ? 'approve' : ['rejected','archived'].includes(newStatus) ? 'reject' : 'status_change',
+        'matrimony', id, newStatus
+      );
       setStatus(error ? error.message : `Status updated to "${newStatus}".${published ? ' — now visible in browse.' : ''}`);
     }
     if (btn.dataset.matrimonyAction === 'notes') {
       const notes = card.querySelector('[data-admin-notes]').value;
       const { error } = await supabase.from(currentMatrimonyType)
         .update({ admin_notes: notes, updated_at: new Date().toISOString() }).eq('id', id);
+      if (!error) logAdminActivity('notes_save', 'matrimony', id);
       setStatus(error ? error.message : 'Notes saved.');
     }
     if (btn.dataset.matrimonyAction === 'akt-verify') {
       const { error } = await supabase.from('matrimony_profiles')
         .update({ akt_verified: true, updated_at: new Date().toISOString() }).eq('id', id);
+      if (!error) logAdminActivity('akt_verify', 'matrimony', id);
       setStatus(error ? error.message : 'AKT profile marked as verified ✓');
     }
     await renderMatrimonyList();
@@ -594,6 +623,9 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
 
   function switchSection(section) {
     const isMatrimony     = section === 'matrimony';
+    const isAdminUsers    = section === 'admin-users';
+    const isAdminLog      = section === 'admin-log';
+    const isSpecial       = isMatrimony || isAdminUsers || isAdminLog;
     const showSubmissions = section === 'stories';
 
     showList(); // always return to list when switching tabs
@@ -601,11 +633,13 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
     currentFilter = 'all';
     if (searchInput) searchInput.value = '';
 
-    contentSection.style.display     = isMatrimony ? 'none' : 'grid';
-    matrimonySection.style.display   = isMatrimony ? 'block' : 'none';
-    submissionsSection.style.display = showSubmissions ? 'block' : 'none';
+    contentSection.style.display      = isSpecial ? 'none' : 'grid';
+    matrimonySection.style.display    = isMatrimony ? 'block' : 'none';
+    if (adminUsersSection) adminUsersSection.hidden = !isAdminUsers;
+    if (adminLogSection)   adminLogSection.hidden   = !isAdminLog;
+    submissionsSection.style.display  = showSubmissions ? 'block' : 'none';
 
-    if (!isMatrimony) {
+    if (!isSpecial) {
       currentType = section;
       resetFormState(section);
       updateNewEntryButton(section);
@@ -614,37 +648,274 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
       if (editorBreadcrumb) editorBreadcrumb.textContent = labels[section] || section;
       renderList();
       if (showSubmissions) renderSubmissions();
-      // Populate org dropdown when switching to a section that supports org linking
       if (['events', 'videos', 'announcements', 'documents'].includes(section)) loadOrgsDropdown();
-    } else {
+    } else if (isMatrimony) {
       renderMatrimonyList();
+    } else if (isAdminUsers) {
+      renderAdminUsers();
+    } else if (isAdminLog) {
+      renderAdminLog();
     }
   }
 
   async function reflectSession(session) {
     const email      = session?.user?.email;
-    const allowed    = email === ADMIN_EMAIL;
-    const wasAllowed = !adminPanel.hidden; // already showing admin? (token refresh / INITIAL_SESSION re-fire)
+    const wasAllowed = !adminPanel.hidden;
 
-    authPanel.hidden  = Boolean(allowed);
-    adminPanel.hidden = !allowed;
-
-    // Update signed-in chip
-    const sessionEmailEl = document.querySelector('[data-session-email]');
-    if (sessionEmailEl) sessionEmailEl.textContent = email || 'Signed in';
-
-    if (email && !allowed) setStatus(`Signed in as ${email}, but access is restricted to ${ADMIN_EMAIL}.`);
-    if (allowed && !wasAllowed) {
-      // Only run full initialisation when transitioning logged-out → logged-in.
-      // Subsequent auth events (INITIAL_SESSION re-fire, USER_UPDATED, etc.) are
-      // silently ignored so an open editor is never reset.
-      setStatus(`Signed in as ${email}.`);
-      // switchSection FIRST — must run before the user can click anything.
-      // loadTabCounts is cosmetic (badge numbers only) and can finish in the
-      // background without blocking or touching the editor.
-      switchSection('events');
-      loadTabCounts(); // fire-and-forget — never await this here
+    if (!email) {
+      authPanel.hidden  = false;
+      adminPanel.hidden = true;
+      return;
     }
+
+    // ── Superadmin — always full access ──
+    if (email === ADMIN_EMAIL) {
+      currentAdminRole = 'superadmin';
+      currentAdminUser = { email, name: 'Super Admin', role: 'superadmin', is_active: true, assigned_org_ids: [] };
+      authPanel.hidden  = true;
+      adminPanel.hidden = false;
+      if (!wasAllowed) {
+        applyRoleVisibility();
+        setStatus(`Signed in as ${email}.`);
+        logAdminActivity('login');
+        switchSection('events');
+        loadTabCounts();
+      }
+      return;
+    }
+
+    // ── Other emails — check admin_users table ──
+    let adminUser = null;
+    try {
+      const { data } = await supabase.from('admin_users')
+        .select('*').eq('email', email).eq('is_active', true).maybeSingle();
+      adminUser = data;
+    } catch (_) { /* ignore network errors — deny access */ }
+
+    if (!adminUser) {
+      authPanel.hidden  = false;
+      adminPanel.hidden = true;
+      setStatus(`Access denied. ${email} is not registered as a platform admin. Contact the superadmin.`);
+      await supabase.auth.signOut();
+      return;
+    }
+
+    currentAdminRole = adminUser.role;
+    currentAdminUser = adminUser;
+    authPanel.hidden  = true;
+    adminPanel.hidden = false;
+
+    if (!wasAllowed) {
+      applyRoleVisibility();
+      setStatus(`Signed in as ${adminUser.name} (${adminUser.role.replace(/_/g, ' ')}).`);
+      logAdminActivity('login');
+      switchSection(getFirstAllowedSection());
+      loadTabCounts();
+    }
+  }
+
+  // ── Role visibility ──────────────────────────────────────────────────
+  function applyRoleVisibility() {
+    const r            = currentAdminRole;
+    const isSuperAdmin = r === 'superadmin';
+
+    const tabRules = {
+      'events':        isSuperAdmin || r === 'org_admin',
+      'announcements': isSuperAdmin,
+      'documents':     isSuperAdmin,
+      'videos':        isSuperAdmin,
+      'people':        isSuperAdmin || r === 'content_admin',
+      'stories':       isSuperAdmin || r === 'content_admin',
+      'organizations': isSuperAdmin || r === 'org_admin',
+      'matrimony':     isSuperAdmin || r === 'matrimony_admin',
+      'admin-users':   isSuperAdmin,
+      'admin-log':     isSuperAdmin,
+    };
+
+    sectionTabs.forEach(tab => {
+      const show = tabRules[tab.dataset.sectionTab] !== false;
+      tab.style.display = show ? '' : 'none';
+    });
+
+    // Update session chip
+    const sessionEmailEl = document.querySelector('[data-session-email]');
+    if (sessionEmailEl) {
+      const label = isSuperAdmin
+        ? currentAdminUser.email
+        : `${currentAdminUser.name} · ${r.replace(/_/g, ' ')}`;
+      sessionEmailEl.textContent = label;
+    }
+  }
+
+  function getFirstAllowedSection() {
+    switch (currentAdminRole) {
+      case 'org_admin':       return 'organizations';
+      case 'matrimony_admin': return 'matrimony';
+      case 'content_admin':   return 'stories';
+      default:                return 'events';
+    }
+  }
+
+  // ── Admin activity logging ───────────────────────────────────────────
+  async function logAdminActivity(action, section = null, targetId = null, targetTitle = null, meta = null) {
+    if (!currentAdminUser) return;
+    try {
+      await supabase.from('admin_activity_log').insert({
+        admin_email:  currentAdminUser.email,
+        admin_name:   currentAdminUser.name || currentAdminUser.email,
+        admin_role:   currentAdminRole,
+        action,
+        section,
+        target_id:    targetId   ? String(targetId)   : null,
+        target_title: targetTitle ? String(targetTitle) : null,
+        meta,
+      });
+    } catch (_) { /* never block UX */ }
+  }
+
+  // ── Admin Users management ───────────────────────────────────────────
+  async function renderAdminUsers() {
+    if (!adminUsersList) return;
+    adminUsersList.innerHTML = `<p class="text-sm text-archive-muted">Loading…</p>`;
+    let data, error;
+    try {
+      ({ data, error } = await withTimeout(
+        supabase.from('admin_users').select('*').order('created_at', { ascending: false })
+      ));
+    } catch (err) {
+      adminUsersList.innerHTML = `<p class="text-sm text-archive-muted">⏱ ${escapeHtml(err.message)}</p>`;
+      return;
+    }
+    if (error) { adminUsersList.innerHTML = `<p class="text-sm text-archive-muted">${escapeHtml(error.message)}</p>`; return; }
+    if (!data?.length) {
+      adminUsersList.innerHTML = `<p class="text-sm text-archive-muted italic">No additional admins yet. Invite one below.</p>`;
+      return;
+    }
+
+    const roleLabel = r => ({ org_admin:'Organisation Admin', matrimony_admin:'Matrimony Admin', content_admin:'Content Admin' }[r] || r);
+    const roleColor = r => ({ org_admin:'bg-blue-50 text-blue-700', matrimony_admin:'bg-purple-50 text-purple-700', content_admin:'bg-amber-50 text-amber-700' }[r] || 'bg-archive-paper text-archive-muted');
+
+    adminUsersList.innerHTML = `
+      <div class="overflow-hidden border border-archive-line">
+        <div class="grid grid-cols-[1fr_auto_auto_auto] gap-4 items-center border-b border-archive-line bg-archive-paper/50 px-5 py-3 text-[10px] font-black uppercase tracking-[.12em] text-archive-gold">
+          <span>Admin</span><span>Role</span><span>Status</span><span>Action</span>
+        </div>
+        ${data.map(u => `
+        <div class="grid grid-cols-[1fr_auto_auto_auto] gap-4 items-center border-b border-archive-line/60 last:border-b-0 px-5 py-4 hover:bg-archive-cream/40">
+          <div class="min-w-0">
+            <p class="text-sm font-bold text-archive-ink truncate">${escapeHtml(u.name)}</p>
+            <p class="text-xs text-archive-muted truncate">${escapeHtml(u.email)}</p>
+            ${u.notes ? `<p class="mt-0.5 text-xs text-archive-muted/70 italic truncate">${escapeHtml(u.notes)}</p>` : ''}
+          </div>
+          <span class="rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[.08em] ${roleColor(u.role)}">${roleLabel(u.role)}</span>
+          <span class="rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[.08em] ${u.is_active ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'}">${u.is_active ? 'Active' : 'Inactive'}</span>
+          <button data-admin-toggle="${escapeHtml(u.id)}" data-active="${u.is_active}"
+            class="text-xs font-bold ${u.is_active ? 'text-red-500 hover:text-red-700' : 'text-archive-green hover:text-archive-green/70'}">
+            ${u.is_active ? 'Deactivate' : 'Reactivate'}
+          </button>
+        </div>`).join('')}
+      </div>`;
+
+    adminUsersList.querySelectorAll('[data-admin-toggle]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id     = btn.dataset.adminToggle;
+        const active = btn.dataset.active === 'true';
+        const { error: e } = await supabase.from('admin_users')
+          .update({ is_active: !active, updated_at: new Date().toISOString() }).eq('id', id);
+        if (e) { setStatus(e.message); return; }
+        logAdminActivity(active ? 'deactivate_admin' : 'reactivate_admin', 'admin_users', id);
+        renderAdminUsers();
+      });
+    });
+  }
+
+  addAdminForm?.addEventListener('submit', async e => {
+    e.preventDefault();
+    const fd    = new FormData(addAdminForm);
+    const name  = String(fd.get('adminName')  || '').trim();
+    const email = String(fd.get('adminEmail') || '').trim().toLowerCase();
+    const role  = String(fd.get('adminRole')  || 'content_admin');
+    const notes = String(fd.get('adminNotes') || '').trim() || null;
+    if (!name || !email) return;
+
+    const btn = addAdminForm.querySelector('button[type="submit"]');
+    if (btn) { btn.disabled = true; btn.textContent = 'Adding…'; }
+
+    const { error } = await supabase.from('admin_users').insert({
+      email, name, role, notes,
+      invited_by: currentAdminUser?.email || ADMIN_EMAIL,
+    });
+
+    if (btn) { btn.disabled = false; btn.textContent = 'Add Admin →'; }
+
+    if (error) {
+      if (addAdminStatus) { addAdminStatus.textContent = `Error: ${error.message}`; addAdminStatus.classList.remove('hidden'); addAdminStatus.style.color = '#743a32'; }
+      return;
+    }
+
+    logAdminActivity('add_admin', 'admin_users', null, `${name} <${email}> as ${role}`);
+    addAdminForm.reset();
+    if (addAdminStatus) { addAdminStatus.textContent = `✓ ${name} added as ${role.replace(/_/g, ' ')}.`; addAdminStatus.classList.remove('hidden'); addAdminStatus.style.color = ''; setTimeout(() => addAdminStatus.classList.add('hidden'), 4000); }
+    renderAdminUsers();
+    // Update admin count badge
+    const badge = document.querySelector('[data-tab-count="admin-users"]');
+    if (badge) { const n = parseInt(badge.textContent) || 0; badge.textContent = n + 1; }
+  });
+
+  // ── Admin Activity Log ───────────────────────────────────────────────
+  async function renderAdminLog() {
+    if (!adminLogList) return;
+    adminLogList.innerHTML = `<p class="text-sm text-archive-muted">Loading…</p>`;
+    let data, error;
+    try {
+      ({ data, error } = await withTimeout(
+        supabase.from('admin_activity_log').select('*')
+          .order('created_at', { ascending: false }).limit(500)
+      ));
+    } catch (err) {
+      adminLogList.innerHTML = `<p class="text-sm text-archive-muted">⏱ ${escapeHtml(err.message)}</p>`;
+      return;
+    }
+    if (error) { adminLogList.innerHTML = `<p class="text-sm text-archive-muted">${escapeHtml(error.message)}</p>`; return; }
+    if (!data?.length) {
+      adminLogList.innerHTML = `<p class="text-sm text-archive-muted italic">No activity recorded yet.</p>`;
+      return;
+    }
+
+    const actionColor = a => ({
+      login:            'bg-archive-paper text-archive-muted',
+      create:           'bg-green-50 text-green-700',
+      update:           'bg-blue-50 text-blue-700',
+      delete:           'bg-red-50 text-red-600',
+      publish:          'bg-green-100 text-green-800',
+      unpublish:        'bg-amber-50 text-amber-700',
+      approve:          'bg-green-100 text-green-800',
+      reject:           'bg-red-50 text-red-600',
+      akt_verify:       'bg-blue-50 text-blue-700',
+      add_admin:        'bg-purple-50 text-purple-700',
+      deactivate_admin: 'bg-red-50 text-red-600',
+      reactivate_admin: 'bg-green-50 text-green-700',
+    }[a] || 'bg-archive-paper text-archive-muted');
+
+    adminLogList.innerHTML = `
+      <div class="overflow-hidden border border-archive-line">
+        <div class="border-b border-archive-line bg-archive-paper/50 px-5 py-3 grid grid-cols-[auto_1fr_auto_auto] gap-4 text-[10px] font-black uppercase tracking-[.12em] text-archive-gold">
+          <span>Action</span><span>Admin · Target</span><span>Section</span><span>When</span>
+        </div>
+        ${data.map(row => {
+          const when = new Date(row.created_at).toLocaleString('en-IN', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit', hour12:true });
+          return `<div class="grid grid-cols-[auto_1fr_auto_auto] gap-4 items-start border-b border-archive-line/60 last:border-b-0 px-5 py-3 hover:bg-archive-cream/30">
+            <span class="mt-0.5 inline-flex rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-[.08em] whitespace-nowrap ${actionColor(row.action)}">${escapeHtml(row.action)}</span>
+            <div class="min-w-0">
+              <p class="text-xs font-bold text-archive-ink truncate">${escapeHtml(row.admin_name || row.admin_email)}</p>
+              ${row.target_title ? `<p class="text-[11px] text-archive-muted truncate">${escapeHtml(row.target_title)}</p>` : ''}
+              <p class="text-[10px] text-archive-muted/60 truncate">${escapeHtml(row.admin_email)} · ${escapeHtml(row.admin_role || '')}</p>
+            </div>
+            <span class="text-xs text-archive-muted whitespace-nowrap">${row.section ? escapeHtml(row.section) : '—'}</span>
+            <span class="text-[11px] text-archive-muted/70 whitespace-nowrap text-right">${when}</span>
+          </div>`;
+        }).join('')}
+      </div>`;
   }
 
   async function loadTabCounts() {
@@ -655,6 +926,12 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
         const el = document.querySelector(`[data-tab-count="${table}"]`);
         if (el && count !== null) el.textContent = count;
       })));
+      // Admin users count (superadmin only)
+      if (currentAdminRole === 'superadmin') {
+        const { count: ac } = await supabase.from('admin_users').select('*', { count: 'exact', head: true }).eq('is_active', true);
+        const aEl = document.querySelector('[data-tab-count="admin-users"]');
+        if (aEl && ac !== null) aEl.textContent = ac;
+      }
       // Matrimony: sum profiles + requests
       const [{ count: pc }, { count: rc }] = await withTimeout(Promise.all([
         supabase.from('matrimony_profiles').select('*', { count: 'exact', head: true }),
