@@ -1587,7 +1587,6 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
           <div class="flex flex-wrap items-center gap-2 mb-0.5">
             <span class="text-[10px] font-black uppercase tracking-[.12em] text-archive-gold/80">${isProfile ? 'Candidate' : 'Seeker'}</span>
             <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wide ${statusColour}">${escapeHtml(row.status || 'new')}</span>
-            ${row.policy_agreed_at ? `<span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wide text-green-700 bg-green-50">✅ Policy agreed</span>` : `<span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wide text-amber-700 bg-amber-50">⚠ Policy pending</span>`}
           </div>
           <div class="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
             <h3 class="font-black text-archive-green text-base leading-snug">${escapeHtml(title || '—')}</h3>
