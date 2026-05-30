@@ -571,6 +571,21 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
       if (!error) logAdminActivity('akt_verify', 'matrimony', id);
       setStatus(error ? error.message : 'AKT profile marked as verified ✓');
     }
+
+    if (btn.dataset.matrimonyAction === 'revoke') {
+      const reason = prompt(
+        'Enter the reason for returning this profile.\nThis message will be shown to the member when they next log in:\n\n(Leave blank to use a default message)'
+      );
+      if (reason === null) return; // cancelled
+      const note = reason.trim() ||
+        'Your profile has been returned because the information provided appears to be incomplete or inaccurate. Please review and resubmit with correct details.';
+      if (!confirm(`Revoke this profile and ask the member to resubmit?\n\nMessage to member:\n"${note}"`)) return;
+      const { error } = await supabase.from('matrimony_profiles')
+        .update({ status: 'revoked', published: false, admin_notes: note, updated_at: new Date().toISOString() })
+        .eq('id', id);
+      if (!error) logAdminActivity('revoke', 'matrimony', id, null, { reason: note });
+      setStatus(error ? error.message : '✓ Profile revoked — member will see a correction notice on next login.');
+    }
     await renderMatrimonyList();
   });
 
@@ -1576,7 +1591,7 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
       ? [['Education',row.education],['Profession',row.profession],['Marital status',row.marital_status],['Photograph',row.photo_url],['Family background',row.family_background],['Expectations',row.expectations]]
       : [['Preferred location',row.preferred_location],['Notes',row.notes]];
     const createdAt = row.created_at ? new Date(row.created_at).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:true}) : '';
-    const statusColour = { new:'text-amber-700 bg-amber-50', review:'text-amber-700 bg-amber-50', reviewing:'text-amber-700 bg-amber-50', approved:'text-green-700 bg-green-50', matched:'text-green-700 bg-green-50', rejected:'text-red-700 bg-red-50', archived:'text-slate-600 bg-slate-100', changes:'text-orange-700 bg-orange-50' }[row.status] || 'text-archive-muted bg-archive-paper';
+    const statusColour = { new:'text-amber-700 bg-amber-50', review:'text-amber-700 bg-amber-50', reviewing:'text-amber-700 bg-amber-50', approved:'text-green-700 bg-green-50', matched:'text-green-700 bg-green-50', rejected:'text-red-700 bg-red-50', archived:'text-slate-600 bg-slate-100', changes:'text-orange-700 bg-orange-50', revoked:'text-red-800 bg-red-100' }[row.status] || 'text-archive-muted bg-archive-paper';
     const iChevron  = `<svg data-chevron width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="transition:transform .2s"><path d="M4 6l4 4 4-4"/></svg>`;
 
     return `<article data-matrimony-card data-matrimony-id="${escapeHtml(row.id)}" class="border border-archive-line bg-archive-cream overflow-hidden">
@@ -1627,6 +1642,14 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
           <button data-matrimony-action="notes" class="border border-archive-gold bg-archive-gold px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-archive-ink" type="button">Save notes</button>
           ${['new','reviewing','approved','matched','rejected','archived'].map(s => `<button data-matrimony-action="status" data-status-value="${s}" class="border ${row.status===s ? 'border-archive-gold bg-white text-archive-green font-black' : 'border-archive-line text-archive-muted'} px-3 py-2 text-xs font-black uppercase tracking-[0.12em]" type="button">${s}</button>`).join('')}
         </div>
+        ${isProfile ? `
+        <div class="mt-3 pt-3 border-t border-archive-line/60">
+          <button data-matrimony-action="revoke"
+            class="border border-red-300 bg-red-50 px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-red-700 hover:bg-red-100 transition-colors" type="button">
+            ⟲ Revoke &amp; request resubmission
+          </button>
+          <p class="mt-1.5 text-[11px] text-archive-muted/70">Member will see your reason on next login and be prompted to resubmit.</p>
+        </div>` : ''}
       </div>
     </article>`;
   }

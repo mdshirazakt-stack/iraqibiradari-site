@@ -367,6 +367,9 @@ body{background:#f6efd9}
 <!-- ══ STAGE: gate ═════════════════════════════════════════════════════════ -->
 <div data-stage="gate">
   <div class="wrap py-12">
+    <!-- Revocation notice — shown by JS when admin has revoked a profile -->
+    <div id="gate-revoke-notice" style="display:none" class="mb-8"></div>
+
     <div class="m-dots max-w-xs mb-2"><div class="m-dot done">✓</div><div class="m-dotline done"></div><div class="m-dot active">2</div></div>
     <p class="text-xs font-black uppercase tracking-[.14em] text-archive-gold">Step 2 · Reciprocity gate</p>
     <h1 class="mt-2 font-display text-3xl font-bold text-archive-green md:text-4xl">Welcome<span id="gate-firstname"></span>. One more step.</h1>

@@ -350,7 +350,7 @@ policyGateForm?.addEventListener('submit', async e => {
 async function loadSubs() {
   const [pRes, rRes] = await Promise.all([
     supabase.from('matrimony_profiles')
-      .select('id,candidate_name,candidate_gender,marital_status,status,created_at')
+      .select('id,candidate_name,candidate_gender,marital_status,status,admin_notes,created_at')
       .eq('user_id', currentUser.id)
       .order('created_at', { ascending: true }),
     supabase.from('matrimony_requirements')
@@ -394,6 +394,36 @@ async function loadSubsDetailed() {
 // ── Gate render ────────────────────────────────────────────────────────────────
 async function renderGate() {
   await loadSubs();
+
+  // ── Revocation notices ──────────────────────────────────────────────────────
+  const noticeEl       = document.getElementById('gate-revoke-notice');
+  const revokedProfiles = subs.candidates.filter(c => c.status === 'revoked');
+  if (noticeEl) {
+    if (revokedProfiles.length) {
+      noticeEl.style.display = 'block';
+      noticeEl.innerHTML = revokedProfiles.map(p => `
+        <div style="background:#fef2f2;border:1.5px solid #fca5a5;border-radius:6px;padding:18px 22px;margin-bottom:12px">
+          <p style="font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.14em;color:#dc2626;margin:0 0 8px">
+            ⚠ Profile returned for correction
+          </p>
+          <p style="font-size:15px;font-weight:700;color:#1f3a2a;margin:0 0 6px">${esc(p.candidate_name)}</p>
+          ${p.admin_notes
+            ? `<p style="font-size:13px;color:#746b5f;line-height:1.65;margin:0 0 14px">${esc(p.admin_notes)}</p>`
+            : `<p style="font-size:13px;color:#746b5f;margin:0 0 14px">Please review and resubmit this profile with accurate information.</p>`
+          }
+          <button data-go="candidate"
+            style="padding:9px 18px;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.1em;background:#dc2626;color:#fff;border:none;border-radius:3px;cursor:pointer">
+            Fix and resubmit →
+          </button>
+        </div>`).join('');
+      noticeEl.querySelectorAll('[data-go]').forEach(b =>
+        b.addEventListener('click', () => navigate(b.dataset.go))
+      );
+    } else {
+      noticeEl.style.display = 'none';
+      noticeEl.innerHTML = '';
+    }
+  }
 
   const first = memberRecord?.full_name?.split(' ')[0] || '';
   if (gateFirstname) gateFirstname.textContent = first ? `, ${first}` : '';
