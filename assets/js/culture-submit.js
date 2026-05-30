@@ -79,19 +79,21 @@ import { createSupabaseClient } from './supabase-config.js';
     }, 1200);
   }
 
-  ['author_name', 'email', 'category', 'title'].forEach(name => {
+  ['author_name', 'email', 'category', 'title', 'author_bio', 'akt_profile_url'].forEach(name => {
     form.elements[name]?.addEventListener('input', scheduleSave);
   });
   quill.on('text-change', scheduleSave);
 
   function saveDraft() {
     const draft = {
-      author_name: form.elements.author_name?.value || '',
-      email:       form.elements.email?.value || '',
-      category:    form.elements.category?.value || '',
-      title:       form.elements.title?.value || '',
-      body:        quill.root.innerHTML,
-      ts:          Date.now(),
+      author_name:     form.elements.author_name?.value     || '',
+      email:           form.elements.email?.value           || '',
+      category:        form.elements.category?.value        || '',
+      title:           form.elements.title?.value           || '',
+      author_bio:      form.elements.author_bio?.value      || '',
+      akt_profile_url: form.elements.akt_profile_url?.value || '',
+      body:            quill.root.innerHTML,
+      ts:              Date.now(),
     };
     try { localStorage.setItem(DRAFT_KEY, JSON.stringify(draft)); } catch { /* storage full */ }
   }
@@ -108,10 +110,12 @@ import { createSupabaseClient } from './supabase-config.js';
   }
 
   function restoreFormFromDraft(draft) {
-    if (draft.author_name && form.elements.author_name) form.elements.author_name.value = draft.author_name;
-    if (draft.email      && form.elements.email)       form.elements.email.value       = draft.email;
-    if (draft.category   && form.elements.category)    form.elements.category.value    = draft.category;
-    if (draft.title      && form.elements.title)       form.elements.title.value       = draft.title;
+    if (draft.author_name     && form.elements.author_name)     form.elements.author_name.value     = draft.author_name;
+    if (draft.email           && form.elements.email)           form.elements.email.value           = draft.email;
+    if (draft.category        && form.elements.category)        form.elements.category.value        = draft.category;
+    if (draft.title           && form.elements.title)           form.elements.title.value           = draft.title;
+    if (draft.author_bio      && form.elements.author_bio)      form.elements.author_bio.value      = draft.author_bio;
+    if (draft.akt_profile_url && form.elements.akt_profile_url) form.elements.akt_profile_url.value = draft.akt_profile_url;
     if (draft.body && draft.body !== '<p><br></p>') {
       quill.root.innerHTML = draft.body;
     }
@@ -138,12 +142,14 @@ import { createSupabaseClient } from './supabase-config.js';
     const bodyInput = form.querySelector('[name="body"]');
     if (bodyInput) bodyInput.value = bodyValue;
 
-    const fd          = new FormData(form);
-    const author_name = String(fd.get('author_name') || '').trim();
-    const email       = String(fd.get('email') || '').trim() || null;
-    const category    = String(fd.get('category') || '').trim() || null;
-    const title       = String(fd.get('title') || '').trim();
-    const content     = bodyValue; // Quill HTML
+    const fd              = new FormData(form);
+    const author_name     = String(fd.get('author_name')     || '').trim();
+    const email           = String(fd.get('email')           || '').trim() || null;
+    const category        = String(fd.get('category')        || '').trim() || null;
+    const title           = String(fd.get('title')           || '').trim();
+    const author_bio      = String(fd.get('author_bio')      || '').trim() || null;
+    const akt_profile_url = String(fd.get('akt_profile_url') || '').trim() || null;
+    const content         = bodyValue;
 
     if (!author_name || !title || !category) {
       showError('Please fill in your name, a category, and a story title.');
@@ -153,6 +159,15 @@ import { createSupabaseClient } from './supabase-config.js';
       showError('Please write your story before submitting.');
       return;
     }
+
+    // Validate AKT URL if provided
+    const aktErrEl = document.getElementById('f-akt-err');
+    if (akt_profile_url && !/^https:\/\/(www\.)?apnonkitalash\.com\//i.test(akt_profile_url)) {
+      if (aktErrEl) aktErrEl.classList.remove('hidden');
+      document.getElementById('f-akt-url')?.focus();
+      return;
+    }
+    if (aktErrEl) aktErrEl.classList.add('hidden');
 
     hideError();
     submitBtn.disabled    = true;
@@ -165,7 +180,9 @@ import { createSupabaseClient } from './supabase-config.js';
         author_name,
         email,
         category,
-        content,              // stores Quill HTML
+        content,
+        author_bio,
+        akt_profile_url,
         status:     'pending',
         created_at: new Date().toISOString(),
       });

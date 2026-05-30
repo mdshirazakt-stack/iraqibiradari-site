@@ -120,6 +120,31 @@
             <p id="draft-saved" style="display:none" class="text-xs font-bold text-archive-gold">Draft saved ✓</p>
           </div>
 
+          <!-- About the author -->
+          <div class="grid gap-2">
+            <label class="text-sm font-bold text-archive-muted" for="f-author-bio">
+              About the author
+              <span class="ml-1 text-xs font-normal text-archive-muted">(optional)</span>
+            </label>
+            <p class="text-xs font-normal text-archive-muted">Tell readers a little about yourself — your connection to the community, where you're from, or anything you'd like them to know.</p>
+            <textarea id="f-author-bio" name="author_bio" rows="3"
+              placeholder="e.g. I grew up in Kanpur and have been documenting community traditions for the past decade…"
+              class="border border-archive-line bg-archive-cream p-3 text-archive-ink text-sm leading-relaxed resize-y"></textarea>
+          </div>
+
+          <!-- AKT profile link -->
+          <div class="grid gap-2">
+            <label class="text-sm font-bold text-archive-muted" for="f-akt-url">
+              Your Apnon Ki Talash profile link
+              <span class="ml-1 text-xs font-normal text-archive-muted">(optional)</span>
+            </label>
+            <p class="text-xs font-normal text-archive-muted">If you are listed on <a href="https://apnonkitalash.com/" target="_blank" rel="noopener" class="font-bold text-archive-green underline underline-offset-2">apnonkitalash.com</a>, paste your profile page link here. It helps us verify your community connection.</p>
+            <input id="f-akt-url" name="akt_profile_url" type="url"
+              placeholder="https://apnonkitalash.com/person/…"
+              class="border border-archive-line bg-archive-cream p-3 text-archive-ink text-sm"/>
+            <p id="f-akt-err" class="hidden text-xs font-bold text-red-600">Link must start with https://apnonkitalash.com/</p>
+          </div>
+
           <div class="flex items-start gap-3 rounded border border-archive-goldSoft bg-archive-paper p-4">
             <input id="f-consent" name="consent" type="checkbox" required
               class="mt-0.5 h-5 w-5 shrink-0 accent-archive-green"/>

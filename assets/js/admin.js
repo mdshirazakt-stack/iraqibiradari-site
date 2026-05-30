@@ -1666,9 +1666,13 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
           <p class="text-xs font-black uppercase tracking-[0.14em] text-archive-gold">Story Submission · ${escapeHtml(row.status||'pending')}${row.category?` · ${escapeHtml(row.category)}`:''}</p>
           <h3 class="mt-2 text-2xl font-black text-archive-green">${escapeHtml(row.title)}</h3>
           <p class="mt-1 text-sm font-bold text-archive-muted">By ${escapeHtml(row.author_name)}</p>
+          ${row.author_bio ? `<p class="mt-1.5 text-xs text-archive-muted leading-5 max-w-xl italic">${escapeHtml(row.author_bio)}</p>` : ''}
           <p class="mt-2 text-xs font-bold text-archive-muted">${escapeHtml(createdAt)}</p>
         </div>
-        ${row.email?`<div class="border border-archive-line bg-white px-4 py-3 text-sm leading-6 text-archive-muted"><p><strong class="text-archive-ink">Email:</strong> ${escapeHtml(row.email)}</p></div>`:''}
+        <div class="flex flex-col gap-2">
+          ${row.email ? `<div class="border border-archive-line bg-white px-4 py-3 text-sm text-archive-muted"><p><strong class="text-archive-ink">Email:</strong> ${escapeHtml(row.email)}</p></div>` : ''}
+          ${row.akt_profile_url ? `<div class="border border-blue-100 bg-blue-50 px-4 py-3 text-sm"><p class="text-xs font-black uppercase tracking-[.1em] text-blue-600 mb-1">AKT Profile</p><a href="${escapeHtml(row.akt_profile_url)}" target="_blank" rel="noopener" class="text-xs font-bold text-blue-700 underline underline-offset-2 break-all">${escapeHtml(row.akt_profile_url)}</a></div>` : ''}
+        </div>
       </div>
       <div class="mt-4 border border-archive-line bg-white p-4">
         <p class="mb-3 text-xs font-black uppercase tracking-[0.12em] text-archive-gold">Story content</p>
