@@ -169,8 +169,8 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
     editorView.style.display            = 'block';
     submissionsSection.style.display    = 'none';
     if (orgMembersSection)  orgMembersSection.style.display  = 'none';
-    if (adminUsersSection)  adminUsersSection.hidden          = true;
-    if (adminLogSection)    adminLogSection.hidden            = true;
+    if (adminUsersSection)  adminUsersSection.style.display   = 'none';
+    if (adminLogSection)    adminLogSection.style.display     = 'none';
   }
 
   function showList() {
@@ -650,8 +650,8 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
 
     contentSection.style.display      = isSpecial ? 'none' : 'grid';
     matrimonySection.style.display    = isMatrimony ? 'block' : 'none';
-    if (adminUsersSection) adminUsersSection.hidden = !isAdminUsers;
-    if (adminLogSection)   adminLogSection.hidden   = !isAdminLog;
+    if (adminUsersSection) adminUsersSection.style.display = isAdminUsers ? 'grid' : 'none';
+    if (adminLogSection)   adminLogSection.style.display   = isAdminLog   ? 'block' : 'none';
     submissionsSection.style.display  = showSubmissions ? 'block' : 'none';
 
     if (!isSpecial) {
