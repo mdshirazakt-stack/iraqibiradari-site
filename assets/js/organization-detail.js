@@ -404,17 +404,16 @@ import { createSupabaseClient, withTimeout } from './supabase-config.js';
   }
 
   function announcementCard(a) {
-    const raw    = a.body || '';
-    const isHtml = /<[a-z][\s\S]*>/i.test(raw);
-    const body   = raw
-      ? (isHtml
-          ? `<div class="mt-4 org-body text-sm leading-7 text-archive-ink">${raw}</div>`
-          : `<p class="mt-4 text-sm leading-7 text-archive-ink whitespace-pre-line">${escapeHtml(raw)}</p>`)
-      : '';
+    const raw     = a.body || '';
+    const plain   = raw.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+    const preview = plain.length > 180 ? `${plain.slice(0, 180).trim()}…` : plain;
+    const href    = `/announcements/detail/?id=${encodeURIComponent(a.id)}`;
     return `
-      <div class="border border-archive-line bg-white p-6">
-        <h3 class="font-display text-xl font-bold text-archive-green">${escapeHtml(a.title)}</h3>
-        ${body}
+      <div onclick="location.href='${href}'"
+           class="group border border-archive-line bg-white p-6 cursor-pointer hover:border-archive-green hover:shadow-soft transition-all">
+        <h3 class="font-display text-xl font-bold text-archive-green group-hover:text-archive-gold transition-colors">${escapeHtml(a.title)}</h3>
+        ${preview ? `<p class="mt-3 text-sm leading-7 text-archive-muted line-clamp-3">${escapeHtml(preview)}</p>` : ''}
+        <p class="mt-4 text-xs font-black uppercase tracking-[0.12em] text-archive-green group-hover:text-archive-gold transition-colors">Read full announcement →</p>
       </div>`;
   }
 
