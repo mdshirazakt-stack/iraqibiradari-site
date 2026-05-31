@@ -404,10 +404,17 @@ import { createSupabaseClient, withTimeout } from './supabase-config.js';
   }
 
   function announcementCard(a) {
+    const raw    = a.body || '';
+    const isHtml = /<[a-z][\s\S]*>/i.test(raw);
+    const body   = raw
+      ? (isHtml
+          ? `<div class="mt-4 org-body text-sm leading-7 text-archive-ink">${raw}</div>`
+          : `<p class="mt-4 text-sm leading-7 text-archive-ink whitespace-pre-line">${escapeHtml(raw)}</p>`)
+      : '';
     return `
       <div class="border border-archive-line bg-white p-6">
-        <h3 class="font-display text-lg font-bold text-archive-green">${escapeHtml(a.title)}</h3>
-        ${a.body ? `<div class="mt-3 text-sm leading-7 text-archive-ink org-body">${a.body}</div>` : ''}
+        <h3 class="font-display text-xl font-bold text-archive-green">${escapeHtml(a.title)}</h3>
+        ${body}
       </div>`;
   }
 
