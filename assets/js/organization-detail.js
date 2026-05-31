@@ -57,12 +57,12 @@ import { createSupabaseClient, withTimeout } from './supabase-config.js';
 
   // ── Decide which tabs are visible ──────────────────────────────────────
   const TABS = [
-    { id: 'about',         label: 'About',                                         show: !!(org.body?.trim() || members.length) },
-    { id: 'impact',        label: 'Impact',                                         show: !!(org.impact?.trim()) },
-    { id: 'contribute',    label: 'Contribute',                                     show: !!(org.how_to_contribute?.trim()) },
-    { id: 'apply',         label: 'Apply',                                          show: !!(org.how_to_apply?.trim()) },
-    { id: 'events',        label: `Events${events.length ? ` (${events.length})` : ''}`,             show: events.length > 0 },
-    { id: 'videos',        label: `Videos${videos.length ? ` (${videos.length})` : ''}`,             show: videos.length > 0 },
+    { id: 'about',         label: 'About / Mission',                                       show: !!(org.body?.trim() || members.length) },
+    { id: 'impact',        label: 'Impact',                                                 show: !!(org.impact?.trim()) },
+    { id: 'contribute',    label: 'Contribute',                                             show: !!(org.how_to_contribute?.trim()) },
+    { id: 'apply',         label: 'Apply as Beneficiary',                                   show: !!(org.how_to_apply?.trim()) },
+    { id: 'events',        label: `Events${events.length ? ` (${events.length})` : ''}`,   show: events.length > 0 },
+    { id: 'videos',        label: `Videos${videos.length ? ` (${videos.length})` : ''}`,   show: videos.length > 0 },
     { id: 'announcements', label: `Announcements${announcements.length ? ` (${announcements.length})` : ''}`, show: announcements.length > 0 },
     { id: 'documents',     label: `Documents${documents.length ? ` (${documents.length})` : ''}`,   show: documents.length > 0 },
   ];
@@ -84,41 +84,55 @@ import { createSupabaseClient, withTimeout } from './supabase-config.js';
              <img src="${escapeHtml(org.cover_image_url)}" alt="" class="w-full h-full object-cover opacity-25"/>
            </div>`
         : ''}
-      <div class="mx-auto w-[min(1120px,calc(100%-36px))] py-10 md:py-12">
-        <p class="text-xs font-black uppercase tracking-[0.18em] text-archive-goldSoft">
-          <a href="/organizations/" class="hover:text-archive-cream transition-colors">Organizations</a>
+      <div class="mx-auto w-[min(1120px,calc(100%-36px))] pt-10 pb-0 md:pt-14">
+        <p class="text-xs font-black uppercase tracking-[0.18em] text-archive-goldSoft/80">
+          <a href="/organizations/" class="hover:text-archive-goldSoft transition-colors">Organizations</a>
         </p>
-        <div class="mt-4 flex flex-wrap items-start gap-5">
+
+        <div class="mt-5 flex flex-wrap items-start gap-5">
           ${org.logo_url
             ? `<img src="${escapeHtml(org.logo_url)}" alt="${escapeHtml(org.title)} logo"
-                 class="shrink-0 h-20 w-20 rounded-xl border-2 border-white/20 bg-white object-contain p-1.5"
+                 class="shrink-0 h-16 w-16 rounded-xl border border-white/20 bg-white object-contain p-1.5"
                  onerror="this.style.display='none'"/>`
             : ''}
           <div class="flex-1 min-w-0">
-            <h1 class="font-display text-3xl font-bold leading-tight text-white md:text-4xl">${escapeHtml(org.title)}</h1>
-            ${org.tagline ? `<p class="mt-2 text-base font-bold text-archive-goldSoft">${escapeHtml(org.tagline)}</p>` : ''}
-            ${org.founders || org.founded_date ? `
-              <p class="mt-2 text-sm text-archive-paper/75">
-                ${org.founders ? `Founded by <strong class="text-archive-paper">${escapeHtml(org.founders)}</strong>` : ''}
-                ${org.founders && org.founded_date ? ' · ' : ''}
-                ${org.founded_date ? escapeHtml(org.founded_date) : ''}
-              </p>` : ''}
+            <h1 class="font-display text-4xl font-bold leading-tight text-white md:text-5xl">${escapeHtml(org.title)}</h1>
+            ${org.tagline ? `<p class="mt-2 text-base text-archive-goldSoft">${escapeHtml(org.tagline)}</p>` : ''}
           </div>
         </div>
-        ${contactBar(org)}
+
+        <!-- Meta strip — Established · Based In · Founders -->
+        ${(org.founded_date || org.address || org.founders) ? `
+        <div class="mt-8 border-t border-white/15 pt-6 pb-8 grid grid-cols-2 gap-6 md:grid-cols-3">
+          ${org.founded_date ? `
+            <div>
+              <p class="text-[10px] font-black uppercase tracking-[.16em] text-archive-goldSoft/60">Established</p>
+              <p class="mt-1.5 text-sm font-bold text-white">${escapeHtml(org.founded_date)}</p>
+            </div>` : ''}
+          ${org.address ? `
+            <div>
+              <p class="text-[10px] font-black uppercase tracking-[.16em] text-archive-goldSoft/60">Based In</p>
+              <p class="mt-1.5 text-sm font-bold text-white">${escapeHtml(org.address)}</p>
+            </div>` : ''}
+          ${org.founders ? `
+            <div>
+              <p class="text-[10px] font-black uppercase tracking-[.16em] text-archive-goldSoft/60">Founders</p>
+              <p class="mt-1.5 text-sm text-archive-paper/90">${escapeHtml(org.founders)}</p>
+            </div>` : ''}
+        </div>` : '<div class="pb-8"></div>'}
       </div>
     </section>
 
     <!-- Tab bar -->
-    <div id="org-tab-bar" class="sticky top-[62px] z-20 border-b border-archive-line bg-white shadow-[0_1px_8px_rgba(32,28,23,.06)]">
+    <div id="org-tab-bar" class="sticky top-[62px] z-20 bg-archive-cream border-b border-archive-line shadow-[0_1px_6px_rgba(32,28,23,.07)]">
       <div class="overflow-x-auto" style="-webkit-overflow-scrolling:touch;scrollbar-width:none">
         <div class="mx-auto flex w-max min-w-full px-4 md:px-0 md:w-[min(1120px,calc(100%-36px))]">
           ${visible.map(t => `
             <button data-tab="${escapeHtml(t.id)}" type="button"
-              class="tab-btn shrink-0 whitespace-nowrap min-h-[46px] border-b-2 px-5 text-xs font-black uppercase tracking-[0.1em] transition-colors
+              class="tab-btn shrink-0 whitespace-nowrap px-5 py-4 text-sm border-b-2 transition-colors
                      ${t.id === activeId
-                       ? 'border-archive-green text-archive-green'
-                       : 'border-transparent text-archive-muted hover:text-archive-green hover:border-archive-line'}">
+                       ? 'border-archive-green font-bold text-archive-green'
+                       : 'border-transparent font-medium text-archive-muted hover:text-archive-ink hover:border-archive-line'}">
               ${escapeHtml(t.label)}
             </button>`).join('')}
         </div>
@@ -131,10 +145,11 @@ import { createSupabaseClient, withTimeout } from './supabase-config.js';
       <!-- ABOUT -->
       <div id="tab-about" class="tab-panel${activeId === 'about' ? '' : ' hidden'}">
         <div class="grid gap-10 lg:grid-cols-[1fr_280px]">
-          <div class="grid gap-8">
+          <div class="grid gap-10">
             ${org.body?.trim() ? `
               <section>
-                <p class="mb-4 text-[11px] font-black uppercase tracking-[0.18em] text-archive-gold">About / Mission</p>
+                <p class="mb-2 text-[11px] font-black uppercase tracking-[0.18em] text-archive-gold">About / Mission</p>
+                <h2 class="mb-5 font-display text-3xl font-bold text-archive-green">About the ${escapeHtml(org.title.split(' ').length > 3 ? 'Organisation' : org.title)}</h2>
                 <div class="org-body leading-relaxed">${org.body}</div>
               </section>` : ''}
             ${members.length ? `
@@ -226,8 +241,10 @@ import { createSupabaseClient, withTimeout } from './supabase-config.js';
     document.querySelectorAll('.tab-btn').forEach(b => {
       const on = b.dataset.tab === tabId;
       b.classList.toggle('border-archive-green', on);
+      b.classList.toggle('font-bold',            on);
       b.classList.toggle('text-archive-green',   on);
       b.classList.toggle('border-transparent',   !on);
+      b.classList.toggle('font-medium',          !on);
       b.classList.toggle('text-archive-muted',   !on);
     });
     document.querySelectorAll('.tab-panel').forEach(p => {
@@ -250,17 +267,20 @@ import { createSupabaseClient, withTimeout } from './supabase-config.js';
   }
 
   function contactCard(o) {
-    if (!o.contact_email && !o.contact_phone && !o.website_url && !o.address && !o.founded_date && !o.founders) return '';
+    if (!o.contact_email && !o.contact_phone && !o.website_url && !o.address && !o.category) return '';
     return `
-      <div class="rounded-xl border border-archive-line bg-white p-5">
-        <p class="mb-3 text-[11px] font-black uppercase tracking-[0.16em] text-archive-gold">Details</p>
-        <dl class="grid gap-3 text-sm">
-          ${o.founded_date  ? `<div><dt class="text-[10px] font-black uppercase tracking-[0.12em] text-archive-muted">Founded</dt><dd class="mt-0.5 font-bold text-archive-ink">${escapeHtml(o.founded_date)}</dd></div>` : ''}
-          ${o.founders      ? `<div><dt class="text-[10px] font-black uppercase tracking-[0.12em] text-archive-muted">Founders</dt><dd class="mt-0.5 text-archive-ink">${escapeHtml(o.founders)}</dd></div>` : ''}
-          ${o.website_url   ? `<div><dt class="text-[10px] font-black uppercase tracking-[0.12em] text-archive-muted">Website</dt><dd class="mt-0.5"><a href="${escapeHtml(o.website_url)}" target="_blank" rel="noopener" class="font-bold text-archive-green underline underline-offset-4 break-all">${escapeHtml(o.website_url.replace(/^https?:\/\//, ''))}</a></dd></div>` : ''}
-          ${o.contact_email ? `<div><dt class="text-[10px] font-black uppercase tracking-[0.12em] text-archive-muted">Email</dt><dd class="mt-0.5"><a href="mailto:${escapeHtml(o.contact_email)}" class="font-bold text-archive-green underline underline-offset-4 break-all">${escapeHtml(o.contact_email)}</a></dd></div>` : ''}
-          ${o.contact_phone ? `<div><dt class="text-[10px] font-black uppercase tracking-[0.12em] text-archive-muted">Phone / WhatsApp</dt><dd class="mt-0.5 font-bold text-archive-ink">${escapeHtml(o.contact_phone)}</dd></div>` : ''}
-          ${o.address       ? `<div><dt class="text-[10px] font-black uppercase tracking-[0.12em] text-archive-muted">Address</dt><dd class="mt-0.5 text-archive-muted">${escapeHtml(o.address)}</dd></div>` : ''}
+      <div class="border border-archive-line bg-white p-5">
+        ${o.category ? `
+          <div class="mb-5 pb-5 border-b border-archive-line">
+            <p class="text-[10px] font-black uppercase tracking-[0.16em] text-archive-gold mb-2">Registration</p>
+            <p class="text-[10px] font-black uppercase tracking-[0.1em] text-archive-muted">Type</p>
+            <p class="mt-1 text-sm font-bold text-archive-ink">${escapeHtml(o.category)}</p>
+          </div>` : ''}
+        <dl class="grid gap-4 text-sm">
+          ${o.website_url   ? `<div><dt class="text-[10px] font-black uppercase tracking-[0.1em] text-archive-muted">Website</dt><dd class="mt-1"><a href="${escapeHtml(o.website_url)}" target="_blank" rel="noopener" class="font-bold text-archive-green underline underline-offset-4 break-all text-sm">${escapeHtml(o.website_url.replace(/^https?:\/\//, '').replace(/\/$/, ''))}</a></dd></div>` : ''}
+          ${o.contact_email ? `<div><dt class="text-[10px] font-black uppercase tracking-[0.1em] text-archive-muted">Email</dt><dd class="mt-1"><a href="mailto:${escapeHtml(o.contact_email)}" class="font-bold text-archive-green underline underline-offset-4 break-all text-sm">${escapeHtml(o.contact_email)}</a></dd></div>` : ''}
+          ${o.contact_phone ? `<div><dt class="text-[10px] font-black uppercase tracking-[0.1em] text-archive-muted">Phone / WhatsApp</dt><dd class="mt-1 text-sm font-bold text-archive-ink">${escapeHtml(o.contact_phone)}</dd></div>` : ''}
+          ${o.address       ? `<div><dt class="text-[10px] font-black uppercase tracking-[0.1em] text-archive-muted">Address</dt><dd class="mt-1 text-sm text-archive-muted">${escapeHtml(o.address)}</dd></div>` : ''}
         </dl>
       </div>`;
   }
