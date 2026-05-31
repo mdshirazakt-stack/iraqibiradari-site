@@ -62,7 +62,11 @@ import { createSupabaseClient } from './supabase-config.js';
         .eq('published', true)
         .order('sort_order', { ascending: false })
         .order(orderColumn, { ascending: type === 'events', nullsFirst: false });
-      if (type === 'events') query = query.gte('event_date', new Date().toISOString().slice(0, 10));
+      if (type === 'events')    query = query.gte('event_date', new Date().toISOString().slice(0, 10));
+      // Org-specific documents/videos/announcements belong on their org page only
+      if (type === 'documents' || type === 'videos' || type === 'announcements') {
+        query = query.is('org_id', null);
+      }
       const { data, error } = await query;
       if (error) throw error;
       return (data || []).map((row) => normalizeRow(type, row));
