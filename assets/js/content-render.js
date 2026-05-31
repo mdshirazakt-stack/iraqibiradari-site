@@ -37,8 +37,16 @@ import { createSupabaseClient } from './supabase-config.js';
   }).join('');
 
   function renderAnnouncement(item) {
-    const text = item.body || item.description || '';
-    const preview = text.length > 220 ? `${text.slice(0, 220).trim()}...` : text;
+    const raw  = item.body || item.description || '';
+    // Strip HTML tags to produce plain text for the preview snippet
+    const plain = raw.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+    const preview = plain.length > 220 ? `${plain.slice(0, 220).trim()}…` : plain;
+    // Render the full body as HTML if it contains tags (Quill output), otherwise
+    // fall back to escaped plain text with newlines preserved.
+    const isHtml   = /<[a-z][\s\S]*>/i.test(raw);
+    const fullBody = isHtml
+      ? `<div class="announcement-body mt-4 leading-7 text-archive-muted">${raw}</div>`
+      : `<p class="mt-4 whitespace-pre-line leading-8 text-archive-muted">${escapeHtml(raw)}</p>`;
     return `
       <article class="border border-archive-line bg-white p-6">
         <p class="text-xs font-black uppercase tracking-[0.14em] text-archive-gold">${escapeHtml(item.date || item.category || 'Announcement')}</p>
@@ -46,7 +54,7 @@ import { createSupabaseClient } from './supabase-config.js';
         <p class="mt-4 leading-7 text-archive-muted">${escapeHtml(preview)}</p>
         <details class="mt-5 border-t border-archive-line pt-4">
           <summary class="cursor-pointer text-sm font-black uppercase tracking-[0.12em] text-archive-maroon">Read full announcement</summary>
-          <p class="mt-4 whitespace-pre-line leading-8 text-archive-muted">${escapeHtml(text)}</p>
+          ${fullBody}
         </details>
       </article>
     `;
