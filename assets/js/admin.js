@@ -796,12 +796,35 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
     } catch (_) { /* never block UX */ }
   }
 
+  // ── Org select for invite form — loads independently ────────────────
+  async function populateOrgSelect() {
+    const orgSelect = document.querySelector('[data-admin-org-select]');
+    if (!orgSelect) return;
+    try {
+      const { data, error } = await withTimeout(
+        supabase.from('organizations').select('id, title').order('title')
+      );
+      if (error || !data?.length) {
+        orgSelect.innerHTML = `<option value="">— no organisations found —</option>`;
+        return;
+      }
+      orgSelect.innerHTML =
+        `<option value="">— select organisation —</option>` +
+        data.map(o => `<option value="${escapeHtml(o.id)}">${escapeHtml(o.title)}</option>`).join('');
+    } catch (err) {
+      orgSelect.innerHTML = `<option value="">— failed to load, try again —</option>`;
+    }
+  }
+
   // ── Admin Users management ───────────────────────────────────────────
   async function renderAdminUsers() {
     if (!adminUsersList) return;
     adminUsersList.innerHTML = `<p class="text-sm text-archive-muted">Loading…</p>`;
 
-    // Load admins + orgs in parallel
+    // Always populate the org select independently — don't tie it to the admins query
+    populateOrgSelect();
+
+    // Load admins + org names (for display in rows) separately
     let admins, orgs;
     try {
       ([{ data: admins }, { data: orgs }] = await withTimeout(Promise.all([
@@ -813,15 +836,8 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
       return;
     }
 
-    // Build org lookup map for display
+    // Build org lookup map for display in existing admin rows
     const orgMap = Object.fromEntries((orgs || []).map(o => [o.id, o.title]));
-
-    // Populate org selector in the invite form
-    const orgSelect = document.querySelector('[data-admin-org-select]');
-    if (orgSelect && orgs?.length) {
-      orgSelect.innerHTML = `<option value="">— select organisation —</option>` +
-        (orgs || []).map(o => `<option value="${escapeHtml(o.id)}">${escapeHtml(o.title)}</option>`).join('');
-    }
 
     if (!admins?.length) {
       adminUsersList.innerHTML = `<p class="text-sm text-archive-muted italic">No additional admins yet. Invite one below.</p>`;
