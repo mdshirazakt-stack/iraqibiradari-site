@@ -100,7 +100,7 @@ function inject() {
     <div class="bg-archive-maroon text-archive-cream">
       <div class="mx-auto flex min-h-11 w-[min(1120px,calc(100%-36px))] flex-col justify-center gap-1 py-2 text-sm md:flex-row md:items-center md:justify-between md:gap-6">
         <p id="event-ribbon" class="font-bold">Upcoming Events: No upcoming events. Keep a watch.</p>
-        <a class="shrink-0 font-bold" href="tel:+919818555830">+91 98185 55830</a>
+        <a class="shrink-0 font-bold" href="https://chat.whatsapp.com/HtSTOEqyDx644pLLdbnnlm?s=sh&p=a&ilr=1" target="_blank" rel="noopener">Join WhatsApp Community →</a>
       </div>
     </div>
 
