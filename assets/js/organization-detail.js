@@ -1,5 +1,8 @@
 import { createSupabaseClient, withTimeout } from './supabase-config.js';
 
+// The Trust that runs this website gets donate / apply-for-help links in its hero.
+const TRUST_ORG_ID = 'iraqi-biradari-welfare-foundation-charitable-trust';
+
 (async function () {
   const main = document.getElementById('org-main');
   if (!main) return;
@@ -100,6 +103,14 @@ import { createSupabaseClient, withTimeout } from './supabase-config.js';
             ${org.tagline ? `<p class="mt-2 text-base text-archive-goldSoft">${escapeHtml(org.tagline)}</p>` : ''}
           </div>
         </div>
+
+        ${id === TRUST_ORG_ID ? `
+        <!-- The Trust behind this website: quick links to donate / apply (Support Us page) -->
+        <div class="mt-6 flex flex-wrap items-center gap-3 border border-archive-gold/60 bg-archive-gold/10 px-4 py-3">
+          <p class="mr-auto text-sm text-archive-paper">Bank details, beneficiary application and contact are on one page.</p>
+          <a href="/contact/#support-trust" class="inline-flex min-h-11 items-center justify-center bg-archive-gold px-4 text-xs font-black uppercase tracking-[0.12em] text-archive-ink hover:bg-archive-goldSoft transition-colors">Donate</a>
+          <a href="/contact/#support-trust" class="inline-flex min-h-11 items-center justify-center border border-archive-goldSoft px-4 text-xs font-black uppercase tracking-[0.12em] text-archive-cream hover:bg-white/10 transition-colors">Apply for help</a>
+        </div>` : ''}
 
         <!-- Meta strip — Established · Based In · Founders -->
         ${(org.founded_date || org.address || org.founders) ? `
