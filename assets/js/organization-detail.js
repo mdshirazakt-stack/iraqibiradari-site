@@ -1,6 +1,11 @@
 import { createSupabaseClient, withTimeout } from './supabase-config.js';
 
 // The Trust that runs this website gets donate / apply-for-help links in its hero.
+// Their clicks are counted here: the bar is rendered after GoatCounter binds clicks.
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('[data-track]');
+  if (el) window.goatcounter?.count?.({ path: el.dataset.track, title: el.dataset.track, event: true });
+});
 const TRUST_ORG_ID = 'iraqi-biradari-welfare-foundation-charitable-trust';
 
 (async function () {
@@ -108,8 +113,8 @@ const TRUST_ORG_ID = 'iraqi-biradari-welfare-foundation-charitable-trust';
         <!-- The Trust behind this website: quick links to donate / apply (Support Us page) -->
         <div class="mt-6 flex flex-wrap items-center gap-3 border border-archive-gold/60 bg-archive-gold/10 px-4 py-3">
           <p class="mr-auto text-sm text-archive-paper">Bank details, beneficiary application and contact are on one page.</p>
-          <a href="/contact/#support-trust" class="inline-flex min-h-11 items-center justify-center bg-archive-gold px-4 text-xs font-black uppercase tracking-[0.12em] text-archive-ink hover:bg-archive-goldSoft transition-colors">Donate</a>
-          <a href="/contact/#support-trust" class="inline-flex min-h-11 items-center justify-center border border-archive-goldSoft px-4 text-xs font-black uppercase tracking-[0.12em] text-archive-cream hover:bg-white/10 transition-colors">Apply for help</a>
+          <a href="/contact/#support-trust" class="inline-flex min-h-11 items-center justify-center bg-archive-gold px-4 text-xs font-black uppercase tracking-[0.12em] text-archive-ink hover:bg-archive-goldSoft transition-colors" data-track="trust-page-donate">Donate</a>
+          <a href="/contact/#support-trust" class="inline-flex min-h-11 items-center justify-center border border-archive-goldSoft px-4 text-xs font-black uppercase tracking-[0.12em] text-archive-cream hover:bg-white/10 transition-colors" data-track="trust-page-apply">Apply for help</a>
         </div>` : ''}
 
         <!-- Meta strip — Established · Based In · Founders -->

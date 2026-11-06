@@ -78,4 +78,13 @@ function formatDate(d) {
       </li>`;
   }).join('');
   section.hidden = false;
+
+  // Rows are inserted after GoatCounter's own click binding runs, so count
+  // clicks here (no-op if the counter script didn't load).
+  list.addEventListener('click', (e) => {
+    const link = e.target.closest('a');
+    if (!link) return;
+    const name = 'whats-new: ' + (link.querySelector('.font-bold')?.textContent || '').trim();
+    window.goatcounter?.count?.({ path: name, title: name, event: true });
+  });
 })();
