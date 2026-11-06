@@ -1,0 +1,35 @@
+name: Sitemap refresh
+
+# Rebuilds sitemap.xml from the published content in Supabase so new
+# achievers, stories, events, announcements and organizations reach Google
+# without a manual step. Commits only when the sitemap actually changed.
+
+on:
+  schedule:
+    - cron: '30 0 * * *' # daily, 06:00 IST
+  workflow_dispatch: # allow manual trigger from GitHub Actions UI
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Build sitemap
+        run: node scripts/build-sitemap.mjs
+      - name: Commit if changed
+        run: |
+          if git diff --quiet -- sitemap.xml; then
+            echo "Sitemap unchanged."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add sitemap.xml
+          git commit -m "Refresh sitemap.xml"
+          git push
