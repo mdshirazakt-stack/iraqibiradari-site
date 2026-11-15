@@ -4,7 +4,9 @@ import { createSupabaseClient, withTimeout } from './supabase-config.js';
 // Their clicks are counted here: the bar is rendered after GoatCounter binds clicks.
 document.addEventListener('click', (e) => {
   const el = e.target.closest('[data-track]');
-  if (el) window.goatcounter?.count?.({ path: el.dataset.track, title: el.dataset.track, event: true });
+  if (!el) return;
+  window.goatcounter?.count?.({ path: el.dataset.track, title: el.dataset.track, event: true });
+  window.umami?.track?.(el.dataset.track);
 });
 const TRUST_ORG_ID = 'iraqi-biradari-welfare-foundation-charitable-trust';
 

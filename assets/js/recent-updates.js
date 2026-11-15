@@ -86,5 +86,6 @@ function formatDate(d) {
     if (!link) return;
     const name = 'whats-new: ' + (link.querySelector('.font-bold')?.textContent || '').trim();
     window.goatcounter?.count?.({ path: name, title: name, event: true });
+    window.umami?.track?.(name);
   });
 })();
