@@ -590,26 +590,125 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
   });
 
   // ── Story submissions ─────────────────────────────────────────────────
+  // Approve  → publishes the story to Culture (a new `stories` row) and marks
+  //            the submission approved.
+  // Reject   → status 'rejected'; hidden from this dashboard but kept in the
+  //            database.
+  // Delete   → removes the submission row permanently (a story already
+  //            published to Culture is managed from the Culture list).
   submissionsList?.addEventListener('click', async (e) => {
     const btn  = e.target.closest('button[data-submission-action]');
     if (!btn) return;
     const card = btn.closest('[data-submission-card]');
     const id   = card?.dataset.submissionId;
     if (!id) return;
+    const row   = submissionRows.get(id);
+    if (!row) return;
+    const title = row.title || 'this story';
+    const action = btn.dataset.submissionAction;
 
-    if (btn.dataset.submissionAction === 'status') {
-      const { error } = await supabase.from('story_submissions')
-        .update({ status: btn.dataset.statusValue, updated_at: new Date().toISOString() }).eq('id', id);
-      setStatus(error ? error.message : `Status updated to "${btn.dataset.statusValue}".`);
+    if (action === 'approve') {
+      if (!confirm(`Approve and publish "${title}" to the Culture section?`)) return;
+      btn.disabled = true;
+      setStatus('Publishing…');
+      const result = await publishSubmission(row);
+      if (result.error) { setStatus(result.error); btn.disabled = false; return; }
+      let { error } = await supabase.from('story_submissions')
+        .update({ status: 'approved', published_story_id: result.storyId, updated_at: new Date().toISOString() }).eq('id', id);
+      if (error && /published_story_id/.test(error.message)) {
+        // Column not added yet (story_submissions_publish_migration.sql) — still record the approval.
+        ({ error } = await supabase.from('story_submissions')
+          .update({ status: 'approved', updated_at: new Date().toISOString() }).eq('id', id));
+      }
+      setStatus(error ? `Published, but the submission status could not be updated: ${error.message}` : `✓ Published "${title}" to Culture.`);
+      logAdminActivity('approve', 'story_submissions', id, title, { story_id: result.storyId });
+      await renderList();
     }
-    if (btn.dataset.submissionAction === 'notes') {
-      const notes = card.querySelector('[data-submission-notes]').value;
+
+    if (action === 'reject') {
+      if (!confirm(`Reject "${title}"? It will be hidden from this dashboard (kept in the database).`)) return;
       const { error } = await supabase.from('story_submissions')
-        .update({ admin_notes: notes, updated_at: new Date().toISOString() }).eq('id', id);
-      setStatus(error ? error.message : 'Notes saved.');
+        .update({ status: 'rejected', updated_at: new Date().toISOString() }).eq('id', id);
+      setStatus(error ? error.message : `Rejected "${title}".`);
+      if (!error) logAdminActivity('reject', 'story_submissions', id, title, null);
     }
+
+    if (action === 'delete') {
+      const extra = row.status === 'approved' ? '\n\nThe published Culture story is NOT removed; delete it from the Culture list if needed.' : '';
+      if (!confirm(`Permanently delete the submission "${title}"?\n\nThe story and the submitter's details will be removed from the database. This cannot be undone.${extra}`)) return;
+      const { data, error } = await supabase.from('story_submissions').delete().eq('id', id).select('id');
+      if (error) setStatus(error.message);
+      else if (!data?.length) setStatus('Not deleted — your admin account does not have permission to delete story submissions.');
+      else { setStatus(`Deleted "${title}".`); logAdminActivity('delete', 'story_submissions', id, title, null); }
+    }
+
     await renderSubmissions();
   });
+
+  async function publishSubmission(row) {
+    const base = slugify(row.title);
+    let storyId = base;
+    for (let n = 2; ; n++) {
+      const { data, error } = await supabase.from('stories').select('id').eq('id', storyId).maybeSingle();
+      if (error) return { error: error.message };
+      if (!data) break;
+      storyId = `${base}-${n}`;
+    }
+    const { data: top } = await supabase.from('stories').select('sort_order').order('sort_order', { ascending: false }).limit(1);
+    const sortOrder = (Number(top?.[0]?.sort_order) || 0) + 10;
+
+    let body = sanitizeStoryHtml(row.content || '');
+    const bio = String(row.author_bio || '').trim();
+    const akt = safeExternalUrl(row.akt_profile_url);
+    if (bio || akt) {
+      body += '<h2>About the author</h2>';
+      if (bio) body += `<p>${escapeHtml(bio)}</p>`;
+      if (akt && /^https:\/\/(www\.)?apnonkitalash\.com\//i.test(akt)) {
+        body += `<p>🌳 <strong>Family tree:</strong> <a href="${escapeHtml(akt)}" target="_blank" rel="noopener noreferrer">Apnon Ki Talash</a></p>`;
+      }
+    }
+    const text = stripHtml(body);
+    const excerpt = text.length > 220 ? `${text.slice(0, 217).replace(/\s+\S*$/, '')}…` : text;
+
+    const { error } = await supabase.from('stories').insert({
+      id: storyId,
+      title: String(row.title || '').trim() || 'Untitled story',
+      author: String(row.author_name || '').trim() || null,
+      category: String(row.category || '').trim() || null,
+      cover_image_url: null,
+      excerpt: excerpt || null,
+      body: body || null,
+      published: true,
+      sort_order: sortOrder,
+    });
+    return error ? { error: `Could not publish: ${error.message}` } : { storyId };
+  }
+
+  // Public submissions are untrusted HTML: keep only basic formatting tags,
+  // http(s) links and images, and drop every attribute except href/src/alt.
+  function sanitizeStoryHtml(html) {
+    const ALLOWED = new Set(['P','BR','STRONG','B','EM','I','U','S','H2','H3','H4','UL','OL','LI','BLOCKQUOTE','A','IMG','SPAN','SUB','SUP','HR','PRE','CODE']);
+    const doc = new DOMParser().parseFromString(`<div>${String(html || '')}</div>`, 'text/html');
+    const root = doc.body.firstElementChild;
+    const walk = (node) => {
+      [...node.childNodes].forEach((child) => {
+        if (child.nodeType === Node.COMMENT_NODE) { child.remove(); return; }
+        if (child.nodeType !== Node.ELEMENT_NODE) return;
+        const tag = child.tagName.toUpperCase();
+        if (['SCRIPT','STYLE','IFRAME','OBJECT','EMBED','FORM','INPUT','BUTTON','TEXTAREA','SELECT','LINK','META','SVG','MATH','TEMPLATE','NOSCRIPT'].includes(tag)) { child.remove(); return; }
+        walk(child);
+        if (!ALLOWED.has(tag)) { child.replaceWith(...child.childNodes); return; }
+        const keep = {};
+        if (tag === 'A') { const u = safeExternalUrl(child.getAttribute('href')); if (u) keep.href = u; }
+        if (tag === 'IMG') { const u = safeExternalUrl(child.getAttribute('src')); if (!u) { child.remove(); return; } keep.src = u; keep.alt = child.getAttribute('alt') || ''; }
+        [...child.attributes].forEach(a => child.removeAttribute(a.name));
+        Object.entries(keep).forEach(([k, v]) => child.setAttribute(k, v));
+        if (tag === 'A' && keep.href) { child.setAttribute('target', '_blank'); child.setAttribute('rel', 'noopener noreferrer'); }
+      });
+    };
+    walk(root);
+    return root.innerHTML.trim();
+  }
 
   // ── Core functions ───────────────────────────────────────────────────
 
@@ -1681,28 +1780,43 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
 
   // ── Story submissions ─────────────────────────────────────────────────
 
+  const submissionRows = new Map();
+
   async function renderSubmissions() {
     if (!submissionsList) return;
     let data, error;
     try {
       ({ data, error } = await withTimeout(
-        supabase.from('story_submissions').select('*').order('created_at', { ascending: false }).limit(100)
+        supabase.from('story_submissions').select('*')
+          .or('status.is.null,status.neq.rejected')
+          .order('created_at', { ascending: false }).limit(100)
       ));
     } catch (err) {
       submissionsList.innerHTML = `<div class="p-5 text-archive-muted">⏱ ${escapeHtml(err.message)} — <button type="button" onclick="location.reload()" class="font-bold text-archive-green underline">Reload</button></div>`;
       return;
     }
     if (error) { submissionsList.innerHTML = `<div class="p-5 text-archive-muted">${escapeHtml(error.message)}</div>`; return; }
-    submissionsList.innerHTML = (data||[]).map(submissionCard).join('') || '<div class="border border-archive-line bg-archive-cream p-5 text-archive-muted">No community story submissions yet.</div>';
+    submissionRows.clear();
+    (data || []).forEach(r => submissionRows.set(String(r.id), r));
+    // Awaiting review first, then already-approved ones.
+    const rows = [...(data || [])].sort((a, b) => (a.status === 'approved') - (b.status === 'approved'));
+    submissionsList.innerHTML = rows.map(submissionCard).join('') || '<div class="border border-archive-line bg-archive-cream p-5 text-archive-muted">No story submissions awaiting review.</div>';
   }
 
   function submissionCard(row) {
     const createdAt = row.created_at ? new Date(row.created_at).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:true}) : '';
-    const STATUSES  = ['pending','approved','rejected','archived'];
+    const approved  = row.status === 'approved';
+    const storyLink = approved && row.published_story_id
+      ? ` · <a href="/culture/detail/?id=${encodeURIComponent(row.published_story_id)}" target="_blank" rel="noopener" class="underline underline-offset-2">View on site</a>` : '';
+    const statusTag = approved
+      ? `<span class="inline-block rounded bg-green-50 px-2 py-0.5 text-green-700">Published${storyLink}</span>`
+      : `<span class="inline-block rounded bg-amber-50 px-2 py-0.5 text-amber-700">Awaiting review</span>`;
+    const btnBase = 'px-4 py-2 text-xs font-black uppercase tracking-[0.12em] border';
     return `<article data-submission-card data-submission-id="${escapeHtml(row.id)}" class="border border-archive-line bg-archive-cream p-5">
       <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
         <div>
-          <p class="text-xs font-black uppercase tracking-[0.14em] text-archive-gold">Story Submission · ${escapeHtml(row.status||'pending')}${row.category?` · ${escapeHtml(row.category)}`:''}</p>
+          <p class="text-xs font-black uppercase tracking-[0.14em] text-archive-gold">Story Submission${row.category?` · ${escapeHtml(row.category)}`:''}</p>
+          <p class="mt-2 text-xs font-bold">${statusTag}</p>
           <h3 class="mt-2 text-2xl font-black text-archive-green">${escapeHtml(row.title)}</h3>
           <p class="mt-1 text-sm font-bold text-archive-muted">By ${escapeHtml(row.author_name)}</p>
           ${row.author_bio ? `<p class="mt-1.5 text-xs text-archive-muted leading-5 max-w-xl italic">${escapeHtml(row.author_bio)}</p>` : ''}
@@ -1710,19 +1824,17 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
         </div>
         <div class="flex flex-col gap-2">
           ${row.email ? `<div class="border border-archive-line bg-white px-4 py-3 text-sm text-archive-muted"><p><strong class="text-archive-ink">Email:</strong> ${escapeHtml(row.email)}</p></div>` : ''}
-          ${row.akt_profile_url ? `<div class="border border-blue-100 bg-blue-50 px-4 py-3 text-sm"><p class="text-xs font-black uppercase tracking-[.1em] text-blue-600 mb-1">AKT Profile</p><a href="${escapeHtml(row.akt_profile_url)}" target="_blank" rel="noopener" class="text-xs font-bold text-blue-700 underline underline-offset-2 break-all">${escapeHtml(row.akt_profile_url)}</a></div>` : ''}
+          ${safeExternalUrl(row.akt_profile_url) ? `<div class="border border-blue-100 bg-blue-50 px-4 py-3 text-sm"><p class="text-xs font-black uppercase tracking-[.1em] text-blue-600 mb-1">AKT Profile</p><a href="${escapeHtml(safeExternalUrl(row.akt_profile_url))}" target="_blank" rel="noopener" class="text-xs font-bold text-blue-700 underline underline-offset-2 break-all">${escapeHtml(row.akt_profile_url)}</a></div>` : ''}
         </div>
       </div>
       <div class="mt-4 border border-archive-line bg-white p-4">
         <p class="mb-3 text-xs font-black uppercase tracking-[0.12em] text-archive-gold">Story content</p>
-        <div class="prose-submission text-sm">${row.content||'<em class="text-archive-muted">No content provided.</em>'}</div>
+        <div class="prose-submission text-sm">${sanitizeStoryHtml(row.content) || '<em class="text-archive-muted">No content provided.</em>'}</div>
       </div>
-      <label class="mt-5 grid gap-2 text-sm font-bold text-archive-muted">Admin notes
-        <textarea data-submission-notes rows="2" class="border border-archive-line bg-white p-3 text-archive-ink">${escapeHtml(row.admin_notes||'')}</textarea>
-      </label>
       <div class="mt-4 flex flex-wrap gap-2">
-        <button data-submission-action="notes" class="border border-archive-gold bg-archive-gold px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-archive-ink" type="button">Save notes</button>
-        ${STATUSES.map(s=>`<button data-submission-action="status" data-status-value="${s}" class="border ${row.status===s?'border-archive-gold bg-white text-archive-green font-black':'border-archive-line text-archive-muted'} px-3 py-2 text-xs font-black uppercase tracking-[0.12em]" type="button">${s}</button>`).join('')}
+        ${approved ? '' : `<button data-submission-action="approve" class="${btnBase} border-archive-green bg-archive-green text-archive-cream" type="button">Approve &amp; publish</button>
+        <button data-submission-action="reject" class="${btnBase} border-archive-line bg-white text-archive-muted" type="button">Reject</button>`}
+        <button data-submission-action="delete" class="${btnBase} border-red-200 bg-white text-red-700" type="button">Delete</button>
       </div>
     </article>`;
   }
