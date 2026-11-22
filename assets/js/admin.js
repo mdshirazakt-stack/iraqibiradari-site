@@ -1,3 +1,4 @@
+import { relationPhrase } from './obituary-message.js';
 import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } from './supabase-config.js';
 
 (async function () {
@@ -1191,7 +1192,7 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
       : '<span class="rounded bg-amber-50 px-2 py-0.5 text-amber-700">Hidden</span>';
     const reported = r.report_count > 0
       ? `<span class="rounded bg-red-50 px-2 py-0.5 text-red-700">${r.report_count} report${r.report_count === 1 ? '' : 's'}</span>` : '';
-    const rels = (r.relations || []).map(x => `${x.rel} of ${x.late ? 'Late ' : ''}${x.name}`).join(' · ');
+    const rels = (r.relations || []).map(relationPhrase).join(' · ');
     const btn = 'border px-3 py-1.5 text-xs font-black uppercase tracking-[0.12em]';
     return `<article data-obituary-card data-obituary-id="${escapeHtml(r.id)}" class="border border-archive-line bg-archive-cream p-4">
       <div class="flex flex-wrap items-center gap-2 text-xs font-bold">

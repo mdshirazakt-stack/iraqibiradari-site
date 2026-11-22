@@ -140,7 +140,7 @@ declare
   v_rels    jsonb := '[]'::jsonb;
   v_rel     jsonb;
   v_relname text;
-  v_relkind text;
+  v_label   text;
   v_age     integer;
   v_kind    text := nullif(lower(coalesce(p ->> 'leaves_from_kind', '')), '');
   v_mobile  text := regexp_replace(coalesce(p ->> 'poster_mobile', ''), '[^0-9+]', '', 'g');
@@ -188,13 +188,18 @@ begin
     raise exception 'Please list at most 8 family relations.';
   end if;
   for v_rel in select * from jsonb_array_elements(coalesce(p -> 'relations', '[]'::jsonb)) loop
-    v_relkind := lower(coalesce(v_rel ->> 'rel', ''));
-    if v_relkind not in ('wife', 'husband', 'son', 'daughter', 'mother', 'father', 'brother', 'sister') then
-      raise exception 'Invalid family relation.';
+    -- Free text, e.g. label "wife of" + name "Late Abdul Qadir". (Older posts used {rel, late}.)
+    v_label   := coalesce(public._obit_text(v_rel, 'label', 40, 'Relation'),
+                          nullif(lower(btrim(coalesce(v_rel ->> 'rel', ''))), ''));
+    v_relname := public._obit_text(v_rel, 'name', 80, 'Relative''s name');
+    if v_label is null and v_relname is null then continue; end if;
+    if v_label is null or v_relname is null then
+      raise exception 'Please fill both parts of each family line (for example "wife of" and the name).';
     end if;
-    v_relname := public._obit_text(v_rel, 'name', 80, 'Relative''s name', true);
-    v_rels := v_rels || jsonb_build_array(jsonb_build_object(
-      'rel', v_relkind, 'name', v_relname, 'late', coalesce((v_rel ->> 'late')::boolean, false)));
+    if coalesce((v_rel ->> 'late')::boolean, false) and v_relname !~* '^late\s' then
+      v_relname := 'Late ' || v_relname;
+    end if;
+    v_rels := v_rels || jsonb_build_array(jsonb_build_object('label', v_label, 'name', v_relname));
   end loop;
 
   if char_length(v_mobile) < 8 or char_length(v_mobile) > 16 then

@@ -2,7 +2,7 @@
 // addresses never reach this page (they are not stored on the website at all).
 
 import { rpc, clientId, esc } from './rpc.js';
-import { buildMessage, whatsappLink, todayIst, diffDays, longDate, weekdayName } from './obituary-message.js';
+import { buildMessage, whatsappLink, todayIst, diffDays, longDate, relationPhrase } from './obituary-message.js';
 import { mountEngagement } from './engage.js';
 import { getEditToken } from './obituary-form.js';
 
@@ -28,7 +28,7 @@ function ago(iso) {
   document.title = `${name} — Obituaries — Iraqi Biradari`;
   const today = todayIst();
 
-  const rels = (o.relations || []).map(r => `${r.rel} of ${r.late ? 'Late ' : ''}${r.name}`);
+  const rels = (o.relations || []).map(relationPhrase);
   const dPassed = diffDays(o.passed_on, today);
   const passedWord = dPassed === 0 ? 'Today' : dPassed === -1 ? 'Yesterday' : '';
   const leaves = o.leaves_from_kind === 'residence' ? 'the residence'

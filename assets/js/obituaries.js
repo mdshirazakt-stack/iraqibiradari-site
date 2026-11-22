@@ -1,7 +1,7 @@
 // Obituaries landing page: newest first, search by name, filter by year.
 
 import { rpc, esc } from './rpc.js';
-import { todayIst, diffDays, shortDate, dayMonth } from './obituary-message.js';
+import { todayIst, diffDays, shortDate, dayMonth, relationPhrase } from './obituary-message.js';
 
 // Paste the link of the WhatsApp Channel for obituaries here (leave empty to hide the button).
 const CHANNEL_URL = '';
@@ -30,8 +30,7 @@ function whenLabel(passedOn) {
 }
 
 function relationLine(o) {
-  return (o.relations || []).slice(0, 2)
-    .map(r => `${r.rel} of ${r.late ? 'Late ' : ''}${r.name}`).join(' · ');
+  return (o.relations || []).slice(0, 2).map(relationPhrase).join(' · ');
 }
 
 function janazaLine(o) {

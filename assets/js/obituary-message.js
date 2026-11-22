@@ -54,9 +54,47 @@ export function dayMonth(s) {
 
 const clean = (v) => String(v ?? '').trim();
 
+// ── Relations (free text: "wife of" + "Late Abdul Qadir") ────────────────
+const LATE = /^late\s+/i;
+
+function relLabel(r) {
+  let l = clean(r.label).replace(/\s+/g, ' ');
+  if (!l && r.rel) l = String(r.rel);              // older records stored a fixed keyword
+  if (!l) return '';
+  return /\bof$/i.test(l) ? l : `${l} of`;
+}
+function relName(r) {
+  const n = clean(r.name);
+  return r.late && !LATE.test(n) ? `Late ${n}` : n;  // older records had a separate "late" flag
+}
+/** "wife of Late Abdul Qadir" */
+export function relationPhrase(r) { return `${relLabel(r)} ${relName(r)}`.trim(); }
+
+// Roman Urdu for whatever the person typed; more specific words first.
+const RU_RELATIONS = [
+  ['saalee', 'ki', 'saali'], ['saali', 'ki', 'saali'], ['sali', 'ki', 'saali'],
+  ['bhabhi', 'ki', 'bhabhi'], ['bhabi', 'ki', 'bhabhi'],
+  ['daughter in law', 'ki', 'bahu'], ['bahu', 'ki', 'bahu'],
+  ['son in law', 'ke', 'damad'], ['damad', 'ke', 'damad'],
+  ['saalaa', 'ke', 'saale'], ['saala', 'ke', 'saale'], ['sala', 'ke', 'saale'],
+  ['behnoi', 'ke', 'behnoi'], ['behnoyi', 'ke', 'behnoi'],
+  ['khala', 'ki', 'khala'], ['phuphi', 'ki', 'phuphi'], ['phupho', 'ki', 'phuphi'],
+  ['chachi', 'ki', 'chachi'], ['mamani', 'ki', 'mamani'],
+  ['mamu', 'ke', 'mamu'], ['khalu', 'ke', 'khalu'], ['phuppa', 'ke', 'phuppa'], ['phupha', 'ke', 'phuppa'], ['chacha', 'ke', 'chacha'],
+  ['daughter', 'ki', 'sahabzadi'], ['son', 'ke', 'sahabzade'], ['wife', 'ki', 'ahliya'], ['husband', 'ke', 'shohar'],
+  ['mother', 'ki', 'walida'], ['father', 'ke', 'walid'], ['brother', 'ke', 'bhai'], ['sister', 'ki', 'behan'],
+];
+function ruRelation(label, female) {
+  const words = ` ${label.toLowerCase().replace(/\bof$/, '').replace(/[^a-z]+/g, ' ').trim()} `;
+  for (const [key, particle, noun] of RU_RELATIONS) if (words.includes(` ${key} `)) return [particle, noun];
+  const plain = label.replace(/\s+of$/i, '').trim();
+  return [female ? 'ki' : 'ke', plain || 'rishtedar'];
+}
+
 // ── English ──────────────────────────────────────────────────────────────
 function relationsEn(o) {
-  return (o.relations || []).map(r => `${r.rel} of ${r.late ? 'Late ' : ''}${r.name}`).join(' and ');
+  // lower-case start: it continues a sentence ("… Name wife of Late X and mother of Y")
+  return (o.relations || []).map(r => { const p = relationPhrase(r); return p.charAt(0).toLowerCase() + p.slice(1); }).join(' and ');
 }
 
 function leavesEn(o, priv) {
@@ -107,12 +145,6 @@ function english(o, priv, url) {
 }
 
 // ── Roman Urdu ───────────────────────────────────────────────────────────
-const RU_REL = {
-  son:      ['ke', 'sahabzade'], daughter: ['ki', 'sahabzadi'],
-  wife:     ['ki', 'ahliya'],    husband:  ['ke', 'shohar'],
-  mother:   ['ki', 'walida'],    father:   ['ke', 'walid'],
-  brother:  ['ke', 'bhai'],      sister:   ['ki', 'behan'],
-};
 const RU_BURIAL = {
   'at the same place':         'wahin par',
   'in the adjoining qabristan': 'qareeb ke qabristan me',
@@ -129,8 +161,10 @@ function romanUrdu(o, priv, url) {
   const verb = female ? 'thin' : 'the';
   const hon  = clean(o.honorific) || (female ? 'mohtarma' : 'janab');
   const rels = (o.relations || []).map(r => {
-    const [particle, noun] = RU_REL[r.rel] || ['ke', r.rel];
-    return `${r.late ? 'marhoom ' : ''}${r.name} ${particle} ${noun} ${verb}`;
+    const [particle, noun] = ruRelation(relLabel(r), female);
+    const n = clean(r.name);
+    const late = r.late || LATE.test(n);
+    return `${late ? 'marhoom ' : ''}${n.replace(LATE, '')} ${particle} ${noun} ${verb}`;
   }).join(' aur ');
   const area = clean(o.residence_area) || clean(priv.address);
   const live = area ? ` aur ${area} me ${female ? 'rahti thin' : 'rahte the'}` : '';
