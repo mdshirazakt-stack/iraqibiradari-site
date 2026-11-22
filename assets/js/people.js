@@ -1,4 +1,5 @@
 import { createSupabaseClient, withTimeout } from './supabase-config.js';
+import { getAllCounts, countLabel, mostViewedStrip } from './views.js';
 
 (async function () {
   const listEl      = document.getElementById('people-list');
@@ -14,6 +15,8 @@ import { createSupabaseClient, withTimeout } from './supabase-config.js';
   }
 
   let allPeople    = [];
+  let counts       = new Map();
+  const countsPromise = getAllCounts('people');   // fetched in parallel; never blocks the list
   let activeFilter = 'all';
 
   let data, error;
@@ -37,6 +40,14 @@ import { createSupabaseClient, withTimeout } from './supabase-config.js';
   }
 
   allPeople = data || [];
+  counts = await countsPromise;
+
+  // "Most viewed" strip above the filters
+  (filtersEl || listEl).insertAdjacentHTML('beforebegin', mostViewedStrip(allPeople, counts, {
+    title: 'Most viewed', unit: 'views',
+    urlFor: p => `/people/detail/?id=${encodeURIComponent(p.id)}`,
+    subFor: p => p.designation || p.category || '',
+  }));
 
   // Build category filter chips
   const categories = ['all', ...new Set(allPeople.map(p => p.category).filter(Boolean))];
@@ -88,6 +99,9 @@ import { createSupabaseClient, withTimeout } from './supabase-config.js';
             </h2>
             ${person.designation
               ? `<p class="mt-1 text-sm font-bold text-archive-muted">${escapeHtml(person.designation)}</p>`
+              : ''}
+            ${counts.get(person.id) > 0
+              ? `<p class="mt-1 text-xs font-bold text-archive-muted">${countLabel(counts.get(person.id), 'views')}</p>`
               : ''}
           </div>
           <span class="shrink-0 text-sm font-black uppercase tracking-[0.1em] text-archive-gold opacity-0 transition-opacity group-hover:opacity-100">

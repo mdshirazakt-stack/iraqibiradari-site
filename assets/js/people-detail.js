@@ -1,4 +1,5 @@
 import { createSupabaseClient, withTimeout } from './supabase-config.js';
+import { recordView, countLabel } from './views.js';
 
 (async function () {
   const id        = new URLSearchParams(location.search).get('id');
@@ -64,6 +65,7 @@ import { createSupabaseClient, withTimeout } from './supabase-config.js';
             ${person.designation
               ? `<p class="mt-3 text-base font-bold text-archive-paper">${escapeHtml(person.designation)}</p>`
               : ''}
+            <p data-view-count hidden class="mt-3 text-xs font-black uppercase tracking-[0.14em] text-archive-goldSoft"></p>
           </div>
         </div>
 
@@ -87,6 +89,11 @@ import { createSupabaseClient, withTimeout } from './supabase-config.js';
     </section>
 
   `;
+
+  recordView('people', id).then(n => {
+    const el = main.querySelector('[data-view-count]');
+    if (el && n > 0) { el.innerHTML = countLabel(n, 'views'); el.hidden = false; }
+  });
 
   function escapeHtml(v) {
     return String(v || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');

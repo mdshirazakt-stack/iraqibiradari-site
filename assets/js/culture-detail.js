@@ -1,4 +1,5 @@
 import { createSupabaseClient, withTimeout } from './supabase-config.js';
+import { recordView, countLabel } from './views.js';
 
 (async function () {
   const id        = new URLSearchParams(location.search).get('id');
@@ -66,6 +67,7 @@ import { createSupabaseClient, withTimeout } from './supabase-config.js';
         <div class="mt-4 flex flex-wrap items-center gap-5 text-sm text-archive-paper">
           ${story.author ? `<span>By <strong class="text-archive-goldSoft">${escapeHtml(story.author)}</strong></span>` : ''}
           ${dateStr ? `<span>${dateStr}</span>` : ''}
+          <span data-view-count hidden></span>
         </div>
 
       </div>
@@ -100,6 +102,11 @@ import { createSupabaseClient, withTimeout } from './supabase-config.js';
     </section>
 
   `;
+
+  recordView('culture', id).then(n => {
+    const el = main.querySelector('[data-view-count]');
+    if (el && n > 0) { el.innerHTML = countLabel(n, 'reads'); el.hidden = false; }
+  });
 
   function escapeHtml(v) {
     return String(v || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');

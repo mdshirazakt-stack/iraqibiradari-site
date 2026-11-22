@@ -241,3 +241,8 @@ async function loadRibbon() {
 }
 
 inject();
+
+// Site-visit counter (once per browser session, any public page; not the admin).
+if (!P.startsWith('/admin')) {
+  import('./views.js').then(m => m.trackSiteVisit()).catch(() => { /* counter is optional */ });
+}

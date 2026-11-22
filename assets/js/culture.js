@@ -1,4 +1,5 @@
 import { createSupabaseClient, withTimeout } from './supabase-config.js';
+import { getAllCounts, countLabel, mostViewedStrip } from './views.js';
 
 (async function () {
   const listEl    = document.getElementById('culture-list');
@@ -25,6 +26,8 @@ import { createSupabaseClient, withTimeout } from './supabase-config.js';
   ];
 
   let allStories   = [];
+  let counts       = new Map();
+  const countsPromise = getAllCounts('culture');   // fetched in parallel; never blocks the list
   let activeFilter = 'all';
 
   let data, error;
@@ -48,6 +51,14 @@ import { createSupabaseClient, withTimeout } from './supabase-config.js';
   }
 
   allStories = data || [];
+  counts = await countsPromise;
+
+  // "Most read" strip above the grid
+  listEl.insertAdjacentHTML('beforebegin', mostViewedStrip(allStories, counts, {
+    title: 'Most read', unit: 'reads',
+    urlFor: s => `/culture/detail/?id=${encodeURIComponent(s.id)}`,
+    subFor: s => s.category || '',
+  }));
 
   // Build category filter chips
   if (filtersEl) {
@@ -125,6 +136,7 @@ import { createSupabaseClient, withTimeout } from './supabase-config.js';
           <div class="mt-4 flex flex-wrap items-center justify-between gap-2">
             ${story.author ? `<p class="text-xs font-bold text-archive-muted">By ${escapeHtml(story.author)}</p>` : ''}
             ${dateStr ? `<p class="text-xs text-archive-muted">${dateStr}</p>` : ''}
+            ${counts.get(story.id) > 0 ? `<p class="text-xs font-bold text-archive-muted">${countLabel(counts.get(story.id), 'reads')}</p>` : ''}
           </div>
         </div>
       </a>`;
