@@ -1,5 +1,5 @@
 import { createSupabaseClient, withTimeout } from './supabase-config.js';
-import { recordView, countLabel } from './views.js';
+import { recordView } from './views.js';
 import { mountEngagement } from './engage.js';
 
 (async function () {
@@ -66,7 +66,6 @@ import { mountEngagement } from './engage.js';
             ${person.designation
               ? `<p class="mt-3 text-base font-bold text-archive-paper">${escapeHtml(person.designation)}</p>`
               : ''}
-            <p data-view-count hidden class="mt-3 text-xs font-black uppercase tracking-[0.14em] text-archive-goldSoft"></p>
           </div>
         </div>
 
@@ -94,10 +93,7 @@ import { mountEngagement } from './engage.js';
 
   mountEngagement(main.querySelector('[data-engage]'), 'people', id);
 
-  recordView('people', id).then(n => {
-    const el = main.querySelector('[data-view-count]');
-    if (el && n > 0) { el.innerHTML = countLabel(n, 'views'); el.hidden = false; }
-  });
+  recordView('people', id);   // counts the view; the number is not shown
 
   function escapeHtml(v) {
     return String(v || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');

@@ -1,5 +1,5 @@
 import { createSupabaseClient, withTimeout } from './supabase-config.js';
-import { getAllCounts, countLabel, mostViewedStrip } from './views.js';
+import { getAllCounts, mostReadIds, mostReadRibbon, MOST_READ_BORDER } from './views.js';
 
 (async function () {
   const listEl    = document.getElementById('culture-list');
@@ -26,7 +26,6 @@ import { getAllCounts, countLabel, mostViewedStrip } from './views.js';
   ];
 
   let allStories   = [];
-  let counts       = new Map();
   const countsPromise = getAllCounts('culture');   // fetched in parallel; never blocks the list
   let activeFilter = 'all';
 
@@ -51,14 +50,7 @@ import { getAllCounts, countLabel, mostViewedStrip } from './views.js';
   }
 
   allStories = data || [];
-  counts = await countsPromise;
-
-  // "Most read" strip above the grid
-  listEl.insertAdjacentHTML('beforebegin', mostViewedStrip(allStories, counts, {
-    title: 'Most read', unit: 'reads',
-    urlFor: s => `/culture/detail/?id=${encodeURIComponent(s.id)}`,
-    subFor: s => s.category || '',
-  }));
+  const topIds = mostReadIds(allStories, await countsPromise);   // ribbon on the most-read stories
 
   // Build category filter chips
   if (filtersEl) {
@@ -114,9 +106,11 @@ import { getAllCounts, countLabel, mostViewedStrip } from './views.js';
     const dateStr   = story.created_at
       ? new Date(story.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
       : '';
+    const top = topIds.has(story.id);
     return `
       <a href="${detailUrl}"
-        class="flex flex-col border border-archive-line bg-white transition-shadow hover:shadow-soft group">
+        class="relative flex flex-col overflow-hidden border bg-white transition-shadow hover:shadow-soft group ${top ? MOST_READ_BORDER : 'border-archive-line'}">
+        ${top ? mostReadRibbon() : ''}
         ${story.cover_image_url ? `
         <div class="aspect-video overflow-hidden">
           <img src="${escapeHtml(story.cover_image_url)}" alt="${escapeHtml(story.title)}"
@@ -136,7 +130,6 @@ import { getAllCounts, countLabel, mostViewedStrip } from './views.js';
           <div class="mt-4 flex flex-wrap items-center justify-between gap-2">
             ${story.author ? `<p class="text-xs font-bold text-archive-muted">By ${escapeHtml(story.author)}</p>` : ''}
             ${dateStr ? `<p class="text-xs text-archive-muted">${dateStr}</p>` : ''}
-            ${counts.get(story.id) > 0 ? `<p class="text-xs font-bold text-archive-muted">${countLabel(counts.get(story.id), 'reads')}</p>` : ''}
           </div>
         </div>
       </a>`;

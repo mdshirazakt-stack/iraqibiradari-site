@@ -9,10 +9,10 @@ const REST    = `${SUPABASE_URL}/rest/v1`;
 const HEADERS = { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` };
 const BOT_UA  = /bot|crawl|spider|slurp|headless|lighthouse|preview/i;
 
-/** "Most read / viewed" strip only appears once at least this many items have views. */
-export const MIN_ITEMS_FOR_STRIP = 3;
-
-export const EYE = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" style="width:14px;height:14px;display:inline-block;vertical-align:-2px;margin-right:4px" aria-hidden="true"><path d="M10 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/><path fill-rule="evenodd" d="M.664 10.59a1.651 1.651 0 0 1 0-1.186A10.004 10.004 0 0 1 10 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0 1 10 17c-4.257 0-7.893-2.66-9.336-6.41zM14 10a4 4 0 1 1-8 0 4 4 0 0 1 8 0z" clip-rule="evenodd"/></svg>';
+/** An item must have at least this many views before it can wear the "Most read" ribbon. */
+export const MIN_VIEWS_FOR_MOST_READ = 20;
+/** At most this many items per page get the ribbon. */
+export const MOST_READ_LIMIT = 3;
 
 export function fmt(n) { return Number(n).toLocaleString('en-IN'); }
 
@@ -21,6 +21,47 @@ function escapeHtml(v) {
 }
 
 function isBot() { return !!navigator.webdriver || BOT_UA.test(navigator.userAgent || ''); }
+
+// ── Opt out of being counted (for the site owner) ───────────────────────
+// Visit any page with ?notrack on the end (once per device/browser) to stop
+// counting that browser; ?track turns counting back on. The same switch also
+// pauses Umami and GoatCounter using their own documented flags.
+const OPT_OUT_KEY = 'ib_notrack';
+function optedOut() { try { return localStorage.getItem(OPT_OUT_KEY) === '1'; } catch { return false; } }
+
+function showToast(text) {
+  const el = document.createElement('div');
+  el.setAttribute('role', 'status');
+  el.textContent = text;
+  el.style.cssText = 'position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:9999;max-width:min(92vw,460px);background:#17130f;color:#fbf7ed;padding:12px 16px;border-radius:8px;font:600 14px/1.5 Lato,Arial,sans-serif;box-shadow:0 8px 30px rgba(0,0,0,.35)';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 7000);
+}
+
+function applyOptOutLink() {
+  try {
+    const url = new URL(location.href);
+    const off = url.searchParams.has('notrack');
+    const on  = url.searchParams.has('track');
+    if (!off && !on) return;
+    if (off) {
+      localStorage.setItem(OPT_OUT_KEY, '1');
+      localStorage.setItem('umami.disabled', '1');
+      localStorage.setItem('skipgc', 't');
+    } else {
+      localStorage.removeItem(OPT_OUT_KEY);
+      localStorage.removeItem('umami.disabled');
+      localStorage.removeItem('skipgc');
+    }
+    url.searchParams.delete('notrack');
+    url.searchParams.delete('track');
+    history.replaceState(null, '', url.pathname + url.search + url.hash);
+    showToast(off
+      ? 'Done — your visits on this device are no longer counted. To undo, open this site with ?track at the end of the address.'
+      : 'Done — your visits on this device are counted again.');
+  } catch { /* storage blocked: nothing to do */ }
+}
+applyOptOutLink();
 function seenKey(kind, id) { return `ib_viewed:${kind}:${id}`; }
 function wasSeen(kind, id) { try { return sessionStorage.getItem(seenKey(kind, id)) === '1'; } catch { return false; } }
 function markSeen(kind, id) { try { sessionStorage.setItem(seenKey(kind, id), '1'); } catch { /* private mode */ } }
@@ -61,7 +102,7 @@ export async function getAllCounts(kind) {
  */
 export async function recordView(kind, id) {
   try {
-    if (!isBot() && !wasSeen(kind, id)) {
+    if (!isBot() && !optedOut() && !wasSeen(kind, id)) {
       markSeen(kind, id);
       const n = await fetchJson(`${REST}/rpc/record_view`, {
         method: 'POST',
@@ -85,36 +126,25 @@ export async function trackSiteVisit() {
   });
 }
 
-/** Small "👁 1,240 views" label (empty string when there are no views yet). */
-export function countLabel(n, unit) {
-  return n > 0 ? `${EYE}${fmt(n)} ${unit}` : '';
+/** Ids of the items that should wear the "Most read" ribbon (top few, each with enough views). */
+export function mostReadIds(items, counts) {
+  return new Set(
+    items
+      .map((item, i) => ({ id: item.id, i, n: counts.get(item.id) || 0 }))
+      .filter(r => r.n >= MIN_VIEWS_FOR_MOST_READ)
+      .sort((a, b) => b.n - a.n || a.i - b.i)
+      .slice(0, MOST_READ_LIMIT)
+      .map(r => r.id)
+  );
 }
 
-/**
- * HTML for the "Most viewed / Most read" strip, or '' if too few items have views.
- * items: published items, in display order. opts: { title, unit, urlFor(item), subFor(item) }
- */
-export function mostViewedStrip(items, counts, opts) {
-  const ranked = items
-    .map((item, i) => ({ item, i, n: counts.get(item.id) || 0 }))
-    .filter(r => r.n > 0);
-  if (ranked.length < MIN_ITEMS_FOR_STRIP) return '';
-  ranked.sort((a, b) => b.n - a.n || a.i - b.i);
-  const cards = ranked.slice(0, 3).map((r, idx) => {
-    const sub = opts.subFor ? opts.subFor(r.item) : '';
-    return `
-      <a href="${escapeHtml(opts.urlFor(r.item))}"
-        class="group flex items-start gap-3 border border-archive-line bg-white p-4 transition-shadow hover:shadow-soft">
-        <span class="font-display text-4xl font-bold leading-none text-archive-gold">${idx + 1}</span>
-        <span class="min-w-0">
-          <span class="block font-display text-lg font-bold leading-snug text-archive-green transition-colors group-hover:text-archive-gold">${escapeHtml(r.item.title)}</span>
-          <span class="mt-1 block text-xs font-bold text-archive-muted">${sub ? `${escapeHtml(sub)} · ` : ''}${countLabel(r.n, opts.unit)}</span>
-        </span>
-      </a>`;
-  }).join('');
-  return `
-    <section class="mb-8 border border-archive-gold bg-[#fbf3dc] p-5" aria-label="${escapeHtml(opts.title)}">
-      <p class="text-xs font-black uppercase tracking-[0.18em] text-archive-gold">${escapeHtml(opts.title)}</p>
-      <div class="mt-3 grid gap-3 md:grid-cols-3">${cards}</div>
-    </section>`;
+/** Extra border classes for a tile that has the ribbon. */
+export const MOST_READ_BORDER = 'border-archive-gold ring-1 ring-archive-gold';
+
+/** Diagonal corner ribbon. The tile must be `relative overflow-hidden`. */
+export function mostReadRibbon(compact = false) {
+  const size = compact
+    ? 'top-[18px] right-[-34px] w-[120px] py-[3px] text-[9px] tracking-[0.12em]'
+    : 'top-[22px] right-[-40px] w-[150px] py-[5px] text-[10px] tracking-[0.16em]';
+  return `<span class="pointer-events-none absolute z-10 rotate-45 bg-[#8a6b27] text-center font-black uppercase text-white shadow ${size}">Most read</span>`;
 }

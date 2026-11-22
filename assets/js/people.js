@@ -1,5 +1,5 @@
 import { createSupabaseClient, withTimeout } from './supabase-config.js';
-import { getAllCounts, countLabel, mostViewedStrip } from './views.js';
+import { getAllCounts, mostReadIds, mostReadRibbon, MOST_READ_BORDER } from './views.js';
 
 (async function () {
   const listEl      = document.getElementById('people-list');
@@ -15,7 +15,6 @@ import { getAllCounts, countLabel, mostViewedStrip } from './views.js';
   }
 
   let allPeople    = [];
-  let counts       = new Map();
   const countsPromise = getAllCounts('people');   // fetched in parallel; never blocks the list
   let activeFilter = 'all';
 
@@ -40,14 +39,7 @@ import { getAllCounts, countLabel, mostViewedStrip } from './views.js';
   }
 
   allPeople = data || [];
-  counts = await countsPromise;
-
-  // "Most viewed" strip above the filters
-  (filtersEl || listEl).insertAdjacentHTML('beforebegin', mostViewedStrip(allPeople, counts, {
-    title: 'Most viewed', unit: 'views',
-    urlFor: p => `/people/detail/?id=${encodeURIComponent(p.id)}`,
-    subFor: p => p.designation || p.category || '',
-  }));
+  const topIds = mostReadIds(allPeople, await countsPromise);   // ribbon on the most-viewed profiles
 
   // Build category filter chips
   const categories = ['all', ...new Set(allPeople.map(p => p.category).filter(Boolean))];
@@ -87,9 +79,11 @@ import { getAllCounts, countLabel, mostViewedStrip } from './views.js';
 
     listEl.innerHTML = filtered.map(person => {
       const detailUrl = `/people/detail/?id=${encodeURIComponent(person.id)}`;
+      const top = topIds.has(person.id);
       return `
         <a href="${detailUrl}"
-          class="flex items-center justify-between gap-4 border-b border-archive-line bg-white px-6 py-5 transition-colors hover:bg-archive-paper group">
+          class="relative flex items-center justify-between gap-4 overflow-hidden border-b border-archive-line bg-white px-6 py-5 transition-colors hover:bg-archive-paper group ${top ? 'ring-1 ring-inset ring-archive-gold' : ''}">
+          ${top ? mostReadRibbon(true) : ''}
           <div>
             ${person.category
               ? `<p class="mb-1 text-xs font-black uppercase tracking-[0.14em] text-archive-gold">${escapeHtml(person.category)}</p>`
@@ -99,9 +93,6 @@ import { getAllCounts, countLabel, mostViewedStrip } from './views.js';
             </h2>
             ${person.designation
               ? `<p class="mt-1 text-sm font-bold text-archive-muted">${escapeHtml(person.designation)}</p>`
-              : ''}
-            ${counts.get(person.id) > 0
-              ? `<p class="mt-1 text-xs font-bold text-archive-muted">${countLabel(counts.get(person.id), 'views')}</p>`
               : ''}
           </div>
           <span class="shrink-0 text-sm font-black uppercase tracking-[0.1em] text-archive-gold opacity-0 transition-opacity group-hover:opacity-100">
