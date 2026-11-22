@@ -1,5 +1,6 @@
 import { createSupabaseClient, withTimeout } from './supabase-config.js';
 import { recordView, countLabel } from './views.js';
+import { mountEngagement } from './engage.js';
 
 (async function () {
   const id        = new URLSearchParams(location.search).get('id');
@@ -87,6 +88,7 @@ import { recordView, countLabel } from './views.js';
           : `<p class="text-archive-muted italic">No content available for this story.</p>`
         }
 
+        <div data-engage></div>
         <div class="mt-12 border-t border-archive-line pt-8 flex flex-wrap items-center justify-between gap-4">
           <a href="/culture/"
             class="inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.14em] text-archive-muted transition-colors hover:text-archive-green">
@@ -102,6 +104,8 @@ import { recordView, countLabel } from './views.js';
     </section>
 
   `;
+
+  mountEngagement(main.querySelector('[data-engage]'), 'culture', id);
 
   recordView('culture', id).then(n => {
     const el = main.querySelector('[data-view-count]');

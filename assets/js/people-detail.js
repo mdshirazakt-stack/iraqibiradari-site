@@ -1,5 +1,6 @@
 import { createSupabaseClient, withTimeout } from './supabase-config.js';
 import { recordView, countLabel } from './views.js';
+import { mountEngagement } from './engage.js';
 
 (async function () {
   const id        = new URLSearchParams(location.search).get('id');
@@ -79,6 +80,7 @@ import { recordView, countLabel } from './views.js';
           ? `<div class="prose-body">${person.body}</div>`
           : `<p class="text-archive-muted italic">No profile details have been published yet.</p>`
         }
+        <div data-engage></div>
         <div class="mt-12 border-t border-archive-line pt-8">
           <a href="/people/"
             class="inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.14em] text-archive-muted transition-colors hover:text-archive-green">
@@ -89,6 +91,8 @@ import { recordView, countLabel } from './views.js';
     </section>
 
   `;
+
+  mountEngagement(main.querySelector('[data-engage]'), 'people', id);
 
   recordView('people', id).then(n => {
     const el = main.querySelector('[data-view-count]');

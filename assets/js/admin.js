@@ -54,6 +54,9 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
   const adminLogSection    = document.querySelector('[data-admin-log-section]');
   const adminUsersList     = document.querySelector('[data-admin-users-list]');
   const adminLogList       = document.querySelector('[data-admin-log-list]');
+  const commentsSection    = document.querySelector('[data-comments-section]');
+  const commentsList       = document.querySelector('[data-comments-list]');
+  const commentsFilter     = document.querySelector('[data-comments-filter]');
   const addAdminForm       = document.querySelector('[data-add-admin-form]');
   const addAdminStatus     = document.querySelector('[data-add-admin-status]');
 
@@ -171,6 +174,7 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
     if (orgMembersSection)  orgMembersSection.style.display  = 'none';
     if (adminUsersSection)  adminUsersSection.style.display   = 'none';
     if (adminLogSection)    adminLogSection.style.display     = 'none';
+    if (commentsSection)    commentsSection.style.display     = 'none';
   }
 
   function showList() {
@@ -739,7 +743,8 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
     const isMatrimony     = section === 'matrimony';
     const isAdminUsers    = section === 'admin-users';
     const isAdminLog      = section === 'admin-log';
-    const isSpecial       = isMatrimony || isAdminUsers || isAdminLog;
+    const isComments      = section === 'comments';
+    const isSpecial       = isMatrimony || isAdminUsers || isAdminLog || isComments;
     const showSubmissions = section === 'stories';
 
     showList(); // always return to list when switching tabs
@@ -751,6 +756,7 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
     matrimonySection.style.display    = isMatrimony ? 'block' : 'none';
     if (adminUsersSection) adminUsersSection.style.display = isAdminUsers ? 'grid' : 'none';
     if (adminLogSection)   adminLogSection.style.display   = isAdminLog   ? 'block' : 'none';
+    if (commentsSection)   commentsSection.style.display   = isComments   ? 'block' : 'none';
     submissionsSection.style.display  = showSubmissions ? 'block' : 'none';
 
     if (!isSpecial) {
@@ -769,6 +775,8 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
       renderAdminUsers();
     } else if (isAdminLog) {
       renderAdminLog();
+    } else if (isComments) {
+      renderComments();
     }
   }
 
@@ -842,6 +850,7 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
       'stories':       isSuperAdmin || r === 'content_admin',
       'organizations': isSuperAdmin || r === 'org_admin',
       'matrimony':     isSuperAdmin || r === 'matrimony_admin',
+      'comments':      isSuperAdmin || r === 'content_admin',
       'admin-users':   isSuperAdmin,
       'admin-log':     isSuperAdmin,
     };
@@ -1042,6 +1051,97 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
   });
 
   // ── Admin Activity Log ───────────────────────────────────────────────
+  // ── Comments moderation ──────────────────────────────────────────────
+  const commentRows = new Map();
+
+  async function renderComments() {
+    if (!commentsList) return;
+    commentsList.innerHTML = `<p class="text-sm text-archive-muted">Loading…</p>`;
+    let data, error;
+    try {
+      ({ data, error } = await withTimeout(
+        supabase.from('comments').select('*').order('created_at', { ascending: false }).limit(300)
+      ));
+    } catch (err) {
+      commentsList.innerHTML = `<p class="text-sm text-archive-muted">⏱ ${escapeHtml(err.message)}</p>`;
+      return;
+    }
+    if (error) {
+      commentsList.innerHTML = `<p class="text-sm text-archive-muted">${escapeHtml(error.message)}${/relation|does not exist/i.test(error.message) ? ' — run supabase/comments_migration.sql first.' : ''}</p>`;
+      return;
+    }
+    commentRows.clear();
+    (data || []).forEach(r => commentRows.set(r.id, r));
+
+    const f = commentsFilter?.value || 'all';
+    let rows = [...(data || [])];
+    if (f === 'reported') rows = rows.filter(r => r.report_count > 0 && r.status === 'visible');
+    if (f === 'hidden')   rows = rows.filter(r => r.status !== 'visible');
+    // Reported ones first (most reports first), then newest.
+    rows.sort((a, b) => (b.report_count - a.report_count) || (new Date(b.created_at) - new Date(a.created_at)));
+
+    if (!rows.length) {
+      commentsList.innerHTML = `<p class="text-sm italic text-archive-muted">${f === 'all' ? 'No comments yet.' : 'Nothing to show here.'}</p>`;
+      return;
+    }
+    commentsList.innerHTML = rows.map(commentCard).join('');
+  }
+
+  function commentCard(r) {
+    const when = r.created_at ? new Date(r.created_at).toLocaleString('en-IN', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit', hour12:true }) : '';
+    const page = `/${r.kind === 'people' ? 'people' : 'culture'}/detail/?id=${encodeURIComponent(r.item_id)}`;
+    const statusTag = r.status === 'visible'
+      ? '<span class="rounded bg-green-50 px-2 py-0.5 text-green-700">Visible</span>'
+      : r.status === 'hidden'
+        ? '<span class="rounded bg-amber-50 px-2 py-0.5 text-amber-700">Hidden</span>'
+        : '<span class="rounded bg-slate-100 px-2 py-0.5 text-slate-600">Deleted by author</span>';
+    const reported = r.report_count > 0
+      ? `<span class="rounded bg-red-50 px-2 py-0.5 text-red-700">${r.report_count} report${r.report_count === 1 ? '' : 's'}</span>` : '';
+    const btn = 'border px-3 py-1.5 text-xs font-black uppercase tracking-[0.12em]';
+    return `<article data-comment-card data-comment-id="${escapeHtml(r.id)}" class="border border-archive-line bg-archive-cream p-4">
+      <div class="flex flex-wrap items-center gap-2 text-xs font-bold">
+        ${statusTag} ${reported}
+        <span class="text-archive-muted">${r.kind === 'people' ? 'Achiever' : 'Culture'} · <a href="${page}" target="_blank" rel="noopener" class="underline underline-offset-2">${escapeHtml(r.item_id)}</a>${r.parent_id ? ' · reply' : ''}</span>
+        <span class="text-archive-muted">${escapeHtml(when)}</span>
+      </div>
+      <p class="mt-2 text-sm font-black text-archive-green">${escapeHtml(r.author_name)}</p>
+      <p class="mt-1 whitespace-pre-wrap break-words text-sm leading-6 text-archive-ink">${escapeHtml(r.body)}</p>
+      <div class="mt-3 flex flex-wrap gap-2">
+        ${r.status === 'visible' ? `<button data-comment-action="hide" class="${btn} border-amber-300 bg-white text-amber-800" type="button">Hide</button>` : ''}
+        ${r.status === 'hidden'  ? `<button data-comment-action="restore" class="${btn} border-archive-green bg-white text-archive-green" type="button">Restore</button>` : ''}
+        <button data-comment-action="delete" class="${btn} border-red-200 bg-white text-red-700" type="button">Delete</button>
+      </div>
+    </article>`;
+  }
+
+  commentsFilter?.addEventListener('change', renderComments);
+  document.querySelector('[data-comments-refresh]')?.addEventListener('click', renderComments);
+  commentsList?.addEventListener('click', async (e) => {
+    const btn  = e.target.closest('button[data-comment-action]');
+    if (!btn) return;
+    const card = btn.closest('[data-comment-card]');
+    const id   = card?.dataset.commentId;
+    const row  = commentRows.get(id);
+    if (!row) return;
+    const label = `${row.author_name}: "${String(row.body).slice(0, 40)}${row.body.length > 40 ? '…' : ''}"`;
+    const action = btn.dataset.commentAction;
+    let error;
+    if (action === 'hide' || action === 'restore') {
+      ({ error } = await supabase.from('comments')
+        .update({ status: action === 'hide' ? 'hidden' : 'visible' }).eq('id', id));
+      setStatus(error ? error.message : action === 'hide' ? 'Comment hidden.' : 'Comment restored.');
+      if (!error) logAdminActivity(action === 'hide' ? 'unpublish' : 'publish', 'comments', id, label, null);
+    } else if (action === 'delete') {
+      if (!confirm(`Permanently delete this comment and any replies to it?\n\n${label}\n\nThis cannot be undone.`)) return;
+      const res = await supabase.from('comments').delete().eq('id', id).select('id');
+      error = res.error;
+      if (error) setStatus(error.message);
+      else if (!res.data?.length) setStatus('Not deleted — your admin account does not have permission.');
+      else { setStatus('Comment deleted.'); logAdminActivity('delete', 'comments', id, label, null); }
+    }
+    await renderComments();
+  });
+
   async function renderAdminLog() {
     if (!adminLogList) return;
     adminLogList.innerHTML = `<p class="text-sm text-archive-muted">Loading…</p>`;
