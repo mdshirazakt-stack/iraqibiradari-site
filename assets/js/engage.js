@@ -1,53 +1,18 @@
-// Thumbs up/down + threaded comments for Achiever profiles and Culture stories.
+// Thumbs up/down + threaded comments for Achiever profiles and Culture stories,
+// and (mode 'condolence') plain condolence messages for obituaries: no thumbs,
+// no replies.
 // Backed by Supabase functions in supabase/comments_migration.sql, called with
 // plain fetch (no SDK). If the database is unreachable or the SQL has not been
 // run, the whole section hides itself and the page works as before.
 
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from './supabase-config.js';
+import { rpc, clientId, esc } from './rpc.js';
 
-const RPC     = `${SUPABASE_URL}/rest/v1/rpc`;
-const HEADERS = { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json' };
-const CID_KEY  = 'ib_client_id';
 const NAME_KEY = 'ib_comment_name';
 const MAX_BODY = 2000;
 const FLAT_FROM_DEPTH = 3;   // replies nested deeper than this stop indenting further
 
-let memClient = null;
-function clientId() {
-  try {
-    let v = localStorage.getItem(CID_KEY);
-    if (!v) {
-      v = (crypto.randomUUID ? crypto.randomUUID() : `c${Date.now()}${Math.random().toString(16).slice(2)}`);
-      localStorage.setItem(CID_KEY, v);
-    }
-    return v;
-  } catch {
-    return memClient || (memClient = `c${Date.now()}${Math.random().toString(16).slice(2)}`);
-  }
-}
 function savedName() { try { return localStorage.getItem(NAME_KEY) || ''; } catch { return ''; } }
 function saveName(n) { try { localStorage.setItem(NAME_KEY, n); } catch { /* private mode */ } }
-
-async function rpc(fn, args) {
-  const ctl = new AbortController();
-  const timer = setTimeout(() => ctl.abort(), 12000);
-  try {
-    const res = await fetch(`${RPC}/${fn}`, { method: 'POST', headers: HEADERS, body: JSON.stringify(args), signal: ctl.signal });
-    if (!res.ok) {
-      let msg = 'Something went wrong. Please try again.';
-      try { const j = await res.json(); if (j?.code === 'P0001' && j.message) msg = j.message; } catch { /* keep default */ }
-      throw new Error(msg);
-    }
-    return res.status === 204 ? null : await res.json();
-  } catch (err) {
-    if (err.name === 'AbortError') throw new Error('The request timed out. Please try again.');
-    throw err;
-  } finally { clearTimeout(timer); }
-}
-
-function esc(v) {
-  return String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
-}
 
 function ago(iso) {
   const s = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
@@ -62,8 +27,9 @@ const INPUT_CLS = 'w-full border border-archive-line bg-white px-3 py-2 text-sm 
 const PRIMARY   = 'bg-archive-green px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-archive-cream hover:bg-archive-gold hover:text-archive-ink disabled:opacity-50';
 const LINK_BTN  = 'text-xs font-bold text-archive-muted underline-offset-2 hover:text-archive-green hover:underline';
 
-export async function mountEngagement(root, kind, itemId) {
+export async function mountEngagement(root, kind, itemId, opts = {}) {
   if (!root) return;
+  const cond = opts.mode === 'condolence';
   const cid = clientId();
   let data;
   try {
@@ -79,17 +45,17 @@ export async function mountEngagement(root, kind, itemId) {
       <div data-eng-reactions></div>
       <h2 class="mt-8 font-display text-2xl font-bold text-archive-green" data-eng-heading></h2>
       <form data-eng-form="main" class="mt-4 grid gap-3 border border-archive-line bg-archive-cream p-4" novalidate>
-        <p class="text-xs font-black uppercase tracking-[0.14em] text-archive-gold">Join the conversation</p>
+        <p class="text-xs font-black uppercase tracking-[0.14em] text-archive-gold">${cond ? 'Leave a condolence message' : 'Join the conversation'}</p>
         <label class="grid gap-1 text-xs font-bold text-archive-muted">Your name
           <input name="name" type="text" maxlength="60" autocomplete="name" placeholder="Your name" value="${esc(savedName())}" class="${INPUT_CLS} sm:max-w-xs"/>
         </label>
-        <label class="grid gap-1 text-xs font-bold text-archive-muted">Comment
-          <textarea name="body" rows="3" maxlength="${MAX_BODY}" placeholder="Share your thoughts or memories…" class="${INPUT_CLS}"></textarea>
+        <label class="grid gap-1 text-xs font-bold text-archive-muted">${cond ? 'Message' : 'Comment'}
+          <textarea name="body" rows="3" maxlength="${MAX_BODY}" placeholder="${cond ? 'Write your condolence message or dua…' : 'Share your thoughts or memories…'}" class="${INPUT_CLS}"></textarea>
         </label>
         <input name="website" type="text" tabindex="-1" autocomplete="off" aria-hidden="true" class="hidden"/>
         <div class="flex flex-wrap items-center gap-3">
-          <button type="submit" class="${PRIMARY}">Post comment</button>
-          <p class="text-xs text-archive-muted">Comments are public. Please be respectful — moderators may remove comments.</p>
+          <button type="submit" class="${PRIMARY}">${cond ? 'Post message' : 'Post comment'}</button>
+          <p class="text-xs text-archive-muted">${cond ? 'Messages are public. Please be respectful — moderators may remove messages.' : 'Comments are public. Please be respectful — moderators may remove comments.'}</p>
         </div>
         <p data-eng-msg class="text-sm font-bold text-red-700" role="alert"></p>
       </form>
@@ -123,6 +89,7 @@ export async function mountEngagement(root, kind, itemId) {
   }
 
   function renderReactions() {
+    if (cond) { reactionsEl.innerHTML = ''; return; }
     const it = state.item;
     const target = `${kind}:${itemId}`;
     reactionsEl.innerHTML = `
@@ -167,9 +134,9 @@ export async function mountEngagement(root, kind, itemId) {
         </div>
         <p class="mt-1 whitespace-pre-wrap break-words text-sm leading-6 text-archive-ink">${esc(c.body)}</p>
         <div class="mt-2 flex flex-wrap items-center gap-2">
-          ${voteBtn('comment', c.id, 1, c.up || 0, c.mine, 'Thumbs up')}
-          ${voteBtn('comment', c.id, -1, c.down || 0, c.mine, 'Thumbs down')}
-          <button type="button" data-action="reply" data-id="${esc(c.id)}" class="${LINK_BTN} ml-1">Reply</button>
+          ${cond ? '' : voteBtn('comment', c.id, 1, c.up || 0, c.mine, 'Thumbs up')}
+          ${cond ? '' : voteBtn('comment', c.id, -1, c.down || 0, c.mine, 'Thumbs down')}
+          ${cond ? '' : `<button type="button" data-action="reply" data-id="${esc(c.id)}" class="${LINK_BTN} ml-1">Reply</button>`}
           ${c.is_mine
             ? `<button type="button" data-action="delete" data-id="${esc(c.id)}" class="${LINK_BTN}">Delete</button>`
             : (reported
@@ -183,13 +150,15 @@ export async function mountEngagement(root, kind, itemId) {
 
   function renderList() {
     const n = visibleCount();
-    headingEl.textContent = n ? `Discussion · ${n} comment${n === 1 ? '' : 's'}` : 'Discussion';
+    headingEl.textContent = cond
+      ? (n ? `Condolences · ${n}` : 'Condolences')
+      : (n ? `Discussion · ${n} comment${n === 1 ? '' : 's'}` : 'Discussion');
     const tops = childrenOf(null)
       .filter(c => c.status === 'visible' || hasVisibleDescendant(c))
       .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     listEl.innerHTML = tops.length
       ? tops.map(c => `<div class="border-b border-archive-line pb-4 last:border-0">${commentHtml(c, 0)}</div>`).join('')
-      : '<p class="text-sm italic text-archive-muted">No comments yet — be the first to share your thoughts.</p>';
+      : `<p class="text-sm italic text-archive-muted">${cond ? 'No messages yet — be the first to leave a condolence.' : 'No comments yet — be the first to share your thoughts.'}</p>`;
   }
 
   renderReactions();

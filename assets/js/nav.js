@@ -1,4 +1,5 @@
 import { createSupabaseClient } from './supabase-config.js';
+import { obituariesOpen } from './obituary-gate.js';
 
 const P = window.location.pathname.replace(/\/$/, '') || '/';
 
@@ -17,10 +18,11 @@ const GROUPS = [
   },
   {
     label: 'Updates',
-    pages: ['/announcements', '/events'],
+    pages: ['/announcements', '/events', '/obituaries'],
     children: [
       { label: 'Announcements', href: '/announcements/' },
       { label: 'Events', href: '/events/' },
+      { label: 'Obituaries', href: '/obituaries/', badge: obituariesOpen() ? '' : 'Soon' },
     ],
   },
   { label: 'Support Us', href: '/contact/' },

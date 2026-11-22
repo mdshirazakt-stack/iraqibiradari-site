@@ -138,6 +138,9 @@
           <button data-section-tab="comments" role="tab" type="button" class="inline-flex items-center gap-2 min-h-9 rounded-lg px-4 text-xs font-black uppercase tracking-[0.1em]">
             Comments
           </button>
+          <button data-section-tab="obituaries" role="tab" type="button" class="inline-flex items-center gap-2 min-h-9 rounded-lg px-4 text-xs font-black uppercase tracking-[0.1em]">
+            Obituaries
+          </button>
           <button data-section-tab="admin-users" role="tab" type="button" class="inline-flex items-center gap-2 min-h-9 rounded-lg px-4 text-xs font-black uppercase tracking-[0.1em]">
             Admin Users <span data-tab-count="admin-users" class="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-archive-paper px-1.5 text-[11px]">—</span>
           </button>
@@ -654,6 +657,24 @@
         <div data-comments-list class="mt-6 grid gap-3"></div>
       </section>
 
+      <!-- ── OBITUARIES MODERATION SECTION ─────────────────────── -->
+      <section data-obituaries-section style="display:none" class="mx-auto mt-6 w-[min(1120px,calc(100%-36px))] rounded-xl border border-archive-line bg-white p-6 shadow-card">
+        <p class="text-xs font-black uppercase tracking-[0.18em] text-archive-gold">Community</p>
+        <h2 class="mt-2 font-display text-3xl font-bold text-archive-green">Obituaries</h2>
+        <p class="mt-2 max-w-3xl text-sm leading-6 text-archive-muted">Obituaries go live the moment someone posts them. <strong>Hide</strong> takes one off the site (you can restore it); <strong>Delete</strong> removes it permanently with its condolence messages. The poster's mobile number is shown here for admins only. Reported ones are listed first. To add one yourself, use <a href="/obituaries/submit/" target="_blank" rel="noopener" class="font-bold underline">the public form</a>.</p>
+        <div class="mt-4 flex flex-wrap items-center gap-3">
+          <label class="text-xs font-black uppercase tracking-[0.12em] text-archive-muted">Show
+            <select data-obituaries-filter class="ml-2 border border-archive-line bg-white px-3 py-2 text-sm font-bold normal-case tracking-normal text-archive-ink">
+              <option value="all">All obituaries</option>
+              <option value="reported">Reported only</option>
+              <option value="hidden">Hidden</option>
+            </select>
+          </label>
+          <button data-obituaries-refresh type="button" class="border border-archive-line px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-archive-green">Refresh</button>
+        </div>
+        <div data-obituaries-list class="mt-6 grid gap-3"></div>
+      </section>
+
       <!-- ── ADMIN ACTIVITY LOG SECTION ────────────────────────── -->
       <section data-admin-log-section style="display:none" class="mx-auto mt-6 w-[min(1120px,calc(100%-36px))] rounded-xl border border-archive-line bg-white p-6 shadow-card">
         <p class="text-xs font-black uppercase tracking-[0.18em] text-archive-gold">Superadmin View</p>
@@ -668,6 +689,6 @@
 
 <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
 <script type="module" src="/assets/js/nav.js"></script>
-<script type="module" src="/assets/js/admin.js?v=20261123"></script>
+<script type="module" src="/assets/js/admin.js?v=20261124"></script>
 </body>
 </html>

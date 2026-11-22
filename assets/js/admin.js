@@ -57,6 +57,9 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
   const commentsSection    = document.querySelector('[data-comments-section]');
   const commentsList       = document.querySelector('[data-comments-list]');
   const commentsFilter     = document.querySelector('[data-comments-filter]');
+  const obituariesSection  = document.querySelector('[data-obituaries-section]');
+  const obituariesList     = document.querySelector('[data-obituaries-list]');
+  const obituariesFilter   = document.querySelector('[data-obituaries-filter]');
   const addAdminForm       = document.querySelector('[data-add-admin-form]');
   const addAdminStatus     = document.querySelector('[data-add-admin-status]');
 
@@ -175,6 +178,7 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
     if (adminUsersSection)  adminUsersSection.style.display   = 'none';
     if (adminLogSection)    adminLogSection.style.display     = 'none';
     if (commentsSection)    commentsSection.style.display     = 'none';
+    if (obituariesSection)  obituariesSection.style.display   = 'none';
   }
 
   function showList() {
@@ -744,7 +748,8 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
     const isAdminUsers    = section === 'admin-users';
     const isAdminLog      = section === 'admin-log';
     const isComments      = section === 'comments';
-    const isSpecial       = isMatrimony || isAdminUsers || isAdminLog || isComments;
+    const isObituaries    = section === 'obituaries';
+    const isSpecial       = isMatrimony || isAdminUsers || isAdminLog || isComments || isObituaries;
     const showSubmissions = section === 'stories';
 
     showList(); // always return to list when switching tabs
@@ -757,6 +762,7 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
     if (adminUsersSection) adminUsersSection.style.display = isAdminUsers ? 'grid' : 'none';
     if (adminLogSection)   adminLogSection.style.display   = isAdminLog   ? 'block' : 'none';
     if (commentsSection)   commentsSection.style.display   = isComments   ? 'block' : 'none';
+    if (obituariesSection) obituariesSection.style.display = isObituaries ? 'block' : 'none';
     submissionsSection.style.display  = showSubmissions ? 'block' : 'none';
 
     if (!isSpecial) {
@@ -777,6 +783,8 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
       renderAdminLog();
     } else if (isComments) {
       renderComments();
+    } else if (isObituaries) {
+      renderObituaries();
     }
   }
 
@@ -851,6 +859,7 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
       'organizations': isSuperAdmin || r === 'org_admin',
       'matrimony':     isSuperAdmin || r === 'matrimony_admin',
       'comments':      isSuperAdmin || r === 'content_admin',
+      'obituaries':    isSuperAdmin || r === 'content_admin',
       'admin-users':   isSuperAdmin,
       'admin-log':     isSuperAdmin,
     };
@@ -1089,7 +1098,7 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
 
   function commentCard(r) {
     const when = r.created_at ? new Date(r.created_at).toLocaleString('en-IN', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit', hour12:true }) : '';
-    const page = `/${r.kind === 'people' ? 'people' : 'culture'}/detail/?id=${encodeURIComponent(r.item_id)}`;
+    const page = `/${r.kind === 'people' ? 'people' : r.kind === 'obituary' ? 'obituaries' : 'culture'}/detail/?id=${encodeURIComponent(r.item_id)}`;
     const statusTag = r.status === 'visible'
       ? '<span class="rounded bg-green-50 px-2 py-0.5 text-green-700">Visible</span>'
       : r.status === 'hidden'
@@ -1101,7 +1110,7 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
     return `<article data-comment-card data-comment-id="${escapeHtml(r.id)}" class="border border-archive-line bg-archive-cream p-4">
       <div class="flex flex-wrap items-center gap-2 text-xs font-bold">
         ${statusTag} ${reported}
-        <span class="text-archive-muted">${r.kind === 'people' ? 'Achiever' : 'Culture'} · <a href="${page}" target="_blank" rel="noopener" class="underline underline-offset-2">${escapeHtml(r.item_id)}</a>${r.parent_id ? ' · reply' : ''}</span>
+        <span class="text-archive-muted">${r.kind === 'people' ? 'Achiever' : r.kind === 'obituary' ? 'Condolence' : 'Culture'} · <a href="${page}" target="_blank" rel="noopener" class="underline underline-offset-2">${escapeHtml(r.item_id)}</a>${r.parent_id ? ' · reply' : ''}</span>
         <span class="text-archive-muted">${escapeHtml(when)}</span>
       </div>
       <p class="mt-2 text-sm font-black text-archive-green">${escapeHtml(r.author_name)}</p>
@@ -1140,6 +1149,95 @@ import { ADMIN_EMAIL, ADMIN_REDIRECT_URL, createSupabaseClient, withTimeout } fr
       else { setStatus('Comment deleted.'); logAdminActivity('delete', 'comments', id, label, null); }
     }
     await renderComments();
+  });
+
+  // ── Obituaries moderation ────────────────────────────────────────────
+  const obituaryRows = new Map();
+
+  async function renderObituaries() {
+    if (!obituariesList) return;
+    obituariesList.innerHTML = `<p class="text-sm text-archive-muted">Loading…</p>`;
+    let data, error;
+    try {
+      ({ data, error } = await withTimeout(
+        supabase.from('obituaries').select('*').order('created_at', { ascending: false }).limit(300)
+      ));
+    } catch (err) {
+      obituariesList.innerHTML = `<p class="text-sm text-archive-muted">⏱ ${escapeHtml(err.message)}</p>`;
+      return;
+    }
+    if (error) {
+      obituariesList.innerHTML = `<p class="text-sm text-archive-muted">${escapeHtml(error.message)}${/relation|does not exist/i.test(error.message) ? ' — run supabase/obituaries_migration.sql first.' : ''}</p>`;
+      return;
+    }
+    obituaryRows.clear();
+    (data || []).forEach(r => obituaryRows.set(r.id, r));
+
+    const f = obituariesFilter?.value || 'all';
+    let rows = [...(data || [])];
+    if (f === 'reported') rows = rows.filter(r => r.report_count > 0);
+    if (f === 'hidden')   rows = rows.filter(r => r.status === 'hidden');
+    rows.sort((a, b) => (b.report_count - a.report_count) || (new Date(b.created_at) - new Date(a.created_at)));
+
+    obituariesList.innerHTML = rows.length
+      ? rows.map(obituaryCard).join('')
+      : `<p class="text-sm italic text-archive-muted">${f === 'all' ? 'No obituaries yet.' : 'Nothing to show here.'}</p>`;
+  }
+
+  function obituaryCard(r) {
+    const when = r.created_at ? new Date(r.created_at).toLocaleString('en-IN', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit', hour12:true }) : '';
+    const tag = r.status === 'visible'
+      ? '<span class="rounded bg-green-50 px-2 py-0.5 text-green-700">Visible</span>'
+      : '<span class="rounded bg-amber-50 px-2 py-0.5 text-amber-700">Hidden</span>';
+    const reported = r.report_count > 0
+      ? `<span class="rounded bg-red-50 px-2 py-0.5 text-red-700">${r.report_count} report${r.report_count === 1 ? '' : 's'}</span>` : '';
+    const rels = (r.relations || []).map(x => `${x.rel} of ${x.late ? 'Late ' : ''}${x.name}`).join(' · ');
+    const btn = 'border px-3 py-1.5 text-xs font-black uppercase tracking-[0.12em]';
+    return `<article data-obituary-card data-obituary-id="${escapeHtml(r.id)}" class="border border-archive-line bg-archive-cream p-4">
+      <div class="flex flex-wrap items-center gap-2 text-xs font-bold">
+        ${tag} ${reported}
+        <span class="text-archive-muted">Passed ${escapeHtml(r.passed_on)} · ${escapeHtml(r.city)}</span>
+        <span class="text-archive-muted">Posted ${escapeHtml(when)}</span>
+      </div>
+      <p class="mt-2 text-lg font-black text-archive-green">${escapeHtml([r.honorific, r.name].filter(Boolean).join(' '))}</p>
+      ${rels ? `<p class="text-sm text-archive-muted">${escapeHtml(rels)}</p>` : ''}
+      <p class="mt-2 text-sm text-archive-ink">${escapeHtml([r.janaza_date, r.janaza_timing, r.janaza_place, r.burial_text].filter(Boolean).join(' · ') || 'No janaza details')}</p>
+      <p class="mt-2 text-sm text-archive-muted">Posted by <strong class="text-archive-ink">${escapeHtml(r.poster_name)}</strong>${r.poster_relation ? ` (${escapeHtml(r.poster_relation)})` : ''} · <span class="font-bold text-archive-ink">${escapeHtml(r.poster_mobile)}</span> <span class="text-xs">(private)</span></p>
+      <div class="mt-3 flex flex-wrap items-center gap-2">
+        <a href="/obituaries/detail/?id=${encodeURIComponent(r.id)}" target="_blank" rel="noopener" class="${btn} border-archive-line bg-white text-archive-green">Open</a>
+        ${r.status === 'visible'
+          ? `<button data-obituary-action="hide" class="${btn} border-amber-300 bg-white text-amber-800" type="button">Hide</button>`
+          : `<button data-obituary-action="restore" class="${btn} border-archive-green bg-white text-archive-green" type="button">Restore</button>`}
+        <button data-obituary-action="delete" class="${btn} border-red-200 bg-white text-red-700" type="button">Delete</button>
+      </div>
+    </article>`;
+  }
+
+  obituariesFilter?.addEventListener('change', renderObituaries);
+  document.querySelector('[data-obituaries-refresh]')?.addEventListener('click', renderObituaries);
+  obituariesList?.addEventListener('click', async (e) => {
+    const btn  = e.target.closest('button[data-obituary-action]');
+    if (!btn) return;
+    const id   = btn.closest('[data-obituary-card]')?.dataset.obituaryId;
+    const row  = obituaryRows.get(id);
+    if (!row) return;
+    const label = `${row.name} (${row.passed_on})`;
+    const action = btn.dataset.obituaryAction;
+    let error;
+    if (action === 'hide' || action === 'restore') {
+      ({ error } = await supabase.from('obituaries')
+        .update({ status: action === 'hide' ? 'hidden' : 'visible' }).eq('id', id));
+      setStatus(error ? error.message : action === 'hide' ? 'Obituary hidden.' : 'Obituary restored.');
+      if (!error) logAdminActivity(action === 'hide' ? 'unpublish' : 'publish', 'obituaries', id, label, null);
+    } else if (action === 'delete') {
+      if (!confirm(`Permanently delete this obituary and its condolence messages?\n\n${label}\n\nThis cannot be undone.`)) return;
+      const res = await supabase.from('obituaries').delete().eq('id', id).select('id');
+      error = res.error;
+      if (error) setStatus(error.message);
+      else if (!res.data?.length) setStatus('Not deleted — your admin account does not have permission.');
+      else { setStatus('Obituary deleted.'); logAdminActivity('delete', 'obituaries', id, label, null); }
+    }
+    await renderObituaries();
   });
 
   async function renderAdminLog() {
