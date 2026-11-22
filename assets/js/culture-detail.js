@@ -54,7 +54,7 @@ import { mountEngagement } from './engage.js';
       <div class="mx-auto w-[min(1120px,calc(100%-36px))]">
 
         <a href="/culture/" class="mb-6 inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.14em] text-archive-goldSoft transition-colors hover:text-white">
-          ${backArrow} Our Culture
+          ${backArrow} Stories
         </a>
 
         ${story.category
@@ -91,7 +91,7 @@ import { mountEngagement } from './engage.js';
         <div class="mt-12 border-t border-archive-line pt-8 flex flex-wrap items-center justify-between gap-4">
           <a href="/culture/"
             class="inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.14em] text-archive-muted transition-colors hover:text-archive-green">
-            ${backArrow} Back to Our Culture
+            ${backArrow} Back to Stories
           </a>
           <a href="/culture/submit/"
             class="inline-block border border-archive-gold px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-archive-green transition-colors hover:bg-archive-gold hover:text-archive-ink">

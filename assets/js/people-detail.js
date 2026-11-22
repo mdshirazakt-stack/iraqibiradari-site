@@ -44,7 +44,7 @@ import { mountEngagement } from './engage.js';
       <div class="mx-auto w-[min(1120px,calc(100%-36px))]">
 
         <a href="/people/" class="mb-6 inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.14em] text-archive-goldSoft transition-colors hover:text-white">
-          ${backArrow} All achievers
+          ${backArrow} All people
         </a>
 
         <div class="flex flex-col gap-6 md:flex-row md:items-start">
@@ -83,7 +83,7 @@ import { mountEngagement } from './engage.js';
         <div class="mt-12 border-t border-archive-line pt-8">
           <a href="/people/"
             class="inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.14em] text-archive-muted transition-colors hover:text-archive-green">
-            ${backArrow} Back to achievers
+            ${backArrow} Back to people
           </a>
         </div>
       </div>

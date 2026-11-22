@@ -4,29 +4,45 @@ const P = window.location.pathname.replace(/\/$/, '') || '/';
 
 const GROUPS = [
   { label: 'About', href: '/about/' },
+  { label: 'People', href: '/people/' },
+  { label: 'Stories', href: '/culture/' },
   {
-    label: 'Community',
-    pages: ['/announcements', '/events', '/people'],
+    label: 'Heritage',
+    pages: ['/documents', '/videos'],
+    children: [
+      { label: 'Shajra', href: 'https://apnonkitalash.com/', external: true },
+      { label: 'Documents', href: '/documents/' },
+      { label: 'Videos', href: '/videos/' },
+    ],
+  },
+  {
+    label: 'Updates',
+    pages: ['/announcements', '/events'],
     children: [
       { label: 'Announcements', href: '/announcements/' },
       { label: 'Events', href: '/events/' },
-      { label: 'Achievers', href: '/people/' },
     ],
   },
-  {
-    label: 'Heritage',
-    pages: ['/documents', '/culture'],
-    children: [
-      { label: 'Documents', href: '/documents/' },
-      { label: 'Our Culture', href: '/culture/' },
-      { label: 'Shajra', href: 'https://apnonkitalash.com/', external: true },
-    ],
-  },
-  { label: 'Organizations', href: '/organizations/' },
-  { label: 'Matrimony', href: '/matrimony/' },
   { label: 'Support Us', href: '/contact/' },
-  { label: 'Helpdesk', href: '/helpdesk/' },
+  {
+    // Sections that are usable but still being finished: tucked away, tagged "Preview".
+    label: 'More',
+    alignRight: true,
+    pages: ['/organizations', '/matrimony', '/helpdesk'],
+    children: [
+      { label: 'Organizations', href: '/organizations/', badge: 'Preview' },
+      { label: 'Matrimony', href: '/matrimony/', badge: 'Preview' },
+      { label: 'Helpdesk', href: '/helpdesk/' },
+    ],
+  },
 ];
+
+// Small pill shown after a menu entry (e.g. "Preview").
+function pill(text) {
+  return text
+    ? `<span style="margin-left:10px;padding:1px 8px;border-radius:999px;background:#efe6cc;color:#6b5f4a;font-size:9px;font-weight:900;letter-spacing:.08em;line-height:1.7">${text}</span>`
+    : '';
+}
 
 function isActive(href) {
   if (!href || href.startsWith('http')) return false;
@@ -52,11 +68,11 @@ function desktopItem(item) {
     const links = item.children.map(c => {
       const ca = isActive(c.href);
       const ext = c.external ? ' target="_blank" rel="noopener"' : '';
-      return `<a href="${c.href}"${ext} role="menuitem" class="block px-4 py-3 text-xs font-black uppercase tracking-[0.1em] transition-colors hover:bg-archive-cream hover:text-archive-green${ca ? ' bg-archive-cream text-archive-green' : ' text-archive-muted'}">${c.label}</a>`;
+      return `<a href="${c.href}"${ext} role="menuitem" class="flex items-center justify-between gap-3 px-4 py-3 text-xs font-black uppercase tracking-[0.1em] transition-colors hover:bg-archive-cream hover:text-archive-green${ca ? ' bg-archive-cream text-archive-green' : ' text-archive-muted'}"><span>${c.label}</span>${pill(c.badge)}</a>`;
     }).join('');
     return `<div class="relative" data-desktop-group>
       <button type="button" data-group-btn class="flex items-center gap-1 rounded px-2 py-2 ${base} ${color}" aria-haspopup="true" aria-expanded="false">${item.label}${CHEVRON}</button>
-      <div data-dropdown role="menu" style="display:none;position:absolute;right:0;top:100%;z-index:50;margin-top:4px;min-width:200px;background:#fff;border:1px solid #ded2bc;padding:4px 0;box-shadow:0 18px 45px rgba(32,28,23,.12)">${links}</div>
+      <div data-dropdown role="menu" style="display:none;position:absolute;${item.alignRight ? 'right:0' : 'left:0'};top:100%;z-index:50;margin-top:4px;min-width:200px;background:#fff;border:1px solid #ded2bc;padding:4px 0;box-shadow:0 18px 45px rgba(32,28,23,.12)">${links}</div>
     </div>`;
   }
 
@@ -75,7 +91,7 @@ function mobileItem(item) {
     const links = item.children.map(c => {
       const ca = isActive(c.href);
       const ext = c.external ? ' target="_blank" rel="noopener"' : '';
-      return `<a href="${c.href}"${ext} class="flex items-center py-3.5 pl-5 text-sm font-bold transition-colors hover:text-archive-green${ca ? ' text-archive-green' : ' text-archive-muted'}">${c.label}</a>`;
+      return `<a href="${c.href}"${ext} class="flex items-center py-3.5 pl-5 text-sm font-bold transition-colors hover:text-archive-green${ca ? ' text-archive-green' : ' text-archive-muted'}">${c.label}${pill(c.badge)}</a>`;
     }).join('');
     return `<div data-mobile-group style="border-bottom:1px solid #ded2bc">
       <button type="button" data-mobile-group-btn class="flex w-full items-center justify-between py-4 text-left text-xs font-black uppercase tracking-[0.12em] transition-colors hover:text-archive-green ${color}">${item.label}<span data-chevron style="display:inline-flex;transform:${on ? 'rotate(180deg)' : 'rotate(0deg)'};transition:transform .2s">${CHEVRON}</span></button>
