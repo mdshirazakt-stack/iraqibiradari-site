@@ -39,9 +39,11 @@
     <section class="py-10">
       <div class="mx-auto w-[min(1120px,calc(100%-36px))]">
         <div class="mb-6 flex flex-wrap items-center gap-3">
-          <input id="obit-search" type="search" placeholder="Search by name…" aria-label="Search obituaries by name"
-            class="w-full max-w-xs border border-archive-line bg-white px-3 py-2 text-sm text-archive-ink focus:border-archive-green focus:outline-none"/>
-          <select id="obit-year" hidden aria-label="Filter by year"
+          <input id="obit-search" type="search" placeholder="Search by name, city, family, condolence contact, date, month, year…" aria-label="Search obituaries"
+            class="w-full max-w-xl border border-archive-line bg-white px-3 py-2 text-sm text-archive-ink focus:border-archive-green focus:outline-none"/>
+          <select id="obit-year" aria-label="Filter by year"
+            class="border border-archive-line bg-white px-3 py-2 text-sm text-archive-ink"><option value="">All years</option></select>
+          <select id="obit-month" aria-label="Filter by month"
             class="border border-archive-line bg-white px-3 py-2 text-sm text-archive-ink"></select>
           <span id="obit-count" class="text-sm font-bold text-archive-muted"></span>
         </div>

@@ -35,6 +35,7 @@ create table if not exists public.obituaries (
   leaves_from_time text,
   burial_text      text,
   message          text,                                          -- optional dua / note
+  condolence_names jsonb       not null default '[]'::jsonb,       -- names only; phone numbers are never stored
   poster_name      text        not null,
   poster_relation  text,
   poster_mobile    text        not null,                          -- admin-only
@@ -46,6 +47,8 @@ create table if not exists public.obituaries (
 );
 create index if not exists obituaries_list_idx   on public.obituaries (status, passed_on desc, created_at desc);
 create index if not exists obituaries_client_idx on public.obituaries (client_id, created_at);
+
+alter table public.obituaries add column if not exists condolence_names jsonb not null default '[]'::jsonb;
 
 create table if not exists public.obituary_reports (
   obituary_id text        not null references public.obituaries(id) on delete cascade,
@@ -141,6 +144,10 @@ declare
   v_rel     jsonb;
   v_relname text;
   v_label   text;
+  v_cond    jsonb := '[]'::jsonb;
+  v_out     jsonb;
+  v_cn      text;
+  v_elem    jsonb;
   v_age     integer;
   v_kind    text := nullif(lower(coalesce(p ->> 'leaves_from_kind', '')), '');
   v_mobile  text := regexp_replace(coalesce(p ->> 'poster_mobile', ''), '[^0-9+]', '', 'g');
@@ -202,11 +209,23 @@ begin
     v_rels := v_rels || jsonb_build_array(jsonb_build_object('label', v_label, 'name', v_relname));
   end loop;
 
+  -- Names (only) of the people to contact for condolence. Phone numbers never reach the server.
+  if jsonb_typeof(coalesce(p -> 'condolence_names', '[]'::jsonb)) <> 'array' then
+    raise exception 'Invalid condolence contacts.';
+  end if;
+  if jsonb_array_length(coalesce(p -> 'condolence_names', '[]'::jsonb)) > 5 then
+    raise exception 'Please list at most 5 condolence contacts.';
+  end if;
+  for v_elem in select * from jsonb_array_elements(coalesce(p -> 'condolence_names', '[]'::jsonb)) loop
+    v_cn := public._obit_text(jsonb_build_object('n', v_elem #>> '{}'), 'n', 60, 'Condolence contact name');
+    if v_cn is not null then v_cond := v_cond || to_jsonb(v_cn); end if;
+  end loop;
+
   if char_length(v_mobile) < 8 or char_length(v_mobile) > 16 then
     raise exception 'Please enter your mobile number (it is kept private).';
   end if;
 
-  return jsonb_build_object(
+  v_out := jsonb_build_object(
     'honorific',         public._obit_text(p, 'honorific', 20, 'Title'),
     'name',              public._obit_text(p, 'name', 80, 'Name', true),
     'gender',            v_gender,
@@ -224,10 +243,14 @@ begin
     'leaves_from_time',  public._obit_text(p, 'leaves_from_time', 40, 'Time the janaza leaves'),
     'burial_text',       public._obit_text(p, 'burial_text', 120, 'Burial place'),
     'message',           public._obit_text(p, 'message', 500, 'Message'),
+    'condolence_names',  v_cond,
     'poster_name',       public._obit_text(p, 'poster_name', 60, 'Your name', true),
     'poster_relation',   public._obit_text(p, 'poster_relation', 40, 'Your relationship'),
     'poster_mobile',     v_mobile
   );
+  if char_length(v_out ->> 'name') < 2 then raise exception 'Please enter the full name.'; end if;
+  if char_length(v_out ->> 'city') < 2 then raise exception 'Please enter the city.'; end if;
+  return v_out;
 end;
 $$;
 
@@ -244,6 +267,7 @@ as $$
     'janaza_date', o.janaza_date, 'janaza_place', o.janaza_place, 'janaza_timing', o.janaza_timing,
     'leaves_from_kind', o.leaves_from_kind, 'leaves_from_other', o.leaves_from_other,
     'leaves_from_time', o.leaves_from_time, 'burial_text', o.burial_text, 'message', o.message,
+    'condolence_names', o.condolence_names,
     'posted_by', o.poster_name, 'posted_relation', o.poster_relation,
     'created_at', o.created_at, 'updated_at', o.updated_at
   );
@@ -297,12 +321,12 @@ begin
   insert into public.obituaries (
     id, honorific, name, gender, relations, city, residence_area, native_place, age, passed_on,
     janaza_date, janaza_place, janaza_timing, leaves_from_kind, leaves_from_other, leaves_from_time,
-    burial_text, message, poster_name, poster_relation, poster_mobile, edit_token_hash, client_id)
+    burial_text, message, condolence_names, poster_name, poster_relation, poster_mobile, edit_token_hash, client_id)
   values (
     v_id, c ->> 'honorific', c ->> 'name', c ->> 'gender', c -> 'relations', c ->> 'city',
     c ->> 'residence_area', c ->> 'native_place', (c ->> 'age')::integer, (c ->> 'passed_on')::date,
     (c ->> 'janaza_date')::date, c ->> 'janaza_place', c ->> 'janaza_timing', c ->> 'leaves_from_kind',
-    c ->> 'leaves_from_other', c ->> 'leaves_from_time', c ->> 'burial_text', c ->> 'message',
+    c ->> 'leaves_from_other', c ->> 'leaves_from_time', c ->> 'burial_text', c ->> 'message', c -> 'condolence_names',
     c ->> 'poster_name', c ->> 'poster_relation', c ->> 'poster_mobile',
     encode(sha256(convert_to(v_token, 'UTF8')), 'hex'), p_client);
 
@@ -311,9 +335,31 @@ end;
 $$;
 
 -- ── Read (public) ────────────────────────────────────────────────────────────
+-- Everything about an obituary that people might search for, as one lower-case string:
+-- name, family, city, area, native place, janaza/burial places, condolence names, and the
+-- date written several ways (2026-11-23, 23/11/2026, 23 November 2026, November, Nov, 2026).
+create or replace function public._obit_haystack(o public.obituaries)
+returns text
+language sql
+stable
+as $$
+  select lower(concat_ws(' ',
+    o.honorific, o.name, o.city, o.residence_area, o.native_place,
+    o.janaza_place, o.janaza_timing, o.burial_text, o.message, o.poster_name,
+    (select string_agg(coalesce(e ->> 'label', '') || ' ' || coalesce(e ->> 'name', ''), ' ')
+       from jsonb_array_elements(o.relations) e),
+    (select string_agg(n, ' ') from jsonb_array_elements_text(o.condolence_names) n),
+    to_char(o.passed_on, 'YYYY-MM-DD'), to_char(o.passed_on, 'DD/MM/YYYY'), to_char(o.passed_on, 'DD-MM-YYYY'),
+    to_char(o.passed_on, 'FMDD FMMonth YYYY'), to_char(o.passed_on, 'FMMonth'), to_char(o.passed_on, 'Mon'),
+    to_char(o.passed_on, 'YYYY')));
+$$;
+
+drop function if exists public.list_obituaries(text, integer, integer, integer);
+
+-- Search: every word you type must match somewhere (so "kolkata 2026" or "lar november" work).
 create or replace function public.list_obituaries(
-  p_search text default null, p_year integer default null,
-  p_limit integer default 24, p_offset integer default 0)
+  p_search text default null, p_year integer default null, p_month integer default null,
+  p_limit integer default 30, p_offset integer default 0)
 returns json
 language plpgsql
 stable
@@ -321,18 +367,20 @@ security definer
 set search_path = public
 as $$
 declare
-  v_q     text := lower(btrim(coalesce(p_search, '')));
-  v_limit integer := least(greatest(coalesce(p_limit, 24), 1), 60);
-  v_off   integer := greatest(coalesce(p_offset, 0), 0);
-  v_total integer;
-  v_rows  json;
-  v_years json;
+  v_tokens text[] := regexp_split_to_array(lower(btrim(coalesce(p_search, ''))), '\s+');
+  v_limit  integer := least(greatest(coalesce(p_limit, 30), 1), 100);
+  v_off    integer := greatest(coalesce(p_offset, 0), 0);
+  v_total  integer;
+  v_rows   json;
+  v_years  json;
 begin
   select count(*) into v_total
     from public.obituaries o
    where o.status = 'visible'
-     and (v_q = '' or position(v_q in lower(o.name)) > 0)
-     and (p_year is null or extract(year from o.passed_on)::integer = p_year);
+     and (p_year  is null or extract(year  from o.passed_on)::integer = p_year)
+     and (p_month is null or extract(month from o.passed_on)::integer = p_month)
+     and not exists (select 1 from unnest(v_tokens) t
+                      where t <> '' and position(t in public._obit_haystack(o)) = 0);
 
   select coalesce(json_agg(public._obit_public(o) order by o.passed_on desc, o.created_at desc), '[]'::json)
     into v_rows
@@ -340,8 +388,10 @@ begin
    where o.id in (
       select o2.id from public.obituaries o2
        where o2.status = 'visible'
-         and (v_q = '' or position(v_q in lower(o2.name)) > 0)
-         and (p_year is null or extract(year from o2.passed_on)::integer = p_year)
+         and (p_year  is null or extract(year  from o2.passed_on)::integer = p_year)
+         and (p_month is null or extract(month from o2.passed_on)::integer = p_month)
+         and not exists (select 1 from unnest(v_tokens) t
+                          where t <> '' and position(t in public._obit_haystack(o2)) = 0)
        order by o2.passed_on desc, o2.created_at desc
        limit v_limit offset v_off);
 
@@ -400,7 +450,7 @@ begin
     janaza_date = (c ->> 'janaza_date')::date, janaza_place = c ->> 'janaza_place',
     janaza_timing = c ->> 'janaza_timing', leaves_from_kind = c ->> 'leaves_from_kind',
     leaves_from_other = c ->> 'leaves_from_other', leaves_from_time = c ->> 'leaves_from_time',
-    burial_text = c ->> 'burial_text', message = c ->> 'message',
+    burial_text = c ->> 'burial_text', message = c ->> 'message', condolence_names = c -> 'condolence_names',
     poster_name = c ->> 'poster_name', poster_relation = c ->> 'poster_relation',
     poster_mobile = c ->> 'poster_mobile', updated_at = now()
   where id = p_id;
@@ -448,7 +498,8 @@ revoke all on function public._obit_clean(jsonb)                               f
 revoke all on function public._obit_public(public.obituaries)                  from public;
 revoke all on function public._obituary_delete_cleanup()                       from public;
 revoke all on function public.create_obituary(jsonb, text)                     from public;
-revoke all on function public.list_obituaries(text, integer, integer, integer) from public;
+revoke all on function public._obit_haystack(public.obituaries)                from public;
+revoke all on function public.list_obituaries(text, integer, integer, integer, integer) from public;
 revoke all on function public.get_obituary(text)                               from public;
 revoke all on function public.get_obituary_for_edit(text, text)                from public;
 revoke all on function public.update_obituary(text, text, jsonb)               from public;
@@ -456,7 +507,7 @@ revoke all on function public.delete_obituary(text, text)                      f
 revoke all on function public.report_obituary(text, text)                      from public;
 
 grant execute on function public.create_obituary(jsonb, text)                     to anon, authenticated;
-grant execute on function public.list_obituaries(text, integer, integer, integer) to anon, authenticated;
+grant execute on function public.list_obituaries(text, integer, integer, integer, integer) to anon, authenticated;
 grant execute on function public.get_obituary(text)                               to anon, authenticated;
 grant execute on function public.get_obituary_for_edit(text, text)                to anon, authenticated;
 grant execute on function public.update_obituary(text, text, jsonb)               to anon, authenticated;

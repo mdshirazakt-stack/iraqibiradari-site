@@ -31,8 +31,6 @@ function ago(iso) {
   const rels = (o.relations || []).map(relationPhrase);
   const dPassed = diffDays(o.passed_on, today);
   const passedWord = dPassed === 0 ? 'Today' : dPassed === -1 ? 'Yesterday' : '';
-  const leaves = o.leaves_from_kind === 'residence' ? 'the residence'
-               : o.leaves_from_kind === 'other' ? (o.leaves_from_other || '') : '';
 
   const row = (label, value) => value
     ? `<div class="grid gap-1 sm:grid-cols-[170px_1fr] sm:gap-4"><dt class="text-xs font-black uppercase tracking-[0.14em] text-archive-gold sm:pt-0.5">${label}</dt><dd dir="auto" class="text-base leading-7 text-archive-ink">${value}</dd></div>`
@@ -41,7 +39,6 @@ function ago(iso) {
   const janazaWhen = o.janaza_date
     ? `${longDate(o.janaza_date)}${diffDays(o.janaza_date, today) === 0 ? ' (today)' : diffDays(o.janaza_date, today) === 1 ? ' (tomorrow)' : ''}`
     : '';
-  const janazaWhere = [o.janaza_timing, o.janaza_place ? `at ${o.janaza_place}` : ''].filter(Boolean).join(' ');
 
   const back = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" style="width:14px;height:14px;flex-shrink:0" aria-hidden="true"><path fill-rule="evenodd" d="M17 10a.75.75 0 0 1-.75.75H5.612l4.158 3.96a.75.75 0 1 1-1.04 1.08l-5.5-5.25a.75.75 0 0 1 0-1.08l5.5-5.25a.75.75 0 1 1 1.04 1.08L5.612 9.25H16.25A.75.75 0 0 1 17 10z" clip-rule="evenodd"/></svg>`;
   const canEdit = !!getEditToken(o.id);
@@ -60,12 +57,16 @@ function ago(iso) {
     <section class="py-12">
       <div class="mx-auto w-[min(760px,calc(100%-36px))]">
         <dl class="grid gap-5 border border-archive-line bg-white p-6">
+          ${row('Name', esc(name))}
+          ${row('Relationship', rels.map(esc).join('<br/>'))}
           ${row('Passed away', esc(`${passedWord ? `${passedWord}, ` : ''}${longDate(o.passed_on)}`) + (o.city ? ` · ${esc(o.city)}` : ''))}
-          ${row('Residence', esc(o.residence_area || ''))}
           ${row('Native place', esc(o.native_place || ''))}
-          ${row('Janaza Namaaz', [esc(janazaWhen), esc(janazaWhere)].filter(Boolean).join('<br/>'))}
-          ${row('Leaves from', leaves ? esc(`${leaves}${o.leaves_from_time ? ` at ${o.leaves_from_time}` : ''}`) : '')}
-          ${row('Burial (Tadfeen)', esc(o.burial_text || ''))}
+          ${row('Residence', esc(o.residence_area || ''))}
+          ${row('Janaza Namaaz', esc(janazaWhen))}
+          ${row('Timing', esc(o.janaza_timing || ''))}
+          ${row('Place', esc(o.janaza_place || ''))}
+          ${row('Tadfeen', esc(o.burial_text || ''))}
+          ${row('For condolence', esc((o.condolence_names || []).join(', ')))}
         </dl>
 
         ${o.message ? `<p dir="auto" class="mt-6 border-l-4 border-archive-gold pl-5 font-display text-xl italic leading-8 text-archive-muted">${esc(o.message)}</p>` : ''}

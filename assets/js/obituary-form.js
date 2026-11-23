@@ -187,7 +187,7 @@ function collect(root) {
   const contacts = [...root.querySelectorAll('[data-contact-row]')].map(r => {
     const [n, num] = r.querySelectorAll('input');
     return { name: n.value.trim(), number: num.value.trim() };
-  }).filter(c => c.number);
+  }).filter(c => c.name || c.number);
   const kind = f.elements.leaves_kind.value;
   const pub = {
     honorific: val('honorific'), name: val('name'), gender: f.elements.gender.value || '',
@@ -198,6 +198,8 @@ function collect(root) {
     leaves_from_other: kind === 'other' ? val('leaves_other') : '',
     leaves_from_time: kind === 'none' ? '' : val('leaves_time'),
     burial_text: val('burial_text'), message: val('message'),
+    // Only the NAMES are sent to the website's database (so they can be searched); numbers stay on this device.
+    condolence_names: contacts.map(c => c.name).filter(Boolean),
     poster_name: val('poster_name'), poster_relation: val('poster_relation'), poster_mobile: val('poster_mobile'),
   };
   return { pub, priv: { address: kind === 'residence' ? val('address') : '', contacts } };
@@ -342,6 +344,12 @@ export async function mountObituaryForm(root, { mode = 'create', id = '', token 
       return;
     }
     priv = loadPrivate(id);
+    // Names come from the server; numbers (if this device has them) from local storage.
+    const names = initial.condolence_names || [];
+    if (names.length) {
+      const numbers = new Map((priv.contacts || []).map(c => [String(c.name || '').toLowerCase(), c.number]));
+      priv = { ...priv, contacts: names.map(n => ({ name: n, number: numbers.get(n.toLowerCase()) || '' })) };
+    }
   }
 
   root.innerHTML = formHtml(initial, priv, mode);

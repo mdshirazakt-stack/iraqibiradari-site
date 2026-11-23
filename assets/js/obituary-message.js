@@ -91,6 +91,11 @@ function ruRelation(label, female) {
   return [female ? 'ki' : 'ke', plain || 'rishtedar'];
 }
 
+function contactLine(c) {
+  const name = clean(c.name), number = clean(c.number);
+  return name && number ? `${name}:- ${number}` : (number || name);
+}
+
 // ── English ──────────────────────────────────────────────────────────────
 function relationsEn(o) {
   // lower-case start: it continues a sentence ("… Name wife of Late X and mother of Y")
@@ -135,10 +140,10 @@ function english(o, priv, url) {
   const jz = janazaEn(o, today);
   if (jz) lines.push(jz);
   if (clean(o.message)) lines.push(clean(o.message));
-  const contacts = (priv.contacts || []).filter(c => clean(c.number));
+  const contacts = (priv.contacts || []).filter(c => clean(c.number) || clean(c.name));
   if (contacts.length) {
     lines.push('For Condolence📱');
-    contacts.forEach(c => lines.push(`${clean(c.name) ? `${clean(c.name)}:- ` : ''}${clean(c.number)}`));
+    contacts.forEach(c => lines.push(contactLine(c)));
   }
   if (url) lines.push(`🔗 ${url}`);
   return lines.join('\n');
@@ -201,10 +206,10 @@ function romanUrdu(o, priv, url) {
   if (clean(o.message)) lines.push(clean(o.message));
   lines.push('Aap sabhi hazrat se shirkat aur maghfirat ki dua ki darkhwast hai');
 
-  const contacts = (priv.contacts || []).filter(c => clean(c.number));
+  const contacts = (priv.contacts || []).filter(c => clean(c.number) || clean(c.name));
   if (contacts.length) {
     lines.push('Taziyat ke liye 📱');
-    contacts.forEach(c => lines.push(`${clean(c.name) ? `${clean(c.name)}:- ` : ''}${clean(c.number)}`));
+    contacts.forEach(c => lines.push(contactLine(c)));
   }
   if (url) lines.push(`🔗 ${url}`);
   return lines.join('\n');
