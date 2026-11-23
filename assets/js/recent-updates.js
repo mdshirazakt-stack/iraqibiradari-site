@@ -1,10 +1,13 @@
 import { createSupabaseClient, withTimeout } from './supabase-config.js';
+import { rpc } from './rpc.js';
+import { obituariesOpen } from './obituary-gate.js';
 
 // Home page "What's new" band — the 5 most recently added/updated published
 // items across every content type. people and stories have no updated_at
 // column, so they sort by created_at; everything else by updated_at (which
-// defaults to created_at on insert). The band stays hidden on error or when
-// there is nothing to show.
+// defaults to created_at on insert). Obituaries (read through a public
+// function, since the table itself is private) are included by date added.
+// The band stays hidden on error or when there is nothing to show.
 
 const LIMIT = 5;
 
@@ -17,6 +20,19 @@ const SOURCES = [
   { table: 'documents',     label: 'Document',     hasUpdated: true,  href: r => r.url || '/documents/', external: r => !!r.url },
   { table: 'videos',        label: 'Video',        hasUpdated: true,  href: r => r.url || '/videos/',    external: r => !!r.url },
 ];
+
+const OBITUARY_SRC = { table: 'obituaries', label: 'Obituary', href: r => `/obituaries/detail/?id=${encodeURIComponent(r.id)}` };
+
+function obituaryItems() {
+  if (!obituariesOpen()) return Promise.resolve([]);
+  return rpc('list_obituaries', { p_search: null, p_year: null, p_month: null, p_limit: LIMIT, p_offset: 0 })
+    .then(r => (r?.rows || []).map(o => ({
+      src: OBITUARY_SRC,
+      row: { id: o.id, title: [[o.honorific, o.name].filter(Boolean).join(' '), o.city].filter(Boolean).join(' · ') },
+      when: o.created_at ? new Date(o.created_at) : null,
+      isUpdate: false,
+    })));
+}
 
 function escapeHtml(v) {
   return String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
@@ -34,7 +50,7 @@ function formatDate(d) {
   let supabase;
   try { supabase = await createSupabaseClient(); } catch { return; }
 
-  const results = await Promise.allSettled(SOURCES.map(src => {
+  const results = await Promise.allSettled([...SOURCES.map(src => {
     const cols = src.hasUpdated ? 'id,title,url,created_at,updated_at' : 'id,title,created_at';
     const select = src.table === 'documents' || src.table === 'videos' ? cols : cols.replace(',url', '');
     return withTimeout(
@@ -53,7 +69,7 @@ function formatDate(d) {
         return { src, row, when, isUpdate };
       });
     });
-  }));
+  }), obituaryItems()]);
 
   const items = results
     .filter(r => r.status === 'fulfilled')
