@@ -1,5 +1,5 @@
 import { createSupabaseClient, withTimeout } from './supabase-config.js';
-import { recordView } from './views.js';
+import { recordView, showFooterViews } from './views.js?v=20261125';
 import { mountEngagement } from './engage.js';
 
 (async function () {
@@ -93,7 +93,7 @@ import { mountEngagement } from './engage.js';
 
   mountEngagement(main.querySelector('[data-engage]'), 'people', id);
 
-  recordView('people', id);   // counts the view; the number is not shown
+  recordView('people', id).then(n => showFooterViews(n, 'view'));   // counts this view, shows the total in the footer
 
   function escapeHtml(v) {
     return String(v || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');

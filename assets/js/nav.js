@@ -262,5 +262,5 @@ inject();
 
 // Site-visit counter (once per browser session, any public page; not the admin).
 if (!P.startsWith('/admin')) {
-  import('./views.js').then(m => m.trackSiteVisit()).catch(() => { /* counter is optional */ });
+  import('./views.js').then(m => { m.trackSiteVisit(); m.trackPageView?.(); }).catch(() => { /* counters are optional */ });
 }

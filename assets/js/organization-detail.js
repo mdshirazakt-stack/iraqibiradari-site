@@ -1,4 +1,5 @@
 import { createSupabaseClient, withTimeout } from './supabase-config.js';
+import { recordView, showFooterViews } from './views.js?v=20261125';
 
 // The Trust that runs this website gets donate / apply-for-help links in its hero.
 // Their clicks are counted here: the bar is rendered after GoatCounter binds clicks.
@@ -85,6 +86,8 @@ const TRUST_ORG_ID = 'iraqi-biradari-welfare-foundation-charitable-trust';
   const activeId = visible.find(t => t.id === hashTab)?.id || visible[0].id;
 
   // ── Render ──────────────────────────────────────────────────────────────
+  recordView('organization', id).then(n => showFooterViews(n, 'view'));
+
   main.innerHTML = `
 
     <!-- Hero -->

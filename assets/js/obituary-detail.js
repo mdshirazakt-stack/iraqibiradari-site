@@ -4,6 +4,7 @@
 import { rpc, clientId, esc } from './rpc.js';
 import { buildMessage, whatsappLink, todayIst, diffDays, longDate, relationPhrase } from './obituary-message.js';
 import { mountEngagement } from './engage.js';
+import { recordView, showFooterViews } from './views.js?v=20261125';
 import { getEditToken } from './obituary-form.js';
 
 const main = document.getElementById('obit-main');
@@ -105,4 +106,6 @@ function ago(iso) {
   });
 
   mountEngagement(main.querySelector('[data-engage]'), 'obituary', o.id, { mode: 'condolence' });
+
+  recordView('obituary', o.id).then(n => showFooterViews(n, 'view'));   // counts this view, shows the total in the footer
 })();

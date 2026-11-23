@@ -16,6 +16,13 @@ export const MOST_READ_LIMIT = 3;
 
 export function fmt(n) { return Number(n).toLocaleString('en-IN'); }
 
+const EYE = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" style="width:14px;height:14px;display:inline-block;vertical-align:-2px;margin-right:4px" aria-hidden="true"><path d="M10 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/><path fill-rule="evenodd" d="M.664 10.59a1.651 1.651 0 0 1 0-1.186A10.004 10.004 0 0 1 10 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0 1 10 17c-4.257 0-7.893-2.66-9.336-6.41zM14 10a4 4 0 1 1-8 0 4 4 0 0 1 8 0z" clip-rule="evenodd"/></svg>';
+
+/** "👁 1,240 views" (unit is the singular word: 'view' or 'read'). Empty when there are no views. */
+export function countLabel(n, unit) {
+  return n > 0 ? `${EYE}${fmt(n)} ${unit}${n === 1 ? '' : 's'}` : '';
+}
+
 function escapeHtml(v) {
   return String(v || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
 }
@@ -124,6 +131,32 @@ export async function trackSiteVisit() {
     if (slot) slot.textContent = fmt(n);
     el.hidden = false;
   });
+}
+
+/** Shows "👁 N views" (or reads) quietly at the bottom of the dark footer. */
+export function showFooterViews(n, unit = 'view') {
+  if (!(n > 0)) return;
+  const footer = document.querySelector('footer');
+  if (!footer) return;
+  let el = footer.querySelector('[data-page-views]');
+  if (!el) {
+    el = document.createElement('div');
+    el.setAttribute('data-page-views', '');
+    el.className = 'mx-auto mt-5 w-[min(1120px,calc(100%-36px))] border-t border-white/10 pt-3 text-xs text-[#8f8577]';
+    footer.appendChild(el);
+  }
+  el.innerHTML = countLabel(n, unit);
+}
+
+// Detail pages (an Achiever, a story, an obituary…) count themselves, by item.
+const DETAIL_PATH = /^\/(people|culture|obituaries|events|announcements|organizations)\/detail\//;
+
+/** Counts a view of an ordinary page (About, People, Stories, Obituaries…) and shows its total in the footer. */
+export function trackPageView() {
+  const raw = location.pathname;
+  if (raw === '/' || raw.startsWith('/admin') || DETAIL_PATH.test(raw)) return null;
+  const path = raw.endsWith('/') ? raw : `${raw}/`;
+  return recordView('page', path).then(n => { showFooterViews(n, 'view'); return n; });
 }
 
 /** Ids of the items that should wear the "Most read" ribbon (top few, each with enough views). */
