@@ -176,6 +176,7 @@ function romanUrdu(o, priv, url) {
   const marhoom = female ? 'Marhooma' : 'Marhoom';
 
   const lines = [
+    `Wafaat in ${clean(o.city)}`,                        // headline, like "Demise in Kolkata"
     'Assalam alaikum wa rahmatullah wa barakatahu',
     `Nihayat hi afsos ke sath ittala di ja rahi hai ki ${hon} ${clean(o.name)} ${female ? 'sahiba' : 'sahab'} ka intaqal ho gaya hai${rels ? `, jo ${rels}` : ''}${live}. ` +
       `Inna lillahe wa inna alaihe rajeoon. Allah pak ${marhoom.toLowerCase()} ki maghfirat farmaye aur unko jannatul firdaus me ala maqam ata farmaey. Aameen`,
