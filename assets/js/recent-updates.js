@@ -3,13 +3,16 @@ import { rpc } from './rpc.js';
 import { obituariesOpen } from './obituary-gate.js';
 
 // Home page "What's new" band — the 5 most recently added/updated published
-// items across every content type. people and stories have no updated_at
+// items across every content type (and everything from the last 7 days, if that is more). people and stories have no updated_at
 // column, so they sort by created_at; everything else by updated_at (which
 // defaults to created_at on insert). Obituaries (read through a public
 // function, since the table itself is private) are included by date added.
 // The band stays hidden on error or when there is nothing to show.
 
-const LIMIT = 5;
+const LIMIT = 5;                       // minimum number of items shown
+const FETCH = 20;                      // how many newest rows to read from each source
+const WINDOW_DAYS = 7;                 // everything added/updated this recently is always shown…
+const MAX_ITEMS = 20;                  // …up to this many
 
 const SOURCES = [
   { table: 'people',        label: 'Achiever',     hasUpdated: false, href: r => `/people/detail/?id=${encodeURIComponent(r.id)}` },
@@ -25,7 +28,7 @@ const OBITUARY_SRC = { table: 'obituaries', label: 'Obituary', href: r => `/obit
 
 function obituaryItems() {
   if (!obituariesOpen()) return Promise.resolve([]);
-  return rpc('list_obituaries', { p_search: null, p_year: null, p_month: null, p_limit: LIMIT, p_offset: 0 })
+  return rpc('list_obituaries', { p_search: null, p_year: null, p_month: null, p_limit: FETCH, p_offset: 0 })
     .then(r => (r?.rows || []).map(o => ({
       src: OBITUARY_SRC,
       row: { id: o.id, title: [[o.honorific, o.name].filter(Boolean).join(' '), o.city].filter(Boolean).join(' · ') },
@@ -56,7 +59,7 @@ function formatDate(d) {
     return withTimeout(
       supabase.from(src.table).select(select).eq('published', true)
         .order(src.hasUpdated ? 'updated_at' : 'created_at', { ascending: false })
-        .limit(LIMIT)
+        .limit(FETCH)
     ).then(({ data, error }) => {
       if (error) throw error;
       return (data || []).map(row => {
@@ -71,12 +74,15 @@ function formatDate(d) {
     });
   }), obituaryItems()]);
 
-  const items = results
+  const sorted = results
     .filter(r => r.status === 'fulfilled')
     .flatMap(r => r.value)
     .filter(it => it.when && !isNaN(it.when) && String(it.row.title || '').trim())
-    .sort((a, b) => b.when - a.when)
-    .slice(0, LIMIT);
+    .sort((a, b) => b.when - a.when);
+  // Always keep the last week's items; if that is fewer than LIMIT, top up with the newest older ones.
+  const cutoff = Date.now() - WINDOW_DAYS * 24 * 60 * 60 * 1000;
+  const recent = sorted.filter(it => it.when.getTime() >= cutoff).length;
+  const items = sorted.slice(0, Math.min(MAX_ITEMS, Math.max(LIMIT, recent)));
 
   if (!items.length) return;
 
