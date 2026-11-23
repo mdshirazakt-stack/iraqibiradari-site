@@ -277,8 +277,8 @@ function successHtml(id, token, isEdit) {
       <p class="${LEGEND}">Send it to the community on WhatsApp</p>
       <div class="flex flex-wrap items-center gap-3 text-sm font-bold text-archive-muted">
         <span>Message style</span>
-        <button type="button" data-style="en" class="${CHIP}">English</button>
         <button type="button" data-style="ru" class="${CHIP}">Roman Urdu</button>
+        <button type="button" data-style="en" class="${CHIP}">English</button>
       </div>
       <textarea data-wa-text rows="14" class="${INPUT} font-mono leading-6" aria-label="WhatsApp message"></textarea>
       <p class="text-xs leading-5 text-archive-muted">You can edit the message above before sending. Delete the last line if you do not want to include the link.</p>
@@ -305,7 +305,7 @@ function wireSuccess(root, id, pub, priv) {
   const send = root.querySelector('[data-send-wa]');
   const note = root.querySelector('[data-copy-note]');
   const chips = [...root.querySelectorAll('[data-style]')];
-  let style = 'en';
+  let style = 'ru';   // Roman Urdu is the default message style
 
   const build = () => {
     ta.value = buildMessage(style, pub, priv, url);
