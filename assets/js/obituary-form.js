@@ -280,6 +280,7 @@ function successHtml(id, token, isEdit) {
       <div class="flex flex-wrap items-center gap-3 text-sm font-bold text-archive-muted">
         <span>Message style</span>
         <button type="button" data-style="ru" class="${CHIP}">Roman Urdu</button>
+        <button type="button" data-style="hi" class="${CHIP}">हिन्दी (Hindi)</button>
         <button type="button" data-style="en" class="${CHIP}">English</button>
       </div>
       <textarea data-wa-text rows="14" class="${INPUT} font-mono leading-6" aria-label="WhatsApp message"></textarea>

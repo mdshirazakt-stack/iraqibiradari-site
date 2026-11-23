@@ -3,6 +3,7 @@
 // Two styles, following the community's own notices:
 //   'en' — formal English ("Demise in Kolkata …")
 //   'ru' — Roman Urdu ("Nihayat hi afsos ke sath ittala di ja rahi hai …")
+//   'hi' — Hindi in Devanagari ("निहायत अफ़सोस के साथ इत्तिला दी जाती है …")
 //
 // The message may include things that are NEVER stored or shown on the website:
 // the street address and condolence phone numbers (the `priv` argument). They
@@ -216,15 +217,101 @@ function romanUrdu(o, priv, url) {
   return lines.join('\n');
 }
 
+// ── Hindi (Devanagari, in the community's Urdu-flavoured Hindi) ───────────
+// Names, cities and places stay exactly as the poster typed them.
+const HI_WEEKDAYS = ['रविवार', 'सोमवार', 'मंगलवार', 'बुधवार', 'गुरुवार', 'शुक्रवार', 'शनिवार'];
+const HI_MONTHS = ['जनवरी', 'फ़रवरी', 'मार्च', 'अप्रैल', 'मई', 'जून', 'जुलाई', 'अगस्त', 'सितंबर', 'अक्टूबर', 'नवंबर', 'दिसंबर'];
+const HI_NOUN = {
+  sahabzade: 'साहबज़ादे', sahabzadi: 'साहबज़ादी', ahliya: 'अहलिया', shohar: 'शौहर', walida: 'वालिदा', walid: 'वालिद',
+  bhai: 'भाई', behan: 'बहन', saali: 'साली', bhabhi: 'भाभी', bahu: 'बहू', damad: 'दामाद', saale: 'साले', behnoi: 'बहनोई',
+  khala: 'ख़ाला', phuphi: 'फूफी', chachi: 'चाची', mamani: 'मामी', mamu: 'मामू', khalu: 'ख़ालू', phuppa: 'फूफा', chacha: 'चाचा',
+};
+const HI_PRAYERS = { fajr: 'फ़ज्र', zohar: 'ज़ोहर', zuhr: 'ज़ोहर', asr: 'अस्र', maghrib: 'मग़रिब', isha: 'इशा', jumma: 'जुमा', jumah: 'जुमा' };
+const HI_BURIAL = {
+  'at the same place': 'वहीं पर',
+  'in the adjoining qabristan': 'क़रीब के क़ब्रिस्तान में',
+};
+
+function hiDate(s) {
+  const d = parseYmd(s);
+  return `${HI_WEEKDAYS[d.getUTCDay()]} ${d.getUTCDate()} ${HI_MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+}
+function hiDay(s, today) {            // आज / कल / full date
+  const d = diffDays(s, today);
+  return d === 0 ? 'आज' : (d === 1 || d === -1) ? 'कल' : hiDate(s);
+}
+function timingHi(t) {
+  const x = clean(t);
+  const jamaat = (v) => v.replace(/jamaa?t time/i, 'जमाअत का वक़्त');
+  const m = /^after (\w+) namaaz\b(.*)$/i.exec(x);
+  const prayer = m && HI_PRAYERS[m[1].toLowerCase()];
+  return prayer ? jamaat(`${prayer} की नमाज़ के बाद${m[2]}`) : jamaat(x);
+}
+
+function hindi(o, priv, url) {
+  const today = todayIst();
+  const female = o.gender === 'female';
+  const verb = female ? 'थीं' : 'थे';
+  const marhoom = female ? 'मरहूमा' : 'मरहूम';
+  const hon = clean(o.honorific) || (female ? 'मोहतरमा' : 'जनाब');
+
+  const rels = (o.relations || []).map(r => {
+    const [particle, noun] = ruRelation(relLabel(r), female);
+    const n = clean(r.name);
+    const late = r.late || LATE.test(n);
+    return `${late ? 'मरहूम ' : ''}${n.replace(LATE, '')} ${particle === 'ki' ? 'की' : 'के'} ${HI_NOUN[noun] || noun} ${verb}`;
+  }).join(' और ');
+  const area = clean(o.residence_area) || clean(priv.address);
+  const live = area ? ` और ${area} में ${female ? 'रहती थीं' : 'रहते थे'}` : '';
+  const when = diffDays(o.passed_on, today) === 0 ? '' : ` ${hiDay(o.passed_on, today)}`;
+
+  const lines = [
+    `${clean(o.city)} में वफ़ात`,
+    'अस्सलामु अलैकुम व रहमतुल्लाहि व बरकातुहू',
+    `निहायत अफ़सोस के साथ इत्तिला दी जाती है कि ${hon} ${clean(o.name)} ${female ? 'साहिबा' : 'साहब'} का${when} इंतक़ाल हो गया है${rels ? `, जो ${rels}` : ''}${live}। ` +
+      `इन्ना लिल्लाहि व इन्ना इलैहि राजिऊन। अल्लाह पाक ${marhoom} की मग़फ़िरत फ़रमाए और उन्हें जन्नतुल फ़िरदौस में आला मक़ाम अता फ़रमाए। आमीन`,
+  ];
+
+  const from = o.leaves_from_kind === 'residence'
+    ? `उनके घर${clean(priv.address) ? ` ${clean(priv.address)}` : ''}`
+    : o.leaves_from_kind === 'other' ? clean(o.leaves_from_other) : '';
+  const leaves = from
+    ? `${marhoom} का जनाज़ा ${from}${clean(o.leaves_from_time) ? ` से ${clean(o.leaves_from_time)} पर` : ' से'} उठेगा और `
+    : `${marhoom} की `;
+  const dateWord = o.janaza_date ? hiDay(o.janaza_date, today) : '';
+  if (from || dateWord || clean(o.janaza_place) || clean(o.janaza_timing)) {
+    let s = `${leaves}नमाज़-ए-जनाज़ा इंशाअल्लाह`;
+    if (dateWord) s += ` ${dateWord}`;
+    if (clean(o.janaza_place)) s += ` ${clean(o.janaza_place)} में`;
+    if (clean(o.janaza_timing)) s += ` ${timingHi(o.janaza_timing)}`;
+    s += ' होगी';
+    const burial = clean(o.burial_text);
+    if (burial) s += ` और तदफ़ीन भी ${HI_BURIAL[burial.toLowerCase()] || burial} होगी`;
+    lines.push(s);
+  }
+  if (clean(o.message)) lines.push(clean(o.message));
+  lines.push('आप सभी हज़रात से शिरकत और मग़फ़िरत की दुआ की दरख़्वास्त है');
+
+  const contacts = (priv.contacts || []).filter(c => clean(c.number) || clean(c.name));
+  if (contacts.length) {
+    lines.push('ताज़ियत के लिए 📱');
+    contacts.forEach(c => lines.push(contactLine(c)));
+  }
+  if (url) lines.push(`🔗 ${url}`);
+  return lines.join('\n');
+}
+
 /**
  * Builds the WhatsApp message.
- * @param {'en'|'ru'} style
+ * @param {'en'|'ru'|'hi'} style
  * @param {object} o     public obituary fields
  * @param {object} priv  { address, contacts: [{name, number}] } — never stored on the website
  * @param {string} [url] link to the obituary page
  */
 export function buildMessage(style, o, priv = {}, url = '') {
-  return style === 'ru' ? romanUrdu(o, priv, url) : english(o, priv, url);
+  if (style === 'ru') return romanUrdu(o, priv, url);
+  if (style === 'hi') return hindi(o, priv, url);
+  return english(o, priv, url);
 }
 
 export function whatsappLink(text) { return `https://wa.me/?text=${encodeURIComponent(text)}`; }

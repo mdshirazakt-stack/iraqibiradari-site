@@ -7,7 +7,7 @@
 // once (and ?nopreview to switch back). To launch publicly: set OBITUARIES_LIVE
 // to true below. Nothing else needs to change.
 
-export const OBITUARIES_LIVE = false;
+export const OBITUARIES_LIVE = true;
 
 const PREVIEW_KEY = 'ib_obit_preview';
 
